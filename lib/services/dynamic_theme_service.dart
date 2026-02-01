@@ -26,6 +26,7 @@ class DynamicThemeService extends ChangeNotifier {
   ColorScheme? get darkScheme => _darkScheme;
 
   /// Load and cache palette from asset with downsampling
+  // ignore: unused_element
   Future<PaletteGenerator> _loadPalette(String assetPath) async {
     if (_paletteCache.containsKey(assetPath)) {
       return _paletteCache[assetPath]!;
