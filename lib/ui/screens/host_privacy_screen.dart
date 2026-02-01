@@ -98,10 +98,11 @@ class HostPrivacyScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Nothing on this screen is interactive.',
+                        'This screen is designed to prevent players from peaking at\nsensitive script steps or the vote record.',
                         style: TextStyle(
-                          color: cs.onSurface.withValues(alpha: 0.45),
+                          color: cs.onSurface.withValues(alpha: 0.4),
                           fontSize: 12,
+                          fontStyle: FontStyle.italic,
                         ),
                         textAlign: TextAlign.center,
                       ),

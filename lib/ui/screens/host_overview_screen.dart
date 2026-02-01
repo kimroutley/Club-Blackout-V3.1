@@ -29,6 +29,7 @@ import '../widgets/game_drawer.dart';
 import '../widgets/game_toast_listener.dart';
 import '../widgets/host_alert_listener.dart';
 import '../widgets/host_player_status_card.dart';
+import '../widgets/inline_player_tile.dart';
 import '../widgets/neon_background.dart';
 import '../widgets/neon_page_scaffold.dart';
 
@@ -645,7 +646,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                   labelStyle: const TextStyle(color: accent),
                 ),
               ),
-              ValueListenableBuilder(
+              ValueListenableBuilder<KeepScreenAwakeStatus>(
                 valueListenable: KeepScreenAwakeService.status,
                 builder: (context, status, _) {
                   return IconButton(
@@ -2303,8 +2304,9 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
   Widget _buildHostToolsCard(BuildContext context, GameEngine engine) {
     final cs = Theme.of(context).colorScheme;
     final hasPending = engine.dramaQueenSwapPending ||
-        engine.hasPendingPredatorRetaliation ||
-        engine.hasPendingTeaSpillerReveal;
+      engine.hasPendingPredatorRetaliation ||
+      engine.hasPendingTeaSpillerReveal ||
+      engine.messyBitchVictoryPending;
 
     final canControlScript =
         engine.currentPhase != GamePhase.lobby && engine.scriptQueue.isNotEmpty;
@@ -2324,15 +2326,49 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            currentStep == null
-                ? (canControlScript
-                    ? 'No active script step.'
-                    : 'Game script controls are available once the game starts.')
-                : 'Current: ${currentStep.title}',
-            style: TextStyle(color: cs.onSurfaceVariant),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          Builder(
+            builder: (context) {
+              if (currentStep == null) {
+                return Text(
+                  canControlScript
+                      ? 'No active script step.'
+                      : 'Game script controls are available once the game starts.',
+                  style: TextStyle(color: cs.onSurfaceVariant),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                );
+              }
+
+              Player? stepPlayer;
+              final stepRoleId = currentStep.roleId;
+              if (stepRoleId != null && stepRoleId.isNotEmpty) {
+                try {
+                  stepPlayer = engine.players.firstWhere(
+                    (p) =>
+                        p.role.id == stepRoleId &&
+                        p.isActive &&
+                        !p.soberSentHome,
+                  );
+                } catch (_) {}
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Current: ${currentStep.title}',
+                      style: TextStyle(color: cs.onSurfaceVariant),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (stepPlayer != null) ...[
+                    const SizedBox(width: 10),
+                    InlinePlayerTile(player: stepPlayer),
+                  ],
+                ],
+              );
+            },
           ),
           const SizedBox(height: 10),
           Row(
@@ -2474,6 +2510,82 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
           if (engine.hasPendingTeaSpillerReveal) ...[
             const SizedBox(height: 12),
             _TeaSpillerRevealPanel(gameEngine: engine),
+          ],
+          if (engine.messyBitchVictoryPending) ...[
+            const SizedBox(height: 12),
+            _buildPendingRow(
+              context,
+              icon: Icons.record_voice_over_rounded,
+              color: ClubBlackoutTheme.neonPurple,
+              title: 'Messy Bitch victory pending',
+              subtitle:
+                  'Rumours reached everyone. Declare to end the game now.',
+              trailing: FilledButton(
+                style: ClubBlackoutTheme.neonButtonStyle(
+                  ClubBlackoutTheme.neonPurple,
+                  isPrimary: true,
+                ),
+                onPressed: engine.declareMessyBitchVictory,
+                child: const Text('DECLARE WIN'),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPendingRow(
+    BuildContext context, {
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    Widget? trailing,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.25),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(color: cs.onSurfaceVariant, height: 1.3),
+                ),
+              ],
+            ),
+          ),
+          if (trailing != null) ...[
+            const SizedBox(width: 12),
+            trailing,
           ],
         ],
       ),

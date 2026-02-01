@@ -19,7 +19,7 @@ class SetupPhaseHelper extends StatelessWidget {
     this.onStartGame,
   });
 
-  bool get _hasMinimumPlayers => gameEngine.guests.length >= 5;
+  bool get _hasMinimumPlayers => gameEngine.guests.length >= 4;
 
   bool get _hasHost {
     final hostName = gameEngine.hostName;

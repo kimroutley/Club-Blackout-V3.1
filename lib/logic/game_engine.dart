@@ -207,6 +207,33 @@ class GameEngine extends ChangeNotifier {
 
   // Messy Bitch Victory handling
   bool messyBitchVictoryPending = false;
+  void markMessyBitchVictoryPending() {
+    if (messyBitchVictoryPending) return;
+    messyBitchVictoryPending = true;
+
+    if (!silent) {
+      queueHostAlert(
+        title: 'Messy Bitch can win',
+        message: 'Rumours reached every enabled guest. Declare the win.',
+      );
+
+      showPersistentToast(
+        title: 'Messy Bitch Victory?',
+        message: 'Rumours reached everyone. Confirm to end the game.',
+        onIgnore: dismissPersistentToast,
+      );
+    }
+
+    notifyListeners();
+  }
+
+  void declareMessyBitchVictory() {
+    if (!messyBitchVictoryPending) return;
+    messyBitchVictoryPending = false;
+    enterEndGame(reason: 'Messy Bitch spread a rumour to every player.');
+    notifyListeners();
+  }
+
   void clearMessyBitchVictoryPending() {
     messyBitchVictoryPending = false;
     notifyListeners();
@@ -432,28 +459,38 @@ class GameEngine extends ChangeNotifier {
   }
 
   String? _lastArchivedGameBlobJson;
+  DateTime? _cachedLastArchivedGameSavedAt;
 
   /// JSON-encoded save blob of the most recently archived game.
   ///
   /// This is written automatically before [resetToLobby] wipes the active game.
   String? get lastArchivedGameBlobJson => _lastArchivedGameBlobJson;
 
-  DateTime? get lastArchivedGameSavedAt {
+  DateTime? get lastArchivedGameSavedAt => _cachedLastArchivedGameSavedAt;
+
+  void _updateCachedSavedAt() {
     final json = _lastArchivedGameBlobJson;
-    if (json == null) return null;
+    if (json == null) {
+      _cachedLastArchivedGameSavedAt = null;
+      return;
+    }
     try {
       final decoded = (jsonDecode(json) as Map).cast<String, dynamic>();
       final savedAt = decoded['savedAt'] as String?;
-      if (savedAt == null) return null;
-      return DateTime.tryParse(savedAt);
+      if (savedAt == null) {
+        _cachedLastArchivedGameSavedAt = null;
+      } else {
+        _cachedLastArchivedGameSavedAt = DateTime.tryParse(savedAt);
+      }
     } catch (_) {
-      return null;
+      _cachedLastArchivedGameSavedAt = null;
     }
   }
 
   Future<void> _loadLastArchivedGameBlob() async {
     final prefs = await SharedPreferences.getInstance();
     _lastArchivedGameBlobJson = prefs.getString(_lastArchivedGameBlobKey);
+    _updateCachedSavedAt();
     notifyListeners();
   }
 
@@ -473,6 +510,7 @@ class GameEngine extends ChangeNotifier {
     final blob = exportSaveBlobMap(includeLog: true);
     final encoded = jsonEncode(blob);
     _lastArchivedGameBlobJson = encoded;
+    _updateCachedSavedAt();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastArchivedGameBlobKey, encoded);
     if (notify) {
@@ -482,6 +520,7 @@ class GameEngine extends ChangeNotifier {
 
   Future<void> clearArchivedGameBlob({bool notify = true}) async {
     _lastArchivedGameBlobJson = null;
+    _updateCachedSavedAt();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_lastArchivedGameBlobKey);
     if (notify) {
@@ -926,6 +965,8 @@ class GameEngine extends ChangeNotifier {
 
     // Messy Bitch immediate win: rumours have reached every enabled guest.
     if (messyBitch != null && messyBitch.isAlive && allTargetsHaveRumour) {
+      markMessyBitchVictoryPending();
+
       return const GameEndResult(
         winner: 'MESSY_BITCH',
         message: 'Messy Bitch spread a rumour to every player.',
@@ -2618,6 +2659,14 @@ class GameEngine extends ChangeNotifier {
             '${creep.name} inherited ${victim.role.name} from ${victim.name}');
         creep.role = victim.role;
         _resetPlayerStateForNewRole(creep);
+
+        // Whore deflection should never transfer to a new holder.
+        if (victim.role.id == 'whore') {
+          creep.whoreDeflectionTargetId = null;
+          creep.whoreDeflectionUsed = false;
+          nightActions.remove('whore_deflect');
+        }
+
         creep.alliance = victim.alliance;
       }
     } catch (_) {}

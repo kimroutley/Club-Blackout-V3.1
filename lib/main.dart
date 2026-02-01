@@ -11,6 +11,7 @@ import 'services/dynamic_theme_service.dart';
 import 'ui/screens/main_screen.dart';
 import 'ui/scroll_behavior.dart';
 import 'ui/styles.dart';
+import 'ui/utils/error_handler.dart';
 import 'utils/game_logger.dart';
 
 void main() async {
@@ -132,13 +133,80 @@ class _ClubBlackoutAppState extends State<ClubBlackoutApp> {
           themeMode: ThemeMode.dark,
           scrollBehavior: const ClubBlackoutScrollBehavior(),
           home: _error != null
-              ? Scaffold(body: Center(child: Text('Init error: $_error')))
+              ? _ErrorSummaryScreen(
+                  error: _error!,
+                  onRetry: () {
+                    setState(() {
+                      _error = null;
+                      _engine = null;
+                    });
+                    _init();
+                  },
+                )
               : engine == null
                   ? const Scaffold(
                       body: Center(child: CircularProgressIndicator()))
                   : MainScreen(gameEngine: engine),
         );
       },
+    );
+  }
+}
+
+/// A clean error summary screen for fatal initialization errors
+class _ErrorSummaryScreen extends StatelessWidget {
+  final Object error;
+  final VoidCallback onRetry;
+
+  const _ErrorSummaryScreen({
+    required this.error,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: Theme.of(context).colorScheme.error,
+                size: 64,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Initialization Failed',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Club Blackout couldn\'t start properly. This usually happens if data files are missing or corrupted.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 32),
+              FilledButton.icon(
+                onPressed: () {
+                  ErrorHandler.showErrorDialog(
+                    context: context,
+                    title: 'Error Details',
+                    message: error.toString(),
+                    onRetry: onRetry,
+                  );
+                },
+                icon: const Icon(Icons.info_outline),
+                label: const Text('Show Details & Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

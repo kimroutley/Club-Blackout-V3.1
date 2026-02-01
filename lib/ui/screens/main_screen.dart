@@ -7,7 +7,9 @@ import '../screens/guides_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/host_overview_screen.dart';
 import '../screens/lobby_screen.dart';
+import '../widgets/connectivity_error_widget.dart';
 import '../widgets/game_drawer.dart';
+import '../widgets/loading_overlay.dart';
 
 class MainScreen extends StatefulWidget {
   final GameEngine gameEngine;
@@ -18,7 +20,7 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> with LoadingStateMixin {
   int _selectedIndex = 0;
   bool _hasPeeked = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -87,37 +89,42 @@ class _MainScreenState extends State<MainScreen> {
         _selectedIndex == 1 ||
         _selectedIndex == 2;
 
-    return Scaffold(
-      key: _scaffoldKey,
-      extendBodyBehindAppBar: !isNight,
-      appBar: hideAppBar
-          ? null
-          : AppBar(
-              title: null,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: IconThemeData(color: cs.onSurface, size: 26),
-            ),
-      drawer: GameDrawer(
-        gameEngine: widget.gameEngine,
-        onContinueGameTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => GameScreen(gameEngine: widget.gameEngine),
-            ),
-          );
-        },
-        onHostDashboardTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => HostOverviewScreen(gameEngine: widget.gameEngine),
-            ),
-          );
-        },
-        onNavigate: _onItemTapped,
-        selectedIndex: _selectedIndex,
+    return ErrorBoundary(
+      child: buildWithLoading(
+        child: Scaffold(
+          key: _scaffoldKey,
+          extendBodyBehindAppBar: !isNight,
+          appBar: hideAppBar
+              ? null
+              : AppBar(
+                  title: null,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  iconTheme: IconThemeData(color: cs.onSurface, size: 26),
+                ),
+          drawer: GameDrawer(
+            gameEngine: widget.gameEngine,
+            onContinueGameTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => GameScreen(gameEngine: widget.gameEngine),
+                ),
+              );
+            },
+            onHostDashboardTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      HostOverviewScreen(gameEngine: widget.gameEngine),
+                ),
+              );
+            },
+            onNavigate: _onItemTapped,
+            selectedIndex: _selectedIndex,
+          ),
+          body: _getPage(_selectedIndex),
+        ),
       ),
-      body: _getPage(_selectedIndex),
     );
   }
 }

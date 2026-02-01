@@ -46,8 +46,14 @@ class _DynamicThemedBackgroundState extends State<DynamicThemedBackground> {
   Future<void> _updateTheme() async {
     if (!mounted) return;
 
-    final themeService =
-        Provider.of<DynamicThemeService>(context, listen: false);
+    late final DynamicThemeService themeService;
+    try {
+      themeService = Provider.of<DynamicThemeService>(context, listen: false);
+    } on ProviderNotFoundException {
+      // Tests or preview widgets may not provide DynamicThemeService.
+      // In that case, just render the child without attempting theme updates.
+      return;
+    }
 
     if (widget.useRoleColors &&
         widget.activeRoles != null &&
@@ -76,14 +82,22 @@ class _DynamicThemedBackgroundState extends State<DynamicThemedBackground> {
 extension DynamicThemeContext on BuildContext {
   /// Update theme from background image
   Future<void> updateThemeFromBackground(String assetPath) async {
-    final service = Provider.of<DynamicThemeService>(this, listen: false);
-    await service.updateFromBackground(assetPath);
+    try {
+      final service = Provider.of<DynamicThemeService>(this, listen: false);
+      await service.updateFromBackground(assetPath);
+    } on ProviderNotFoundException {
+      return;
+    }
   }
 
   /// Update theme from role colors
   void updateThemeFromRoles(List<Role> roles) {
-    final service = Provider.of<DynamicThemeService>(this, listen: false);
-    service.updateFromRoles(roles);
+    try {
+      final service = Provider.of<DynamicThemeService>(this, listen: false);
+      service.updateFromRoles(roles);
+    } on ProviderNotFoundException {
+      return;
+    }
   }
 
   /// Update theme from both background and roles
@@ -91,13 +105,21 @@ extension DynamicThemeContext on BuildContext {
     String assetPath,
     List<Role> roles,
   ) async {
-    final service = Provider.of<DynamicThemeService>(this, listen: false);
-    await service.updateFromBackgroundAndRoles(assetPath, roles);
+    try {
+      final service = Provider.of<DynamicThemeService>(this, listen: false);
+      await service.updateFromBackgroundAndRoles(assetPath, roles);
+    } on ProviderNotFoundException {
+      return;
+    }
   }
 
   /// Reset theme to default
   void resetTheme() {
-    final service = Provider.of<DynamicThemeService>(this, listen: false);
-    service.reset();
+    try {
+      final service = Provider.of<DynamicThemeService>(this, listen: false);
+      service.reset();
+    } on ProviderNotFoundException {
+      return;
+    }
   }
 }

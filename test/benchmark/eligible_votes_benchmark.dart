@@ -64,7 +64,8 @@ void main() {
     }
     stopwatch.stop();
 
+    // ignore: avoid_print
     print(
-        'Benchmark eligibleDayVotesByTarget: ${stopwatch.elapsedMilliseconds} ms for 100,000 calls');
+      'Benchmark eligibleDayVotesByTarget: ${stopwatch.elapsedMilliseconds} ms for 100,000 calls');
   });
 }

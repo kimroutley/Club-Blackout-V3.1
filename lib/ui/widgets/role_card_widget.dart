@@ -165,6 +165,8 @@ class _RoleCardWidgetState extends State<RoleCardWidget>
       case 'predator':
       case 'lightweight':
         return 'High';
+      case 'host':
+        return 'N/A';
       default:
         return 'Medium';
     }
@@ -409,13 +411,11 @@ class _RoleCardWidgetState extends State<RoleCardWidget>
         role.type.trim().isEmpty ? 'Guest' : toTitleCase(role.type.trim());
 
     return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(ClubBlackoutTheme.radiusLg),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.3),
-          width: 1,
-        ),
+      decoration: ClubBlackoutTheme.neonFrame(
+        color: role.color,
+        opacity: 0.95,
+        borderRadius: ClubBlackoutTheme.radiusLg,
+        borderWidth: 0,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(ClubBlackoutTheme.radiusLg),
@@ -475,10 +475,14 @@ class _RoleCardWidgetState extends State<RoleCardWidget>
                         decoration: BoxDecoration(
                           color: widget.role.color.withValues(alpha: 0.10),
                           border: Border.all(
-                            color: cs.outlineVariant.withValues(alpha: 0.35),
+                            color: widget.role.color.withValues(alpha: 0.5),
                             width: 1,
                           ),
                           borderRadius: BorderRadius.circular(4),
+                          boxShadow: ClubBlackoutTheme.boxGlow(
+                            widget.role.color,
+                            intensity: 0.2,
+                          ),
                         ),
                         child: Text(
                           'PASS',
@@ -507,7 +511,7 @@ class _RoleCardWidgetState extends State<RoleCardWidget>
                                 size: widget.compact
                                     ? 80
                                     : 100, // Slightly smaller for better proportions
-                                glowIntensity: 0.25,
+                                glowIntensity: 0.65,
                               ),
                             ),
                             const Spacer(),
@@ -523,11 +527,12 @@ class _RoleCardWidgetState extends State<RoleCardWidget>
                                 name.toUpperCase(),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: titleStyle.copyWith(
-                                  height: 1.1,
+                                style: ClubBlackoutTheme.glowTextStyle(
+                                  base: titleStyle.copyWith(height: 1.1),
                                   color: role.color,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 0.5,
+                                  glowIntensity: 0.95,
                                 ),
                               ),
                               ClubBlackoutTheme.gap12,
@@ -668,13 +673,11 @@ class _RoleCardWidgetState extends State<RoleCardWidget>
     }
 
     return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(ClubBlackoutTheme.radiusLg),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.3),
-          width: 1,
-        ),
+      decoration: ClubBlackoutTheme.neonFrame(
+        color: role.color,
+        opacity: 0.98,
+        borderRadius: ClubBlackoutTheme.radiusLg,
+        borderWidth: 0,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(ClubBlackoutTheme.radiusLg),
@@ -869,10 +872,8 @@ class _IdPhotoBlock extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surface.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(ClubBlackoutTheme.radiusMd),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.35),
-          width: 1,
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.45), width: 1.2),
+        boxShadow: ClubBlackoutTheme.circleGlow(accent, intensity: 0.55),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(ClubBlackoutTheme.radiusSm),
@@ -898,10 +899,7 @@ class _BarcodeStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(ClubBlackoutTheme.radiusSm),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.35),
-          width: 1,
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.22), width: 1),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {

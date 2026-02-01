@@ -13,9 +13,13 @@ import '../../services/dynamic_theme_service.dart';
 import '../styles.dart';
 import '../utils/player_sort.dart';
 import '../widgets/bulletin_dialog_shell.dart';
+import '../widgets/dynamic_themed_background.dart';
+import '../widgets/fade_slide_tab_view.dart';
 import '../widgets/game_toast_listener.dart';
+import '../widgets/loading_overlay.dart';
 import '../widgets/player_tile.dart';
 import '../widgets/role_assignment_dialog.dart';
+import '../widgets/setup_phase_helper.dart';
 import 'game_screen.dart';
 
 class LobbyScreen extends StatefulWidget {
@@ -28,7 +32,7 @@ class LobbyScreen extends StatefulWidget {
 }
 
 class _LobbyScreenState extends State<LobbyScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, LoadingStateMixin {
   late final TextEditingController _controller;
   late final TextEditingController _hostController;
   late final FocusNode _nameFocus;
@@ -240,69 +244,75 @@ class _LobbyScreenState extends State<LobbyScreen>
           indicatorWeight: 3,
         );
 
-        return DefaultTabController(
-          length: 2,
-          child: Scaffold(
-            backgroundColor: cs.surface,
-            appBar: AppBar(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          ClubBlackoutTheme.neonPurple.withValues(alpha: 0.25),
-                          ClubBlackoutTheme.neonPink.withValues(alpha: 0.2),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color:
-                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.people_alt_rounded,
-                      color: ClubBlackoutTheme.neonPurple,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text('Lobby'),
-                ],
-              ),
-              backgroundColor: cs.surface,
-              surfaceTintColor: Colors.transparent,
-              scrolledUnderElevation: 3,
-              elevation: 0,
-              centerTitle: true,
-              leading: IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(kToolbarHeight),
-                child: tabBar,
-              ),
-            ),
-            body: SafeArea(
-              top: false,
-              child: Stack(
-                children: [
-                  // Main Content
-                  TabBarView(
+        return DynamicThemedBackground(
+          backgroundAsset: 'Backgrounds/Club Blackout V2 Home Menu.png',
+          child: buildWithLoading(
+            child: DefaultTabController(
+              length: 2,
+              child: Scaffold(
+                backgroundColor: cs.surface,
+                appBar: AppBar(
+                  title: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildGuestsTab(context, cs, engine, guests),
-                      _buildGameSetupTab(context, cs, engine, guests),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              ClubBlackoutTheme.neonPurple
+                                  .withValues(alpha: 0.25),
+                              ClubBlackoutTheme.neonPink.withValues(alpha: 0.2),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: ClubBlackoutTheme.neonPurple
+                                .withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.people_alt_rounded,
+                          color: ClubBlackoutTheme.neonPurple,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text('Lobby'),
                     ],
                   ),
+                  backgroundColor: cs.surface,
+                  surfaceTintColor: Colors.transparent,
+                  scrolledUnderElevation: 3,
+                  elevation: 0,
+                  centerTitle: true,
+                  leading: IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  ),
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(kToolbarHeight),
+                    child: tabBar,
+                  ),
+                ),
+                body: SafeArea(
+                  top: false,
+                  child: Stack(
+                    children: [
+                      // Main Content
+                      FadeSlideTabBarView(
+                        children: [
+                          _buildGuestsTab(context, cs, engine, guests),
+                          _buildGameSetupTab(context, cs, engine, guests),
+                        ],
+                      ),
 
-                  // Overlays
-                  GameToastListener(engine: engine),
-                  _buildNotificationOverlay(context),
-                ],
+                      // Overlays
+                      GameToastListener(engine: engine),
+                      _buildNotificationOverlay(context),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -730,132 +740,13 @@ class _LobbyScreenState extends State<LobbyScreen>
 
     return Column(
       children: [
-        // Top Card: Main Action & Info
-        Container(
-          margin: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                ClubBlackoutTheme.neonGreen.withValues(alpha: 0.12),
-                ClubBlackoutTheme.neonBlue.withValues(alpha: 0.1),
-                ClubBlackoutTheme.neonPurple.withValues(alpha: 0.08),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.25),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.1),
-                blurRadius: 12,
-                spreadRadius: 2,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Info Row
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: players.length < 4
-                              ? [
-                                  ClubBlackoutTheme.neonOrange
-                                      .withValues(alpha: 0.25),
-                                  ClubBlackoutTheme.neonRed
-                                      .withValues(alpha: 0.2),
-                                ]
-                              : [
-                                  ClubBlackoutTheme.neonGreen
-                                      .withValues(alpha: 0.25),
-                                  ClubBlackoutTheme.neonBlue
-                                      .withValues(alpha: 0.2),
-                                ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: (players.length < 4
-                                  ? ClubBlackoutTheme.neonOrange
-                                  : ClubBlackoutTheme.neonGreen)
-                              .withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: Icon(
-                        players.length < 4
-                            ? Icons.info_outline_rounded
-                            : Icons.check_circle_outline_rounded,
-                        size: 28,
-                        color: players.length < 4
-                            ? ClubBlackoutTheme.neonOrange
-                            : ClubBlackoutTheme.neonGreen,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            players.length < 4
-                                ? 'Need More Guests'
-                                : 'Ready to Start!',
-                            style: TextStyle(
-                              color: cs.onSurface,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            players.length < 4
-                                ? 'Minimum 4 guests required • ${players.length} added'
-                                : '${players.length} guests ready for role assignment',
-                            style: TextStyle(
-                              color: cs.onSurfaceVariant,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Button
-                FilledButton.icon(
-                  onPressed: players.length < 4
-                      ? null
-                      : () => _showRoleAssignment(context),
-                  label: const Text('ASSIGN ROLES & START GAME'),
-                  icon: const Icon(Icons.casino_rounded, size: 22),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        // High-level Setup Helper
+        SetupPhaseHelper(
+          gameEngine: engine,
+          onStartGame: () => _showRoleAssignment(context),
         ),
+
+        const SizedBox(height: 8),
 
         if (engine.lastArchivedGameBlobJson != null)
           Padding(

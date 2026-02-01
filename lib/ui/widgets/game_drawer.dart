@@ -642,7 +642,7 @@ class _KeepScreenAwakeDrawerTileState
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
+    return ValueListenableBuilder<KeepScreenAwakeStatus>(
       valueListenable: KeepScreenAwakeService.status,
       builder: (context, status, _) {
         final label = status.loaded
