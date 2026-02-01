@@ -37,7 +37,8 @@ class _VotingWidgetState extends State<VotingWidget> {
     // Excludes: Host, Ally Cat, Sober-sent-home, and Roofi/Paralyzed targets.
     return widget.gameEngine.players.where((p) {
       if (!p.isActive) return false;
-      if (p.id == GameEngine.hostPlayerId || p.role.id == GameEngine.hostRoleId) {
+      if (p.id == GameEngine.hostPlayerId ||
+          p.role.id == GameEngine.hostRoleId) {
         return false;
       }
       if (p.role.id == 'ally_cat') return false;
@@ -107,7 +108,8 @@ class _VotingWidgetState extends State<VotingWidget> {
 
   void _onVoterChanged(String candidateId, String voterId, bool select) {
     // Gentle tactile feedback for vote interactions.
-    unawaited(select ? SoundService().playSelect() : SoundService().playClick());
+    unawaited(
+        select ? SoundService().playSelect() : SoundService().playClick());
 
     Player? clinger;
     try {
@@ -470,7 +472,8 @@ class _VotingWidgetState extends State<VotingWidget> {
                           boxShadow: voteCount >= requiredVotes
                               ? [
                                   BoxShadow(
-                                    color: Colors.redAccent.withValues(alpha: 0.4),
+                                    color:
+                                        Colors.redAccent.withValues(alpha: 0.4),
                                     blurRadius: 12,
                                     spreadRadius: 2,
                                   ),
@@ -498,8 +501,8 @@ class _VotingWidgetState extends State<VotingWidget> {
                                     ? Icons.gavel_rounded
                                     : Icons.person_outline,
                                 key: ValueKey(voteCount >= requiredVotes),
-                                color: voteCount >= requiredVotes 
-                                    ? Colors.white 
+                                color: voteCount >= requiredVotes
+                                    ? Colors.white
                                     : accentColor,
                                 size: 18,
                               ),
@@ -508,8 +511,8 @@ class _VotingWidgetState extends State<VotingWidget> {
                             AnimatedDefaultTextStyle(
                               duration: const Duration(milliseconds: 300),
                               style: TextStyle(
-                                color: voteCount >= requiredVotes 
-                                    ? Colors.white 
+                                color: voteCount >= requiredVotes
+                                    ? Colors.white
                                     : accentColor,
                                 fontSize: voteCount >= requiredVotes ? 22 : 20,
                                 fontWeight: FontWeight.w900,
@@ -712,9 +715,7 @@ class _VoterChip extends StatelessWidget {
           child: Icon(
             isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
             size: 20,
-            color: isSelected
-                ? accent
-                : cs.onSurface.withValues(alpha: 0.4),
+            color: isSelected ? accent : cs.onSurface.withValues(alpha: 0.4),
           ),
         ),
         side: BorderSide(

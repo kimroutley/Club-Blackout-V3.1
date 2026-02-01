@@ -164,11 +164,12 @@ class _GameScreenState extends State<GameScreen>
   /// Update theme based on active player roles
   void _updateDynamicTheme() {
     if (!mounted) return;
-    
+
     try {
-      final themeService = Provider.of<DynamicThemeService>(context, listen: false);
-        final activeRoles = widget.gameEngine.guests.map((p) => p.role).toList();
-      
+      final themeService =
+          Provider.of<DynamicThemeService>(context, listen: false);
+      final activeRoles = widget.gameEngine.guests.map((p) => p.role).toList();
+
       if (activeRoles.isNotEmpty) {
         // Hybrid theming: combine game background with role colors
         themeService.updateFromBackgroundAndRoles(
@@ -542,7 +543,6 @@ class _GameScreenState extends State<GameScreen>
       );
 
       if (step.roleId == 'bouncer') {
-
         // Add visual status for Host Overview
         widget.gameEngine.applyPlayerStatus(targetId, 'Checked by Bouncer');
 
@@ -572,8 +572,7 @@ class _GameScreenState extends State<GameScreen>
         }
 
         // Dealer check dialog (kept as immediate UI feedback)
-        final isDealerAlly =
-            target.role.alliance == 'criminal' ||
+        final isDealerAlly = target.role.alliance == 'criminal' ||
             target.role.id == 'dealer' ||
             target.alliance == 'The Dealers' ||
             target.role.alliance == 'The Dealers';
@@ -639,8 +638,9 @@ class _GameScreenState extends State<GameScreen>
       context: context,
       builder: (context) {
         final cs = Theme.of(context).colorScheme;
-        final accent =
-            isDealerAlly ? ClubBlackoutTheme.neonGreen : ClubBlackoutTheme.neonRed;
+        final accent = isDealerAlly
+            ? ClubBlackoutTheme.neonGreen
+            : ClubBlackoutTheme.neonRed;
         final titleText = isDealerAlly ? 'DEALER CONFIRMED' : 'NOT A DEALER';
 
         return BulletinDialogShell(
@@ -660,7 +660,9 @@ class _GameScreenState extends State<GameScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                isDealerAlly ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                isDealerAlly
+                    ? Icons.check_circle_rounded
+                    : Icons.cancel_rounded,
                 color: accent,
                 size: 60,
                 shadows: ClubBlackoutTheme.iconGlow(accent),
@@ -995,13 +997,15 @@ class _GameScreenState extends State<GameScreen>
 
       final medic = widget.gameEngine.players.firstWhere(
         (p) =>
-            p.role.id == 'medic' && widget.gameEngine.deadPlayerIds.contains(p.id),
+            p.role.id == 'medic' &&
+            widget.gameEngine.deadPlayerIds.contains(p.id),
       );
 
       final medicChoseRevive =
           (medic.medicChoice ?? '').toUpperCase() == 'REVIVE';
-      final eligible =
-          medicChoseRevive && !medic.reviveUsed && medic.deathDay == widget.gameEngine.dayCount;
+      final eligible = medicChoseRevive &&
+          !medic.reviveUsed &&
+          medic.deathDay == widget.gameEngine.dayCount;
 
       if (!eligible) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1821,7 +1825,8 @@ class _GameScreenState extends State<GameScreen>
             centerTitle: true,
             actions: [
               IconButton(
-                icon: Icon(Icons.history_rounded, color: cs.onSurface, size: 24),
+                icon:
+                    Icon(Icons.history_rounded, color: cs.onSurface, size: 24),
                 onPressed: _showLog,
                 tooltip: 'Game Log',
               ),
@@ -1833,7 +1838,8 @@ class _GameScreenState extends State<GameScreen>
             onHostDashboardTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => HostOverviewScreen(gameEngine: widget.gameEngine),
+                  builder: (_) =>
+                      HostOverviewScreen(gameEngine: widget.gameEngine),
                 ),
               );
             },
@@ -2131,19 +2137,22 @@ class _GameScreenState extends State<GameScreen>
                   boxShadow: _abilityFabExpanded
                       ? [
                           BoxShadow(
-                            color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.8),
+                            color: ClubBlackoutTheme.neonPurple
+                                .withValues(alpha: 0.8),
                             blurRadius: 28,
                             spreadRadius: 6,
                           ),
                           BoxShadow(
-                            color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.5),
+                            color: ClubBlackoutTheme.neonPurple
+                                .withValues(alpha: 0.5),
                             blurRadius: 40,
                             spreadRadius: 10,
                           ),
                         ]
                       : [
                           BoxShadow(
-                            color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.5),
+                            color: ClubBlackoutTheme.neonPurple
+                                .withValues(alpha: 0.5),
                             blurRadius: 16,
                             spreadRadius: 3,
                           ),
@@ -2208,7 +2217,7 @@ class _GameScreenState extends State<GameScreen>
     required String tooltip,
   }) {
     final isEnabled = onPressed != null;
-    
+
     return Tooltip(
       message: tooltip,
       child: AnimatedContainer(
@@ -2301,35 +2310,31 @@ class _GameScreenState extends State<GameScreen>
   Widget _buildPlayerSelectionList(ScriptStep step) {
     final cs = Theme.of(context).colorScheme;
 
-    final allowSentHomeTargets =
-      step.id == 'dealer_act' ||
-      step.id == 'medic_act' ||
-      step.id == 'medic_protect' ||
-      step.id == 'bouncer_act' ||
-      step.id == 'roofi_act' ||
-      step.id == 'club_manager_act';
+    final allowSentHomeTargets = step.id == 'dealer_act' ||
+        step.id == 'medic_act' ||
+        step.id == 'medic_protect' ||
+        step.id == 'bouncer_act' ||
+        step.id == 'roofi_act' ||
+        step.id == 'club_manager_act';
 
     // Usually sent-home players are unavailable for the night. However, some roles
     // are allowed to *choose* them (and the effect will fail / be wasted).
     final players = sortedPlayersByDisplayName(
       widget.gameEngine.players
           .where(
-            (p) =>
-                p.isAlive &&
-                (allowSentHomeTargets || !p.soberSentHome),
+            (p) => p.isAlive && (allowSentHomeTargets || !p.soberSentHome),
           )
           .toList(),
     );
 
-    final role = widget.gameEngine.roleRepository.getRoleById(step.roleId ?? '');
+    final role =
+        widget.gameEngine.roleRepository.getRoleById(step.roleId ?? '');
     final accent = role?.color ?? ClubBlackoutTheme.neonPurple;
     final required =
         step.actionType == ScriptActionType.selectTwoPlayers ? 2 : 1;
     final selectedNames = _currentSelection
         .map(
-          (id) => widget.gameEngine.players
-              .firstWhere((p) => p.id == id)
-              .name,
+          (id) => widget.gameEngine.players.firstWhere((p) => p.id == id).name,
         )
         .toList(growable: false);
 
@@ -2419,33 +2424,34 @@ class _GameScreenState extends State<GameScreen>
                 final p = players[index];
                 final isSelected = _currentSelection.contains(p.id);
 
-          String stats = '';
-          if (p.role.id == 'clinger' && p.clingerPartnerId != null) {
-            final partner = widget.gameEngine.players.firstWhere(
-              (pl) => pl.id == p.clingerPartnerId,
-              orElse: () => p,
-            );
-            stats = 'Obsession: ${partner.name}';
-          } else if (p.role.id == 'creep' && p.creepTargetId != null) {
-            final target = widget.gameEngine.players.firstWhere(
-              (pl) => pl.id == p.creepTargetId,
-              orElse: () => p,
-            );
-            stats = 'Mimicking: ${target.role.name}';
-          } else if (p.role.id == 'tea_spiller' &&
-              p.teaSpillerTargetId != null) {
-            final target = widget.gameEngine.players.firstWhere(
-              (pl) => pl.id == p.teaSpillerTargetId,
-              orElse: () => p,
-            );
-            stats = 'Target: ${target.name}';
-          } else if (p.role.id == 'predator' && p.predatorTargetId != null) {
-            final prey = widget.gameEngine.players.firstWhere(
-              (pl) => pl.id == p.predatorTargetId,
-              orElse: () => p,
-            );
-            stats = 'Prey: ${prey.name}';
-          }
+                String stats = '';
+                if (p.role.id == 'clinger' && p.clingerPartnerId != null) {
+                  final partner = widget.gameEngine.players.firstWhere(
+                    (pl) => pl.id == p.clingerPartnerId,
+                    orElse: () => p,
+                  );
+                  stats = 'Obsession: ${partner.name}';
+                } else if (p.role.id == 'creep' && p.creepTargetId != null) {
+                  final target = widget.gameEngine.players.firstWhere(
+                    (pl) => pl.id == p.creepTargetId,
+                    orElse: () => p,
+                  );
+                  stats = 'Mimicking: ${target.role.name}';
+                } else if (p.role.id == 'tea_spiller' &&
+                    p.teaSpillerTargetId != null) {
+                  final target = widget.gameEngine.players.firstWhere(
+                    (pl) => pl.id == p.teaSpillerTargetId,
+                    orElse: () => p,
+                  );
+                  stats = 'Target: ${target.name}';
+                } else if (p.role.id == 'predator' &&
+                    p.predatorTargetId != null) {
+                  final prey = widget.gameEngine.players.firstWhere(
+                    (pl) => pl.id == p.predatorTargetId,
+                    orElse: () => p,
+                  );
+                  stats = 'Prey: ${prey.name}';
+                }
 
                 return NightPhasePlayerTile(
                   player: p,
@@ -2555,8 +2561,7 @@ class _GameScreenState extends State<GameScreen>
         _showClingerConfirmation(target);
       }
     } else if (step.id == 'creep_reveal') {
-      final targetId =
-          widget.gameEngine.nightActions['creep_target'] ??
+      final targetId = widget.gameEngine.nightActions['creep_target'] ??
           widget.gameEngine.nightActions['creep_act'];
       if (targetId != null) {
         final target = widget.gameEngine.players.firstWhere(
@@ -3095,8 +3100,8 @@ class _GameScreenState extends State<GameScreen>
     }
 
     final activeBouncers = widget.gameEngine.players
-      .where((p) => p.role.id == 'bouncer' && p.isActive)
-      .toList();
+        .where((p) => p.role.id == 'bouncer' && p.isActive)
+        .toList();
     final bouncer = activeBouncers.isNotEmpty ? activeBouncers.first : null;
 
     if (bouncer != null && bouncer.bouncerHasRoofiAbility) {
@@ -3525,7 +3530,7 @@ class _GameLogDialogState extends State<_GameLogDialog> {
   List<GameLogEntry> _filteredEntries() {
     final entries = widget.gameEngine.gameLog;
     Iterable<GameLogEntry> filtered;
-    
+
     // Apply type filter
     switch (_filter) {
       case _LogFilter.action:
@@ -3540,24 +3545,23 @@ class _GameLogDialogState extends State<_GameLogDialog> {
       case _LogFilter.all:
         filtered = entries;
     }
-    
+
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
-      filtered = filtered.where((e) => 
-        e.title.toLowerCase().contains(query) ||
-        e.description.toLowerCase().contains(query) ||
-        e.phase.toLowerCase().contains(query)
-      );
+      filtered = filtered.where((e) =>
+          e.title.toLowerCase().contains(query) ||
+          e.description.toLowerCase().contains(query) ||
+          e.phase.toLowerCase().contains(query));
     }
-    
+
     return filtered.toList(growable: false).reversed.toList(growable: false);
   }
 
   Map<String, List<GameLogEntry>> _groupedEntries() {
     final entries = _filteredEntries();
     if (!_groupByPhase) return {'all': entries};
-    
+
     final grouped = <String, List<GameLogEntry>>{};
     for (final entry in entries) {
       final key = 'Turn ${entry.turn} - ${entry.phase.toUpperCase()}';
@@ -3583,7 +3587,8 @@ class _GameLogDialogState extends State<_GameLogDialog> {
 
     for (final entry in entries.reversed) {
       buffer.writeln('[${entry.timestamp.toIso8601String()}]');
-      buffer.writeln('Turn ${entry.turn} — ${entry.phase.toUpperCase()} — ${entry.type.name.toUpperCase()}');
+      buffer.writeln(
+          'Turn ${entry.turn} — ${entry.phase.toUpperCase()} — ${entry.type.name.toUpperCase()}');
       buffer.writeln(entry.title);
       if (entry.description.trim().isNotEmpty) {
         buffer.writeln(entry.description);
@@ -4055,7 +4060,8 @@ class _GameLogDialogState extends State<_GameLogDialog> {
   void _handleEntryAction(String action, GameLogEntry entry) {
     switch (action) {
       case 'copy':
-        final text = '${entry.title}\n${entry.description}\nTurn ${entry.turn} - ${entry.phase} - ${entry.timestamp}';
+        final text =
+            '${entry.title}\n${entry.description}\nTurn ${entry.turn} - ${entry.phase} - ${entry.timestamp}';
         Clipboard.setData(ClipboardData(text: text));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Entry copied to clipboard')),

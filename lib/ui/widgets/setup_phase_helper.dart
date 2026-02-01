@@ -153,9 +153,12 @@ class SetupPhaseHelper extends StatelessWidget {
                         ],
                       ),
                       SizedBox(height: 12),
-                      _TipItem(tip: 'Recommended: 7-12 players for best experience'),
-                      _TipItem(tip: 'The Host doesn\'t play but manages the game'),
-                      _TipItem(tip: 'Roles are assigned automatically after setup'),
+                      _TipItem(
+                          tip: 'Recommended: 7-12 players for best experience'),
+                      _TipItem(
+                          tip: 'The Host doesn\'t play but manages the game'),
+                      _TipItem(
+                          tip: 'Roles are assigned automatically after setup'),
                     ],
                   ),
                 ),
@@ -167,7 +170,8 @@ class SetupPhaseHelper extends StatelessWidget {
                       backgroundColor: ClubBlackoutTheme.neonGreen,
                       foregroundColor: Colors.black,
                       disabledBackgroundColor: cs.surfaceContainerHighest,
-                      disabledForegroundColor: cs.onSurface.withValues(alpha: 0.4),
+                      disabledForegroundColor:
+                          cs.onSurface.withValues(alpha: 0.4),
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       elevation: _canStartGame ? 4 : 0,
                       shape: RoundedRectangleBorder(

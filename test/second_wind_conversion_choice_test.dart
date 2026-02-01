@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'support/file_role_repository.dart';
 
 void main() {
-  test('Second Wind conversion choice is inserted before dealer_act on conversion night',
+  test(
+      'Second Wind conversion choice is inserted before dealer_act on conversion night',
       () async {
     SharedPreferences.setMockInitialValues({});
 
@@ -35,8 +36,7 @@ void main() {
     engine.dayCount = 2;
     engine.currentPhase = GamePhase.day;
 
-    final secondWind =
-        engine.players.firstWhere((p) => p.name == 'SecondWind');
+    final secondWind = engine.players.firstWhere((p) => p.name == 'SecondWind');
     secondWind.secondWindPendingConversion = true;
     secondWind.secondWindConverted = false;
     secondWind.secondWindRefusedConversion = false;

@@ -140,16 +140,18 @@ class PlayerStatusResolver {
 
     // Show medic protection status
     final medicWithProtection = gameEngine.players
-        .where((p) => p.role.id == 'medic' && 
-                      p.isActive && 
-                      p.medicProtectedPlayerId == player.id)
+        .where((p) =>
+            p.role.id == 'medic' &&
+            p.isActive &&
+            p.medicProtectedPlayerId == player.id)
         .firstOrNull;
     if (medicWithProtection != null) {
       statuses.add(
         PlayerStatusDisplay(
           label: 'PROTECTED',
           color: ClubBlackoutTheme.neonGreen,
-          description: 'Under medic protection - safe from night kills until medic changes target.',
+          description:
+              'Under medic protection - safe from night kills until medic changes target.',
           icon: Icons.shield,
         ),
       );

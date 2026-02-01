@@ -17,7 +17,7 @@ class ErrorHandler {
     Color? accentColor,
   }) async {
     final color = accentColor ?? ClubBlackoutTheme.neonRed;
-    
+
     return showDialog<void>(
       context: context,
       barrierDismissible: canDismiss,
@@ -26,139 +26,139 @@ class ErrorHandler {
 
         return BulletinDialogShell(
           accent: color,
-        maxWidth: 460,
-        padding: const EdgeInsets.all(24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Error icon
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: color.withValues(alpha: 0.4),
-                  width: 2,
-                ),
-              ),
-              child: Icon(
-                Icons.error_outline_rounded,
-                color: color,
-                size: 32,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Title
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: color,
-                letterSpacing: 0.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            
-            // Message
-            Text(
-              message,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurface,
-                height: 1.4,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            
-            // Details (if provided)
-            if (details != null) ...[
-              const SizedBox(height: 16),
+          maxWidth: 460,
+          padding: const EdgeInsets.all(24),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Error icon
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(8),
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
                   border: Border.all(
-                    color: cs.outlineVariant,
+                    color: color.withValues(alpha: 0.4),
+                    width: 2,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Details:',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: cs.onSurface,
+                child: Icon(
+                  Icons.error_outline_rounded,
+                  color: color,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Title
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Message
+              Text(
+                message,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              // Details (if provided)
+              if (details != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: cs.outlineVariant,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Details:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        details,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontFamily: 'monospace',
+                          color: cs.onSurfaceVariant,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 24),
+
+              // Action buttons
+              Row(
+                children: [
+                  if (canDismiss)
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: TextButton.styleFrom(
+                          foregroundColor: cs.onSurfaceVariant,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: const Text(
+                          'DISMISS',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      details,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontFamily: 'monospace',
-                        color: cs.onSurfaceVariant,
-                        height: 1.3,
+                  if (onRetry != null) ...[
+                    if (canDismiss) const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          onRetry();
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: color.withValues(alpha: 0.9),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'RETRY',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
             ],
-            
-            const SizedBox(height: 24),
-            
-            // Action buttons
-            Row(
-              children: [
-                if (canDismiss)
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                        foregroundColor: cs.onSurfaceVariant,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        'DISMISS',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  ),
-                if (onRetry != null) ...[
-                  if (canDismiss) const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        onRetry();
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: color.withValues(alpha: 0.9),
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'RETRY',
-                        style: TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
+          ),
         );
       },
     );
@@ -177,7 +177,7 @@ class ErrorHandler {
     final color = _getColorForType(type);
     final icon = _getIconForType(type);
     final cs = Theme.of(context).colorScheme;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

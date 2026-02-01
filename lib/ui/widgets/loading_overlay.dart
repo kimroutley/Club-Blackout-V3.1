@@ -46,7 +46,7 @@ class LoadingOverlay extends StatelessWidget {
               color: cs.surfaceContainerHigh.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: hasError 
+                color: hasError
                     ? ClubBlackoutTheme.neonRed.withValues(alpha: 0.6)
                     : color.withValues(alpha: 0.6),
                 width: 2,
@@ -109,9 +109,9 @@ class LoadingOverlay extends StatelessWidget {
                     ),
                   ),
                 ],
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Message
                 Text(
                   hasError ? 'Operation Failed' : (message ?? 'Loading...'),
@@ -147,7 +147,7 @@ class LoadingOverlay extends StatelessWidget {
                           child: TextButton(
                             onPressed: onCancel,
                             style: TextButton.styleFrom(
-                                foregroundColor: cs.onSurfaceVariant,
+                              foregroundColor: cs.onSurfaceVariant,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
                             child: const Text(
@@ -162,7 +162,8 @@ class LoadingOverlay extends StatelessWidget {
                           child: FilledButton(
                             onPressed: onRetry,
                             style: FilledButton.styleFrom(
-                              backgroundColor: ClubBlackoutTheme.neonRed.withValues(alpha: 0.9),
+                              backgroundColor: ClubBlackoutTheme.neonRed
+                                  .withValues(alpha: 0.9),
                               foregroundColor: Colors.black,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(
@@ -284,11 +285,11 @@ mixin LoadingStateMixin<T extends StatefulWidget> on State<T> {
             message: e.toString(),
             onRetry: autoRetry
                 ? () => withLoadingAndError(
-                    operation: operation,
-                    loadingMessage: loadingMessage,
-                    errorTitle: errorTitle,
-                    autoRetry: autoRetry,
-                  )
+                      operation: operation,
+                      loadingMessage: loadingMessage,
+                      errorTitle: errorTitle,
+                      autoRetry: autoRetry,
+                    )
                 : null,
             onCancel: () {
               setState(() {

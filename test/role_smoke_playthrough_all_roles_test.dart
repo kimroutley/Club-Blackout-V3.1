@@ -63,9 +63,7 @@ void main() {
       if (preferred != null) return preferred;
     }
 
-    return engine.players
-        .where((p) => p.isAlive && p.isEnabled)
-        .first;
+    return engine.players.where((p) => p.isAlive && p.isEnabled).first;
   }
 
   void _playUntilDayScene(GameEngine engine,
@@ -105,9 +103,8 @@ void main() {
           break;
 
         case ScriptActionType.selectTwoPlayers:
-          final alive = engine.players
-              .where((p) => p.isAlive && p.isEnabled)
-              .toList();
+          final alive =
+              engine.players.where((p) => p.isAlive && p.isEnabled).toList();
           if (alive.length >= 2) {
             engine.handleScriptAction(step, [alive[0].id, alive[1].id]);
           } else if (alive.isNotEmpty) {
