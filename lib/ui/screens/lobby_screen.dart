@@ -456,13 +456,14 @@ class _LobbyScreenState extends State<LobbyScreen>
               ? const SizedBox.shrink()
               : (guests.isEmpty)
                   ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              gradient: RadialGradient(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                gradient: RadialGradient(
                                 colors: [
                                   ClubBlackoutTheme.neonPurple.withValues(alpha: 0.15),
                                   ClubBlackoutTheme.neonPurple.withValues(alpha: 0.05),
@@ -492,7 +493,31 @@ class _LobbyScreenState extends State<LobbyScreen>
                               fontSize: 14,
                             ),
                           ),
-                        ],
+                          const SizedBox(height: 32),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: () => _showSavedPlayersPicker(context),
+                                icon: const Icon(Icons.history_rounded, size: 18),
+                                label: const Text('From History'),
+                              ),
+                              FilledButton.tonalIcon(
+                                onPressed: () async {
+                                  final data = await Clipboard.getData(Clipboard.kTextPlain);
+                                  final text = data?.text ?? '';
+                                  if (!context.mounted) return;
+                                  _addGuestsFromText(context, text);
+                                },
+                                icon: const Icon(Icons.content_paste_rounded, size: 18),
+                                label: const Text('Paste List'),
+                              ),
+                            ],
+                          ),
+                          ],
+                        ),
                       ),
                     )
                   : ListView.builder(
