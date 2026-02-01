@@ -104,42 +104,57 @@ class ShenanigansTracker {
     }
 
     // --- 3. "Nemesis Pair" ---
-    final voteAdj = <String, Map<String, int>>{};
+    // Optimization: Use integer array for O(1) accumulation instead of nested map lookups.
+    // Gather all involved IDs to ensure we cover players who might have been removed.
+    final allIds = <String>{};
+    for (final p in engine.guests) {
+      allIds.add(p.id);
+    }
+    for (final v in engine.voteHistory) {
+      allIds.add(v.voterId);
+      if (v.targetId != null) {
+        allIds.add(v.targetId!);
+      }
+    }
+    final playerIds = allIds.toList();
+
+    final idToIndex = <String, int>{};
+    for (int i = 0; i < playerIds.length; i++) {
+      idToIndex[playerIds[i]] = i;
+    }
+
+    final n = playerIds.length;
+    final conflicts = List<int>.filled(n * n, 0);
+
     for (final vote in engine.voteHistory) {
       if (vote.targetId == null) continue;
-      voteAdj.putIfAbsent(vote.voterId, () => {});
-      voteAdj[vote.voterId]![vote.targetId!] =
-          (voteAdj[vote.voterId]![vote.targetId!] ?? 0) + 1;
+
+      final vIdx = idToIndex[vote.voterId];
+      final tIdx = idToIndex[vote.targetId!];
+
+      if (vIdx != null && tIdx != null && vIdx != tIdx) {
+        final row = vIdx < tIdx ? vIdx : tIdx;
+        final col = vIdx < tIdx ? tIdx : vIdx;
+        conflicts[row * n + col]++;
+      }
     }
 
     String? p1, p2;
     int maxConflict = 0;
 
-    for (final v1 in voteAdj.keys) {
-      for (final t1 in voteAdj[v1]!.keys) {
-        final int v1ot1 = voteAdj[v1]![t1]!;
-
-        if (v1.compareTo(t1) < 0) {
-          // Case 1: v1 (smaller) voted for t1 (larger)
-          // Include any return fire from t1
-          final int t1ov1 = voteAdj[t1]?[v1] ?? 0;
-          final int conflict = v1ot1 + t1ov1;
-          if (conflict > maxConflict) {
-            maxConflict = conflict;
-            p1 = v1;
-            p2 = t1;
-          }
-        } else {
-          // Case 2: v1 (larger) voted for t1 (smaller)
-          // Only process if t1 did NOT vote for v1 (otherwise handled in Case 1)
-          final bool smallVotedLarge = voteAdj[t1]?.containsKey(v1) ?? false;
-          if (!smallVotedLarge) {
-            // Conflict is one-way only
-            if (v1ot1 > maxConflict) {
-              maxConflict = v1ot1;
-              p1 = t1;
-              p2 = v1;
-            }
+    for (int i = 0; i < n; i++) {
+      for (int j = i + 1; j < n; j++) {
+        final val = conflicts[i * n + j];
+        if (val > maxConflict) {
+          maxConflict = val;
+          final s1 = playerIds[i];
+          final s2 = playerIds[j];
+          if (s1.compareTo(s2) < 0) {
+            p1 = s1;
+            p2 = s2;
+          } else {
+            p1 = s2;
+            p2 = s1;
           }
         }
       }
