@@ -14,10 +14,6 @@ import '../styles.dart';
 import '../utils/player_sort.dart';
 import '../widgets/bulletin_dialog_shell.dart';
 import '../widgets/game_toast_listener.dart';
-// M3: Removed neon widgets
-// import '../widgets/neon_background.dart';
-// import '../widgets/neon_page_scaffold.dart';
-// import '../widgets/neon_section_header.dart';
 import '../widgets/player_tile.dart';
 import '../widgets/role_assignment_dialog.dart';
 import 'game_screen.dart';
@@ -473,10 +469,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                                   Colors.transparent,
                                 ],
                               ),
-                              child: Icon(Icons.person_add_outlined,
-                                  size: 64,
-                                  color: ClubBlackoutTheme.neonPurple
-                                      .withValues(alpha: 0.6)),
+                              shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.person_add_outlined,
                                 size: 64,
@@ -492,44 +485,16 @@ class _LobbyScreenState extends State<LobbyScreen>
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.3,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Add at least 4 guests to start the game',
-                              style: TextStyle(
-                                color:
-                                    cs.onSurfaceVariant.withValues(alpha: 0.8),
-                                fontSize: 14,
-                              ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Add at least 4 guests to start the game',
+                            style: TextStyle(
+                              color: cs.onSurfaceVariant.withValues(alpha: 0.8),
+                              fontSize: 14,
                             ),
-                            const SizedBox(height: 32),
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 12,
-                              alignment: WrapAlignment.center,
-                              children: [
-                                OutlinedButton.icon(
-                                  onPressed: () =>
-                                      _showSavedPlayersPicker(context),
-                                  icon: const Icon(Icons.history_rounded,
-                                      size: 18),
-                                  label: const Text('From History'),
-                                ),
-                                FilledButton.tonalIcon(
-                                  onPressed: () async {
-                                    final data = await Clipboard.getData(
-                                        Clipboard.kTextPlain);
-                                    final text = data?.text ?? '';
-                                    if (!context.mounted) return;
-                                    _addGuestsFromText(context, text);
-                                  },
-                                  icon: const Icon(Icons.content_paste_rounded,
-                                      size: 18),
-                                  label: const Text('Paste List'),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     )
                   : ListView.builder(
