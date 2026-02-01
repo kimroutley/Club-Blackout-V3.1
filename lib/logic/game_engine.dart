@@ -1981,9 +1981,9 @@ class GameEngine extends ChangeNotifier {
             (roofiDodgedId != null && roofiDodgedId == target.id)) {
           addLine(
             cleanLine:
-                "• Roofi tried to paralyze ${target.name}, but didn't get to them fast enough.",
+                '• Roofi tried to paralyze ${target.name}, but didn\'t get to them fast enough.',
             spicyLine:
-                "• Roofi tried to paralyze ${target.name}, but didn't get to them fast enough.",
+                '• Roofi tried to paralyze ${target.name}, but didn\'t get to them fast enough.',
           );
           quietNight = false;
         }
@@ -2472,7 +2472,7 @@ class GameEngine extends ChangeNotifier {
         : 'No marked pair. Host must choose two players.';
 
     logAction(
-      "Drama Queen's Final Act",
+      'Drama Queen\'s Final Act',
       '${reaction.sourcePlayer.name} died. Open the action menu to swap two players. $pendingLine',
     );
     notifyListeners();
@@ -2701,7 +2701,7 @@ class GameEngine extends ChangeNotifier {
       for (final clinger in clingers) {
         logAction(
           'DOUBLE DEATH',
-          "OBSESSION OVER! ${clinger.name} (The Clinger) couldn't live without ${victim.name} and has died of a broken heart!",
+          'OBSESSION OVER! ${clinger.name} (The Clinger) couldn\'t live without ${victim.name} and has died of a broken heart!',
         );
 
         processDeath(clinger, cause: 'clinger_heartbreak');
@@ -3256,7 +3256,7 @@ class GameEngine extends ChangeNotifier {
           );
           logAction(
             step.title,
-            "Silver Fox tried to give ${silverTarget.name} an alibi, but they were sent home by The Sober.",
+            'Silver Fox tried to give ${silverTarget.name} an alibi, but they were sent home by The Sober.',
             toast: _currentPhase == GamePhase.night,
           );
           break;
@@ -3440,24 +3440,24 @@ class GameEngine extends ChangeNotifier {
       case 'roofi':
         final isStolenMode = step.id == 'bouncer_roofi_act';
 
-        Player? _findMimicSource(Player actor) {
+        Player? findMimicSource(Player actor) {
           if (actor.role.id != 'creep') return null;
           final targetId = actor.creepTargetId;
           if (targetId == null) return null;
           return players.where((p) => p.id == targetId).firstOrNull;
         }
 
-        bool _actorHasActivePower(Player actor) {
+        bool actorHasActivePower(Player actor) {
           if (isStolenMode) {
             if (actor.role.id == 'creep') {
-              final mimic = _findMimicSource(actor);
+              final mimic = findMimicSource(actor);
               return mimic?.bouncerHasRoofiAbility ?? false;
             }
             return actor.bouncerHasRoofiAbility;
           }
 
           if (actor.role.id == 'creep') {
-            final mimic = _findMimicSource(actor);
+            final mimic = findMimicSource(actor);
             return mimic?.roofiAbilityRevoked == false;
           }
           return !actor.roofiAbilityRevoked;
@@ -3467,7 +3467,7 @@ class GameEngine extends ChangeNotifier {
                 ? getActorsForRole('bouncer')
                 : getActorsForRole('roofi'))
             .where((p) => p.isActive)
-            .where(_actorHasActivePower)
+            .where(actorHasActivePower)
             .toList();
 
         if (actors.isEmpty) {
@@ -3496,7 +3496,7 @@ class GameEngine extends ChangeNotifier {
           );
           logAction(
             step.title,
-            "${isStolenMode ? 'Bouncer (stolen Roofi powers)' : 'Roofi'} tried to paralyze ${target.name}, but didn't get to them fast enough.",
+            '${isStolenMode ? 'Bouncer (stolen Roofi powers)' : 'Roofi'} tried to paralyze ${target.name}, but didn\'t get to them fast enough.',
             toast: _currentPhase == GamePhase.night,
           );
           break;
@@ -3630,7 +3630,7 @@ class GameEngine extends ChangeNotifier {
                     '${target.name} was sent home early and is immune to all night requests.',
               );
               logAction(step.title,
-                  "Clinger tried to obsess over ${target.name}, but they were sent home by The Sober.");
+                  'Clinger tried to obsess over ${target.name}, but they were sent home by The Sober.');
               break;
             }
 
@@ -3911,7 +3911,7 @@ class GameEngine extends ChangeNotifier {
                   '${target.name} was sent home early and is immune to all night requests.',
             );
             logAction(step.title,
-                "Whore tried to pick ${target.name}, but they were sent home by The Sober.");
+                'Whore tried to pick ${target.name}, but they were sent home by The Sober.');
             break;
           }
 
@@ -3919,7 +3919,7 @@ class GameEngine extends ChangeNotifier {
           whore.needsSetup = false;
           nightActions['whore_deflect'] = target.id;
           logAction(step.title,
-              "Whore chose ${target.name} as THE WHORE'S BITCH (one-time scapegoat).\nIf the Whore or a Dealer is voted out, ${target.name} will take the fall once.",
+              'Whore chose ${target.name} as THE WHORE\'S BITCH (one-time scapegoat).\nIf the Whore or a Dealer is voted out, ${target.name} will take the fall once.',
               toast: _currentPhase == GamePhase.night);
         }
         break;
@@ -3979,7 +3979,7 @@ class GameEngine extends ChangeNotifier {
         }
 
         logAction(step.title,
-            "Club Manager viewed ${target.name}'s role: ${target.role.name}",
+            'Club Manager viewed ${target.name}\'s role: ${target.role.name}',
             toast: _currentPhase == GamePhase.night);
         onClubManagerReveal?.call(target);
         break;
