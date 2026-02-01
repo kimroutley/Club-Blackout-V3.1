@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:club_blackout/logic/game_engine.dart';
 import 'package:club_blackout/logic/monte_carlo_simulator.dart';
 import 'package:flutter/services.dart';

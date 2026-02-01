@@ -26,6 +26,7 @@ class DynamicThemeService extends ChangeNotifier {
   ColorScheme? get darkScheme => _darkScheme;
 
   /// Load and cache palette from asset with downsampling
+  // ignore: unused_element
   Future<PaletteGenerator> _loadPalette(String assetPath) async {
     if (_paletteCache.containsKey(assetPath)) {
       return _paletteCache[assetPath]!;
@@ -62,26 +63,7 @@ class DynamicThemeService extends ChangeNotifier {
     }
 
     try {
-      // Check cache first
-      PaletteGenerator palette;
-      if (_paletteCache.containsKey(assetPath)) {
-        palette = _paletteCache[assetPath]!;
-      } else {
-        // Load and decode image
-        final ByteData data = await rootBundle.load(assetPath);
-        final Uint8List bytes = data.buffer.asUint8List();
-        final ui.Codec codec = await ui.instantiateImageCodec(bytes);
-        final ui.FrameInfo frameInfo = await codec.getNextFrame();
-        final ui.Image image = frameInfo.image;
-
-        // Generate palette
-        palette = await PaletteGenerator.fromImage(
-          image,
-          maximumColorCount: 20,
-        );
-
-        _paletteCache[assetPath] = palette;
-      }
+      final palette = await _loadPalette(assetPath);
 
       _currentBackground = assetPath;
       _generateThemeFromPalette(palette);
@@ -115,24 +97,7 @@ class DynamicThemeService extends ChangeNotifier {
     }
 
     try {
-      // Get background palette
-      PaletteGenerator palette;
-      if (_paletteCache.containsKey(assetPath)) {
-        palette = _paletteCache[assetPath]!;
-      } else {
-        final ByteData data = await rootBundle.load(assetPath);
-        final Uint8List bytes = data.buffer.asUint8List();
-        final ui.Codec codec = await ui.instantiateImageCodec(bytes);
-        final ui.FrameInfo frameInfo = await codec.getNextFrame();
-        final ui.Image image = frameInfo.image;
-
-        palette = await PaletteGenerator.fromImage(
-          image,
-          maximumColorCount: 20,
-        );
-
-        _paletteCache[assetPath] = palette;
-      }
+      final palette = await _loadPalette(assetPath);
 
       _currentBackground = assetPath;
       _generateHybridTheme(palette, roles);

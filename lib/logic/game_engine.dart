@@ -153,7 +153,6 @@ class GameEngine extends ChangeNotifier {
     if (notify) {
       notifyListeners();
     }
-    _invalidateEligibleVotesCache();
     return true;
   }
 
@@ -168,7 +167,6 @@ class GameEngine extends ChangeNotifier {
     if (notify) {
       notifyListeners();
     }
-    _invalidateEligibleVotesCache();
     return true;
   }
 
@@ -416,7 +414,6 @@ class GameEngine extends ChangeNotifier {
     if (notify) {
       notifyListeners();
     }
-    _invalidateEligibleVotesCache();
   }
 
   String? get winner => _winner;
@@ -440,31 +437,22 @@ class GameEngine extends ChangeNotifier {
   }
 
   String? _lastArchivedGameBlobJson;
-  DateTime? _cachedLastArchivedGameSavedAt;
 
   /// JSON-encoded save blob of the most recently archived game.
   ///
   /// This is written automatically before [resetToLobby] wipes the active game.
   String? get lastArchivedGameBlobJson => _lastArchivedGameBlobJson;
 
-  DateTime? get lastArchivedGameSavedAt => _cachedLastArchivedGameSavedAt;
-
-  void _updateCachedSavedAt() {
+  DateTime? get lastArchivedGameSavedAt {
     final json = _lastArchivedGameBlobJson;
-    if (json == null) {
-      _cachedLastArchivedGameSavedAt = null;
-      return;
-    }
+    if (json == null) return null;
     try {
       final decoded = (jsonDecode(json) as Map).cast<String, dynamic>();
       final savedAt = decoded['savedAt'] as String?;
-      if (savedAt == null) {
-        _cachedLastArchivedGameSavedAt = null;
-      } else {
-        _cachedLastArchivedGameSavedAt = DateTime.tryParse(savedAt);
-      }
+      if (savedAt == null) return null;
+      return DateTime.tryParse(savedAt);
     } catch (_) {
-      _cachedLastArchivedGameSavedAt = null;
+      return null;
     }
   }
 
@@ -472,7 +460,6 @@ class GameEngine extends ChangeNotifier {
     if (!persistenceEnabled) return;
     final prefs = await SharedPreferences.getInstance();
     _lastArchivedGameBlobJson = prefs.getString(_lastArchivedGameBlobKey);
-    _updateCachedSavedAt();
     notifyListeners();
   }
 
@@ -652,17 +639,7 @@ class GameEngine extends ChangeNotifier {
   /// Defensive by design: the UI should already use [recordVote], which blocks
   /// ineligible voters (e.g., Sober-sent-home), but this protects against any
   /// direct map mutations or stale saved state.
-  Map<String, List<String>>? _cachedEligibleVotes;
-
-  void _invalidateEligibleVotesCache() {
-    _cachedEligibleVotes = null;
-  }
-
   Map<String, List<String>> get eligibleDayVotesByTarget {
-    if (_cachedEligibleVotes != null) {
-      return _cachedEligibleVotes!;
-    }
-
     // Optimization: Create a map for O(1) player lookup instead of O(N) search per target.
     // This reduces complexity from O(T*N) to O(N + T).
     final playerMap = {for (var p in players) p.id: p};
@@ -689,10 +666,7 @@ class GameEngine extends ChangeNotifier {
         filtered[targetId] = voters;
       }
     }
-
-    final result = Map<String, List<String>>.unmodifiable(filtered);
-    _cachedEligibleVotes = result;
-    return result;
+    return filtered;
   }
 
   bool _isVoteImmuneTarget(String targetId) {
@@ -790,7 +764,6 @@ class GameEngine extends ChangeNotifier {
     // automatically propagate.
     _syncClingerVotesToPartner();
     notifyListeners();
-    _invalidateEligibleVotesCache();
   }
 
   void _syncClingerVotesToPartner() {
@@ -856,7 +829,6 @@ class GameEngine extends ChangeNotifier {
     currentDayVotesByVoter.clear();
     currentDayVotesByTarget.clear();
     notifyListeners();
-    _invalidateEligibleVotesCache();
   }
 
   /// Test helper: populate the engine with a deterministic roster.
@@ -1144,7 +1116,6 @@ class GameEngine extends ChangeNotifier {
     GameLogger.info('Player added: ${player.name} as ${assignedRole.name}',
         context: 'GameEngine');
     notifyListeners();
-    _invalidateEligibleVotesCache();
   }
 
   Player addPlayerDuringDay(String name, {Role? role}) {
@@ -1187,7 +1158,6 @@ class GameEngine extends ChangeNotifier {
 
     players.add(player);
     notifyListeners();
-    _invalidateEligibleVotesCache();
     return player;
   }
 
@@ -1227,7 +1197,6 @@ class GameEngine extends ChangeNotifier {
     players[index].role = newRole;
     players[index].initialize();
     notifyListeners();
-    _invalidateEligibleVotesCache();
   }
 
   /// Clears the entire guest list and all associated session state.
@@ -1237,7 +1206,6 @@ class GameEngine extends ChangeNotifier {
     currentDayVotesByVoter.clear();
     currentDayVotesByTarget.clear();
     notifyListeners();
-    _invalidateEligibleVotesCache();
   }
 
   void removePlayer(String id) {
@@ -1252,7 +1220,6 @@ class GameEngine extends ChangeNotifier {
     currentDayVotesByTarget.forEach((_, voters) => voters.remove(id));
 
     notifyListeners();
-    _invalidateEligibleVotesCache();
   }
 
   /// Restores a previously removed player (used by Lobby undo).
@@ -1277,7 +1244,6 @@ class GameEngine extends ChangeNotifier {
 
     players.insert(insertIndex, player);
     notifyListeners();
-    _invalidateEligibleVotesCache();
     return true;
   }
 
@@ -1298,7 +1264,6 @@ class GameEngine extends ChangeNotifier {
 
     players.addAll(roster);
     notifyListeners();
-    _invalidateEligibleVotesCache();
     return true;
   }
 
@@ -1398,7 +1363,6 @@ class GameEngine extends ChangeNotifier {
     }
 
     notifyListeners();
-    _invalidateEligibleVotesCache();
   }
 
   void advanceScript() {
@@ -1473,7 +1437,6 @@ class GameEngine extends ChangeNotifier {
 
       _scriptQueue = ScriptBuilder.buildNightScript(players, dayCount);
       _scriptIndex = 0;
-      _invalidateEligibleVotesCache();
       return;
     }
 
@@ -1514,7 +1477,6 @@ class GameEngine extends ChangeNotifier {
       _scriptQueue = dayQueue;
       _scriptIndex = 0;
       dayCount++;
-      _invalidateEligibleVotesCache();
       return;
     }
 
@@ -1585,7 +1547,6 @@ class GameEngine extends ChangeNotifier {
 
       _scriptQueue = nightQueue;
       _scriptIndex = 0;
-      _invalidateEligibleVotesCache();
     }
   }
 
@@ -3148,7 +3109,6 @@ class GameEngine extends ChangeNotifier {
 
         // This affects who wakes up, so rebuild the remaining night script.
         rebuildNightScript();
-        _invalidateEligibleVotesCache();
         break;
 
       case 'silver_fox':
@@ -3180,7 +3140,6 @@ class GameEngine extends ChangeNotifier {
         logAction(step.title,
             'Silver Fox gave ${silverTarget.name} an alibi (cannot be voted out tomorrow).',
             toast: _currentPhase == GamePhase.night);
-        _invalidateEligibleVotesCache();
         break;
 
       case 'medic':
@@ -3365,7 +3324,6 @@ class GameEngine extends ChangeNotifier {
         logAction(step.title,
             '$actorLabel silenced ${target.name} for Day ${dayCount + 1}.',
             toast: _currentPhase == GamePhase.night);
-        _invalidateEligibleVotesCache();
         break;
 
       case 'creep':
@@ -4719,7 +4677,6 @@ class GameEngine extends ChangeNotifier {
     statusEffectManager.clearAll();
 
     notifyListeners();
-    _invalidateEligibleVotesCache();
   }
 
   // Canonicalize UI-written nightActions keys (step.id) into engine keys
@@ -4863,7 +4820,6 @@ class GameEngine extends ChangeNotifier {
 
     // 5. Notify
     notifyListeners();
-    _invalidateEligibleVotesCache();
   }
 }
 
