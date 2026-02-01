@@ -2952,9 +2952,9 @@ class GameEngine extends ChangeNotifier {
           players.where((p) => p.role.id == 'creep' && p.isActive);
       for (final creep in activeCreeps) {
         if (creep.creepTargetId != null) {
-          final target = players
-              .cast<Player?>()
-              .firstWhere((p) => p!.id == creep.creepTargetId, orElse: () => null);
+          final target = players.cast<Player?>().firstWhere(
+              (p) => p!.id == creep.creepTargetId,
+              orElse: () => null);
           if (target != null && target.role.id == targetRoleId) {
             actors.add(creep);
           }
@@ -3275,12 +3275,13 @@ class GameEngine extends ChangeNotifier {
       case 'medic':
         if (step.id == 'medic_setup_choice') {
           final decision = selections.first;
-          final actors = getActorsForRole('medic').where((p) => p.isActive).toList();
-          
+          final actors =
+              getActorsForRole('medic').where((p) => p.isActive).toList();
+
           if (actors.isEmpty) {
-             // Fallback if no active actors found but step was triggered
-             logAction(step.title, 'No active Medic found for setup.');
-             break;
+            // Fallback if no active actors found but step was triggered
+            logAction(step.title, 'No active Medic found for setup.');
+            break;
           }
 
           for (final p in actors) {
@@ -3288,7 +3289,7 @@ class GameEngine extends ChangeNotifier {
             p.needsSetup = false;
           }
           logAction(step.title, 'Medic(s) chose ability: $decision.',
-                toast: _currentPhase == GamePhase.night);
+              toast: _currentPhase == GamePhase.night);
           break;
         }
         final target = resolvePlayer(selections.first);
@@ -3305,11 +3306,11 @@ class GameEngine extends ChangeNotifier {
         if (target.soberSentHome) {
           // Record intent for logging/auditing
           for (final p in actors) {
-             if (p.medicChoice == 'PROTECT_DAILY') {
-                nightActions['protect'] = target.id; 
-             } else if (p.medicChoice == 'REVIVE') {
-                nightActions['medic_revive'] = target.id;
-             }
+            if (p.medicChoice == 'PROTECT_DAILY') {
+              nightActions['protect'] = target.id;
+            } else if (p.medicChoice == 'REVIVE') {
+              nightActions['medic_revive'] = target.id;
+            }
           }
           queueHostAlert(
             title: 'Sent Home Early',
@@ -3322,8 +3323,8 @@ class GameEngine extends ChangeNotifier {
         }
 
         for (final medic in actors) {
-          // Only apply if the actor is capable (e.g. alive or allowed). 
-          // Note: Dead medic protection is usually filtered out in resolver, 
+          // Only apply if the actor is capable (e.g. alive or allowed).
+          // Note: Dead medic protection is usually filtered out in resolver,
           // but Creep is alive.
           if (medic.medicChoice == 'PROTECT_DAILY') {
             medic.medicProtectedPlayerId = target.id;
@@ -3334,7 +3335,8 @@ class GameEngine extends ChangeNotifier {
           } else if (medic.medicChoice == 'REVIVE') {
             if (!medic.reviveUsed) {
               nightActions['medic_revive'] = target.id;
-              logAction(step.title, 'Medic (${medic.name}) chose to revive ${target.name}.',
+              logAction(step.title,
+                  'Medic (${medic.name}) chose to revive ${target.name}.',
                   toast: _currentPhase == GamePhase.night);
             }
           }
@@ -3342,8 +3344,9 @@ class GameEngine extends ChangeNotifier {
         break;
 
       case 'bouncer':
-        final actors = getActorsForRole('bouncer').where((p) => p.isActive).toList();
-        
+        final actors =
+            getActorsForRole('bouncer').where((p) => p.isActive).toList();
+
         // If all actors are revoked, no action.
         // Actually, individual actors might be revoked?
         // Rules: "The Bouncer might strip your ability."
@@ -3352,8 +3355,9 @@ class GameEngine extends ChangeNotifier {
         // Creep adopts "Role". Does it assume the "Revoked" state?
         // Role state usually reset on new player?
         // Use `p.bouncerAbilityRevoked` per player.
-        
-        final capableActors = actors.where((p) => !p.bouncerAbilityRevoked).toList();
+
+        final capableActors =
+            actors.where((p) => !p.bouncerAbilityRevoked).toList();
 
         if (capableActors.isEmpty) {
           logAction(step.title,
@@ -3416,12 +3420,14 @@ class GameEngine extends ChangeNotifier {
           if (isDealerSide) {
             queueHostAlert(
               title: 'Gotcha!',
-              message: 'A Dealer or a Friend of the Dealers was caught. (Show to Bouncer/Creep)',
+              message:
+                  'A Dealer or a Friend of the Dealers was caught. (Show to Bouncer/Creep)',
             );
           } else {
             queueHostAlert(
               title: 'Clear',
-              message: '${target.name} appears innocent. (Show to Bouncer/Creep)',
+              message:
+                  '${target.name} appears innocent. (Show to Bouncer/Creep)',
             );
           }
         }

@@ -594,8 +594,10 @@ class UnifiedPlayerTile extends StatelessWidget {
                 )
               : LinearGradient(
                   colors: [
-                    cs.surfaceContainerHigh.withValues(alpha: isEnabled ? 0.9 : 0.4),
-                    cs.surfaceContainerHigh.withValues(alpha: isEnabled ? 0.7 : 0.3),
+                    cs.surfaceContainerHigh
+                        .withValues(alpha: isEnabled ? 0.9 : 0.4),
+                    cs.surfaceContainerHigh
+                        .withValues(alpha: isEnabled ? 0.7 : 0.3),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -691,7 +693,9 @@ class UnifiedPlayerTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (config.isSelected && config.onConfirm != null && isEnabled)
+                  if (config.isSelected &&
+                      config.onConfirm != null &&
+                      isEnabled)
                     IconButton(
                       icon: Icon(Icons.check_circle_rounded, color: accent),
                       iconSize: 32,
