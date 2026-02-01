@@ -52,16 +52,17 @@ void main() {
       await engine.startGame();
     }
 
-    test('Predator mark survives nightActions clear and is used as preferred retaliation target',
+    test(
+        'Predator mark survives nightActions clear and is used as preferred retaliation target',
         () async {
       await startWithMinimumPlayers(['predator', 'party_animal']);
 
       engine.skipToNextPhase(); // setup -> night
 
-      final predator = engine.players.firstWhere((p) => p.role.id == 'predator');
-      final target = engine.players
-          .where((p) => p.role.id == 'party_animal')
-          .first;
+      final predator =
+          engine.players.firstWhere((p) => p.role.id == 'predator');
+      final target =
+          engine.players.where((p) => p.role.id == 'party_animal').first;
 
       const step = ScriptStep(
         id: 'predator_act',

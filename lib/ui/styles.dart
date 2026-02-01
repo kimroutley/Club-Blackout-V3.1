@@ -45,11 +45,11 @@ class ClubBlackoutTheme {
   static const double stateLayerOpacityDragged = 0.16;
 
   // Material 3 Elevation levels (for reference)
-  static const double elevationLevel0 = 0.0;  // Surface
-  static const double elevationLevel1 = 1.0;  // Cards at rest
-  static const double elevationLevel2 = 3.0;  // FAB at rest
-  static const double elevationLevel3 = 6.0;  // Modal bottom sheets
-  static const double elevationLevel4 = 8.0;  // Navigation drawer
+  static const double elevationLevel0 = 0.0; // Surface
+  static const double elevationLevel1 = 1.0; // Cards at rest
+  static const double elevationLevel2 = 3.0; // FAB at rest
+  static const double elevationLevel3 = 6.0; // Modal bottom sheets
+  static const double elevationLevel4 = 8.0; // Navigation drawer
   static const double elevationLevel5 = 12.0; // Dialogs
 
   // Material 3 Motion/Animation Durations
@@ -713,13 +713,16 @@ class ClubBlackoutTheme {
         ).copyWith(
           overlayColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.pressed)) {
-              return colorScheme.onPrimary.withValues(alpha: stateLayerOpacityPressed);
+              return colorScheme.onPrimary
+                  .withValues(alpha: stateLayerOpacityPressed);
             }
             if (states.contains(WidgetState.hovered)) {
-              return colorScheme.onPrimary.withValues(alpha: stateLayerOpacityHover);
+              return colorScheme.onPrimary
+                  .withValues(alpha: stateLayerOpacityHover);
             }
             if (states.contains(WidgetState.focused)) {
-              return colorScheme.onPrimary.withValues(alpha: stateLayerOpacityFocus);
+              return colorScheme.onPrimary
+                  .withValues(alpha: stateLayerOpacityFocus);
             }
             return null;
           }),
@@ -1083,7 +1086,8 @@ class ClubBlackoutTheme {
         trackColor: WidgetStateProperty.resolveWith(
           (states) {
             if (states.contains(WidgetState.disabled)) {
-              return colorScheme.surfaceContainerHighest.withValues(alpha: 0.12);
+              return colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.12);
             }
             if (states.contains(WidgetState.selected)) {
               return colorScheme.primary.withValues(alpha: 0.5);

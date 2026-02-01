@@ -176,7 +176,7 @@ class GameDrawer extends StatelessWidget {
                     context: context,
                     builder: (ctx) => SaveLoadDialog(engine: gameEngine!),
                   );
-                  
+
                   // If a game was loaded, navigate to Lobby to review/edit before starting
                   if (loaded == true && context.mounted) {
                     Navigator.of(context).push(
@@ -433,7 +433,8 @@ class GameDrawer extends StatelessWidget {
                         Text(
                           'Host Dashboard',
                           style: TextStyle(
-                            color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                            color:
+                                scheme.onSurfaceVariant.withValues(alpha: 0.8),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.5,
@@ -452,8 +453,8 @@ class GameDrawer extends StatelessWidget {
               children: [
                 Expanded(
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
@@ -463,7 +464,8 @@ class GameDrawer extends StatelessWidget {
                       ),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.3),
+                        color:
+                            ClubBlackoutTheme.neonBlue.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                     ),
@@ -473,7 +475,8 @@ class GameDrawer extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.25),
+                            color: ClubBlackoutTheme.neonBlue
+                                .withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Icon(
@@ -520,10 +523,12 @@ class GameDrawer extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.15),
+                      color:
+                          ClubBlackoutTheme.neonGreen.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.3),
+                        color:
+                            ClubBlackoutTheme.neonGreen.withValues(alpha: 0.3),
                       ),
                     ),
                     child: const Row(
@@ -617,7 +622,8 @@ class _KeepScreenAwakeDrawerTile extends StatefulWidget {
       _KeepScreenAwakeDrawerTileState();
 }
 
-class _KeepScreenAwakeDrawerTileState extends State<_KeepScreenAwakeDrawerTile> {
+class _KeepScreenAwakeDrawerTileState
+    extends State<_KeepScreenAwakeDrawerTile> {
   Future<void> _toggle() async {
     final messenger = ScaffoldMessenger.of(context);
     final next = !KeepScreenAwakeService.status.value.enabled;
@@ -627,7 +633,8 @@ class _KeepScreenAwakeDrawerTileState extends State<_KeepScreenAwakeDrawerTile> 
 
     messenger.showSnackBar(
       SnackBar(
-        content: Text(next ? 'Keep screen awake: ON' : 'Keep screen awake: OFF'),
+        content:
+            Text(next ? 'Keep screen awake: ON' : 'Keep screen awake: OFF'),
         duration: const Duration(milliseconds: 1400),
       ),
     );

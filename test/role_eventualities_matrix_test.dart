@@ -199,9 +199,7 @@ void main() {
     }
 
     // Default: pick the first living non-host player.
-    return engine.players
-        .where((p) => p.isAlive && p.isEnabled)
-        .first;
+    return engine.players.where((p) => p.isAlive && p.isEnabled).first;
   }
 
   /// Drives the script forward, answering interactive steps based on [policy].
@@ -267,9 +265,8 @@ void main() {
           break;
 
         case ScriptActionType.selectTwoPlayers:
-          final alive = engine.players
-              .where((p) => p.isAlive && p.isEnabled)
-              .toList();
+          final alive =
+              engine.players.where((p) => p.isAlive && p.isEnabled).toList();
           if (alive.length >= 2) {
             engine.handleScriptAction(step, [alive[0].id, alive[1].id]);
           } else {
@@ -571,10 +568,7 @@ void main() {
 
       // With stolen powers, the Roofi action should still be usable.
       final target = engine.players.firstWhere(
-        (p) =>
-            p.isAlive &&
-            p.isEnabled &&
-            p.id != bouncer.id,
+        (p) => p.isAlive && p.isEnabled && p.id != bouncer.id,
       );
       engine.handleScriptAction(
         ScriptStep(
@@ -614,10 +608,7 @@ void main() {
 
       // Defensive: even if a host/UI calls the ID-check action, it should not apply.
       final target = engine.players.firstWhere(
-        (p) =>
-            p.isAlive &&
-            p.isEnabled &&
-            p.id != bouncer.id,
+        (p) => p.isAlive && p.isEnabled && p.id != bouncer.id,
       );
       expect(target.idCheckedByBouncer, isFalse);
       engine.handleScriptAction(
@@ -918,10 +909,7 @@ void main() {
       // Sanity: another player can vote.
       final otherVoter = engine.players.firstWhere(
         (p) =>
-            p.isAlive &&
-            p.isEnabled &&
-            !p.soberSentHome &&
-            p.id != dealer.id,
+            p.isAlive && p.isEnabled && !p.soberSentHome && p.id != dealer.id,
       );
       engine.setDayVote(voterId: otherVoter.id, targetId: dealer.id);
       expect(engine.currentDayVotesByVoter[otherVoter.id], dealer.id);
@@ -1100,10 +1088,7 @@ void main() {
       expect(silenced, isNotNull);
 
       final target = engine.players.firstWhere(
-        (p) =>
-            p.isAlive &&
-            p.isEnabled &&
-            p.id != silenced!.id,
+        (p) => p.isAlive && p.isEnabled && p.id != silenced!.id,
       );
       engine.recordVote(voterId: silenced!.id, targetId: target.id);
 
@@ -1369,11 +1354,7 @@ void main() {
       final clubManager =
           engine.players.firstWhere((p) => p.role.id == 'club_manager');
       final target = engine.players.firstWhere(
-        (p) =>
-            p.isAlive &&
-            p.isEnabled &&
-            p.id != clubManager.id &&
-        true,
+        (p) => p.isAlive && p.isEnabled && p.id != clubManager.id && true,
       );
 
       Player? revealed;

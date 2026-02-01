@@ -20,7 +20,8 @@ class Player {
       medicChoice; // "PROTECT_DAILY" or "REVIVE" - permanent choice made at Night 0 setup
   bool hasReviveToken =
       false; // True if medic has used their one-time revive ability
-  String? medicProtectedPlayerId; // Current player under medic protection (persists until changed)
+  String?
+      medicProtectedPlayerId; // Current player under medic protection (persists until changed)
   String? creepTargetId; // For The Creep to store who they are mimicking
   bool hasRumour = false; // For Messy Bitch
   bool messyBitchKillUsed =
@@ -33,8 +34,10 @@ class Player {
   bool clingerAttackDogUsed = false; // Attack dog ability used
   List<String> tabooNames = []; // Lightweight's forbidden names
   bool minorHasBeenIDd = false; // Minor death protection flag
-  bool soberAbilityUsed = false; // Legacy field - no longer used (Sober can act every night)
-  bool soberSentHome = false; // Player sent home by Sober this night (resets each night)
+  bool soberAbilityUsed =
+      false; // Legacy field - no longer used (Sober can act every night)
+  bool soberSentHome =
+      false; // Player sent home by Sober this night (resets each night)
   bool silverFoxAbilityUsed = false; // Silver Fox's one-time reveal
   bool secondWindConverted = false; // Second Wind conversion status
   bool secondWindPendingConversion = false; // Waiting for Dealer decision
