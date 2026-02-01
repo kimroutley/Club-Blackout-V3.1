@@ -65,6 +65,10 @@ class GameEngine extends ChangeNotifier {
   /// This is critical for performance during Monte Carlo simulations.
   final bool silent;
 
+  /// If false, SharedPreferences interactions are disabled.
+  /// Used for simulations/tests to prevent side effects and isolate crashes.
+  final bool persistenceEnabled;
+
   static const String hostRoleId = 'host';
   static const String hostPlayerId = 'host';
 
@@ -417,6 +421,7 @@ class GameEngine extends ChangeNotifier {
   }
 
   Future<void> _loadHostName() async {
+    if (!persistenceEnabled) return;
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_hostNamePrefsKey);
     _hostName = raw;
@@ -426,13 +431,15 @@ class GameEngine extends ChangeNotifier {
   void _setHostNameInternal(String? name, {bool notify = true}) {
     _hostName = name;
     // Fire-and-forget persistence; UI can update immediately.
-    SharedPreferences.getInstance().then((prefs) {
-      if (name == null || name.trim().isEmpty) {
-        prefs.remove(_hostNamePrefsKey);
-      } else {
-        prefs.setString(_hostNamePrefsKey, name);
-      }
-    });
+    if (persistenceEnabled) {
+      SharedPreferences.getInstance().then((prefs) {
+        if (name == null || name.trim().isEmpty) {
+          prefs.remove(_hostNamePrefsKey);
+        } else {
+          prefs.setString(_hostNamePrefsKey, name);
+        }
+      });
+    }
     if (notify) {
       notifyListeners();
     }
@@ -447,6 +454,7 @@ class GameEngine extends ChangeNotifier {
     bool loadNameHistory = true,
     bool loadArchivedSnapshot = true,
     this.silent = false,
+    this.persistenceEnabled = true,
   }) {
     if (loadNameHistory) {
       _loadNameHistory();
@@ -488,6 +496,7 @@ class GameEngine extends ChangeNotifier {
   }
 
   Future<void> _loadLastArchivedGameBlob() async {
+    if (!persistenceEnabled) return;
     final prefs = await SharedPreferences.getInstance();
     _lastArchivedGameBlobJson = prefs.getString(_lastArchivedGameBlobKey);
     _updateCachedSavedAt();
@@ -510,9 +519,10 @@ class GameEngine extends ChangeNotifier {
     final blob = exportSaveBlobMap(includeLog: true);
     final encoded = jsonEncode(blob);
     _lastArchivedGameBlobJson = encoded;
-    _updateCachedSavedAt();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_lastArchivedGameBlobKey, encoded);
+    if (persistenceEnabled) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_lastArchivedGameBlobKey, encoded);
+    }
     if (notify) {
       notifyListeners();
     }
@@ -520,9 +530,10 @@ class GameEngine extends ChangeNotifier {
 
   Future<void> clearArchivedGameBlob({bool notify = true}) async {
     _lastArchivedGameBlobJson = null;
-    _updateCachedSavedAt();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_lastArchivedGameBlobKey);
+    if (persistenceEnabled) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_lastArchivedGameBlobKey);
+    }
     if (notify) {
       notifyListeners();
     }
@@ -618,6 +629,7 @@ class GameEngine extends ChangeNotifier {
       roleRepository: roleRepository,
       loadNameHistory: false,
       loadArchivedSnapshot: false,
+      persistenceEnabled: persistenceEnabled,
     );
     await clone.importSaveBlobMap(exportSaveBlobMap(includeLog: includeLog),
         notify: false);
@@ -625,6 +637,7 @@ class GameEngine extends ChangeNotifier {
   }
 
   Future<void> _loadNameHistory() async {
+    if (!persistenceEnabled) return;
     final prefs = await SharedPreferences.getInstance();
     nameHistory = prefs.getStringList('player_name_history') ?? [];
     notifyListeners();
@@ -640,8 +653,10 @@ class GameEngine extends ChangeNotifier {
       nameHistory = nameHistory.sublist(nameHistory.length - maxHistory);
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('player_name_history', nameHistory);
+    if (persistenceEnabled) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('player_name_history', nameHistory);
+    }
     notifyListeners();
   }
 
@@ -649,8 +664,10 @@ class GameEngine extends ChangeNotifier {
   Future<void> removeNamesFromHistory(List<String> names) async {
     if (names.isEmpty) return;
     nameHistory.removeWhere((n) => names.contains(n));
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('player_name_history', nameHistory);
+    if (persistenceEnabled) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('player_name_history', nameHistory);
+    }
     notifyListeners();
   }
 
@@ -4231,6 +4248,7 @@ class GameEngine extends ChangeNotifier {
   // --- Persistence (kept minimal; extend as needed) ---
 
   Future<void> saveGame(String saveName, {String? overwriteId}) async {
+    if (!persistenceEnabled) return;
     final prefs = await SharedPreferences.getInstance();
 
     final saveId =
@@ -4249,12 +4267,13 @@ class GameEngine extends ChangeNotifier {
     final logJson = jsonEncode(logList);
 
     // New: single-blob save (preferred for robustness).
-    final blob = <String, dynamic>{
+    // Optimization: construct blob without large lists first, then inject
+    // the pre-encoded JSON strings to avoid double-encoding overhead.
+    final blobMap = <String, dynamic>{
       'schemaVersion': _saveSchemaVersion,
       'savedAt': DateTime.now().toIso8601String(),
       'hostName': hostName,
-      'players': playersList,
-      'log': logList,
+      // 'players' and 'log' injected manually below
       'phaseIndex': _currentPhase.index,
       'dayCount': dayCount,
       'scriptIndex': _scriptIndex,
@@ -4295,7 +4314,12 @@ class GameEngine extends ChangeNotifier {
         },
     };
 
-    await prefs.setString(_saveBlobKey(saveId), jsonEncode(blob));
+    final partialJson = jsonEncode(blobMap);
+    // Inject pre-encoded players and log. Assumes partialJson ends with '}'.
+    final finalJson =
+        '${partialJson.substring(0, partialJson.length - 1)},"players":$playersJson,"log":$logJson}';
+
+    await prefs.setString(_saveBlobKey(saveId), finalJson);
 
     // Legacy per-field keys (kept for backward compatibility + existing tests).
     await prefs.setString(_saveKey(saveId, 'players'), playersJson);
@@ -4388,6 +4412,7 @@ class GameEngine extends ChangeNotifier {
   }
 
   Future<List<SavedGame>> getSavedGames() async {
+    if (!persistenceEnabled) return [];
     final prefs = await SharedPreferences.getInstance();
     final savesJson = prefs.getString(_savedGamesIndexKey);
     if (savesJson == null) return [];
@@ -4406,6 +4431,7 @@ class GameEngine extends ChangeNotifier {
   }
 
   Future<void> deleteSavedGame(String saveId) async {
+    if (!persistenceEnabled) return;
     final prefs = await SharedPreferences.getInstance();
     await _deleteSaveKeys(prefs, saveId);
 
@@ -4418,9 +4444,6 @@ class GameEngine extends ChangeNotifier {
   }
 
   Future<void> _deleteSaveKeys(SharedPreferences prefs, String saveId) async {
-    // Blob format
-    await prefs.remove(_saveBlobKey(saveId));
-
     // Legacy per-field keys.
     const fields = <String>[
       'players',
@@ -4445,12 +4468,15 @@ class GameEngine extends ChangeNotifier {
       'reactionHistory',
     ];
 
-    for (final f in fields) {
-      await prefs.remove(_saveKey(saveId, f));
-    }
+    // Parallelize all removals (Blob + Legacy fields)
+    await Future.wait([
+      prefs.remove(_saveBlobKey(saveId)),
+      ...fields.map((f) => prefs.remove(_saveKey(saveId, f))),
+    ]);
   }
 
   Future<bool> loadGame(String saveId) async {
+    if (!persistenceEnabled) return false;
     final prefs = await SharedPreferences.getInstance();
     if (!prefs.containsKey(_saveBlobKey(saveId)) &&
         !prefs.containsKey(_saveKey(saveId, 'players'))) {
