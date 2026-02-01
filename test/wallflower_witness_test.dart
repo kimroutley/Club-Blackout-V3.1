@@ -113,7 +113,7 @@ void main() {
     expect(gameEngine.nightHistory, isNotEmpty);
     final archived = gameEngine.nightHistory.last;
     expect((archived['wallflower_witness_mode'] as String?)?.toLowerCase(),
-      equals('peek'));
+        equals('peek'));
     // No identity fields should be stored for this action.
     expect(archived.containsKey('wallflower_id'), isFalse);
 

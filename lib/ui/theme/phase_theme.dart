@@ -42,7 +42,7 @@ class PhaseTheme {
     final themeData = getThemeForPhase(phase);
 
     final finalActions = [...?actions];
-    
+
     // Add phase indicator if requested
     if (showPhaseIndicator) {
       finalActions.add(
@@ -146,37 +146,39 @@ class PhaseTheme {
           color: color.withValues(alpha: isSelected ? 0.8 : 0.5),
           width: isSelected ? 2 : 1,
         ),
-        boxShadow: showGlow || isSelected ? [
-          BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: showGlow ? 20 : 12,
-            spreadRadius: showGlow ? 4 : 2,
-          ),
-          const BoxShadow(
-            color: Colors.black26,
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ] : [
-          const BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
+        boxShadow: showGlow || isSelected
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.4),
+                  blurRadius: showGlow ? 20 : 12,
+                  spreadRadius: showGlow ? 4 : 2,
+                ),
+                const BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ]
+            : [
+                const BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
       );
     } else {
       // Material 3 effect for night phase
       final cs = ThemeData().colorScheme; // Could be passed from context
       return BoxDecoration(
-        color: isSelected 
-            ? color.withValues(alpha: 0.12) 
-            : cs.surfaceContainer,
+        color: isSelected ? color.withValues(alpha: 0.12) : cs.surfaceContainer,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: isSelected ? Border.all(
-          color: color.withValues(alpha: 0.6),
-          width: 2,
-        ) : null,
+        border: isSelected
+            ? Border.all(
+                color: color.withValues(alpha: 0.6),
+                width: 2,
+              )
+            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -200,8 +202,8 @@ class PhaseTheme {
     if (themeData.useNeonEffects) {
       // Neon button style for day phase
       return FilledButton.styleFrom(
-        backgroundColor: isPrimary 
-            ? color.withValues(alpha: 0.9) 
+        backgroundColor: isPrimary
+            ? color.withValues(alpha: 0.9)
             : color.withValues(alpha: 0.15),
         foregroundColor: isPrimary ? Colors.black : color,
         shape: RoundedRectangleBorder(
@@ -290,7 +292,7 @@ class PhaseThemeData {
 /// Extension to make phase theming easier to use
 extension GamePhaseThemeExtension on GamePhase {
   PhaseThemeData get theme => PhaseTheme.getThemeForPhase(this);
-  
+
   Color get primaryColor {
     switch (this) {
       case GamePhase.night:

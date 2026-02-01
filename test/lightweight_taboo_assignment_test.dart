@@ -26,11 +26,12 @@ void main() {
     final initialPhase = engine.currentPhase;
     final initialDay = engine.dayCount;
 
-    while (engine.currentScriptIndex < engine.scriptQueue.length &&
-        safety < 800) {
+    while (
+        engine.currentScriptIndex < engine.scriptQueue.length && safety < 800) {
       engine.advanceScript();
       safety++;
-      if (engine.currentPhase != initialPhase || engine.dayCount != initialDay) {
+      if (engine.currentPhase != initialPhase ||
+          engine.dayCount != initialDay) {
         return;
       }
     }
@@ -42,9 +43,10 @@ void main() {
     final initialPhase = engine.currentPhase;
     final initialDay = engine.dayCount;
 
-    while (engine.currentScriptIndex < engine.scriptQueue.length &&
-        safety < 800) {
-      if (engine.currentPhase != initialPhase || engine.dayCount != initialDay) {
+    while (
+        engine.currentScriptIndex < engine.scriptQueue.length && safety < 800) {
+      if (engine.currentPhase != initialPhase ||
+          engine.dayCount != initialDay) {
         throw StateError(
             'Step $stepId not found before phase/day change (phase=$initialPhase day=$initialDay).');
       }
@@ -73,13 +75,18 @@ void main() {
     fastForwardPhaseChange();
     expect(engine.currentPhase, GamePhase.night);
 
-    final lightweight = engine.players.firstWhere((p) => p.role.id == 'lightweight');
+    final lightweight =
+        engine.players.firstWhere((p) => p.role.id == 'lightweight');
 
     final target1 = engine.players.firstWhere(
       (p) => p.isAlive && p.isEnabled && p.id != lightweight.id,
     );
     final target2 = engine.players.firstWhere(
-      (p) => p.isAlive && p.isEnabled && p.id != lightweight.id && p.id != target1.id,
+      (p) =>
+          p.isAlive &&
+          p.isEnabled &&
+          p.id != lightweight.id &&
+          p.id != target1.id,
     );
 
     // Night 1: assign taboo.
@@ -100,12 +107,15 @@ void main() {
     executeStepById('lightweight_act', [target2.id]);
 
     expect(engine.nightActions['lightweight_taboo'], equals(target2.id));
-    expect(lightweight.tabooNames, containsAll(<String>[target1.name, target2.name]));
+    expect(lightweight.tabooNames,
+        containsAll(<String>[target1.name, target2.name]));
   });
 
   test('Lightweight does not duplicate the same taboo name', () {
-    final lightweight = engine.players.firstWhere((p) => p.role.id == 'lightweight');
-    final target = engine.players.firstWhere((p) => p.role.id == 'party_animal');
+    final lightweight =
+        engine.players.firstWhere((p) => p.role.id == 'lightweight');
+    final target =
+        engine.players.firstWhere((p) => p.role.id == 'party_animal');
 
     const step = ScriptStep(
       id: 'lightweight_act',

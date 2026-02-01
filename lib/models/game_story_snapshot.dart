@@ -169,7 +169,7 @@ class GameStorySnapshot {
         'exportedAt': exportedAt.toIso8601String(),
         'dayCount': dayCount,
         'phase': phase,
-      'hostName': hostName,
+        'hostName': hostName,
         'players': players.map((p) => p.toJson()).toList(),
         'gameLog': gameLog.map((e) => e.toJson()).toList(),
         'voteHistory': voteHistory.map((v) => v.toJson()).toList(),

@@ -23,19 +23,19 @@ void main() {
         id: 'b1',
         name: 'Bouncer',
         role: role('bouncer', nightPriority: 2),
-      )
-        ..initialize();
+      )..initialize();
       final allyCat = Player(id: 'a1', name: 'Ally Cat', role: role('ally_cat'))
         ..initialize();
-      final victim =
-          Player(id: 'p1', name: 'Party', role: role('party_animal'))
-            ..initialize();
+      final victim = Player(id: 'p1', name: 'Party', role: role('party_animal'))
+        ..initialize();
 
-      final steps = ScriptBuilder.buildNightScript([bouncer, allyCat, victim], 1);
+      final steps =
+          ScriptBuilder.buildNightScript([bouncer, allyCat, victim], 1);
 
       final bouncerStep = steps.firstWhere(
         (s) => s.id == 'bouncer_act',
-        orElse: () => throw StateError('Expected bouncer_act step in night script'),
+        orElse: () =>
+            throw StateError('Expected bouncer_act step in night script'),
       );
 
       expect(bouncerStep.readAloudText, contains('Ally Cat'));
@@ -46,17 +46,16 @@ void main() {
         id: 'b1',
         name: 'Bouncer',
         role: role('bouncer', nightPriority: 2),
-      )
+      )..initialize();
+      final victim = Player(id: 'p1', name: 'Party', role: role('party_animal'))
         ..initialize();
-      final victim =
-          Player(id: 'p1', name: 'Party', role: role('party_animal'))
-            ..initialize();
 
       final steps = ScriptBuilder.buildNightScript([bouncer, victim], 1);
 
       final bouncerStep = steps.firstWhere(
         (s) => s.id == 'bouncer_act',
-        orElse: () => throw StateError('Expected bouncer_act step in night script'),
+        orElse: () =>
+            throw StateError('Expected bouncer_act step in night script'),
       );
 
       expect(bouncerStep.readAloudText, isNot(contains('Ally Cat')));

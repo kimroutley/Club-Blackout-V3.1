@@ -104,7 +104,8 @@ class NightPhaseGuide extends StatelessWidget {
                       ),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.5),
+                        color:
+                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.5),
                       ),
                     ),
                     child: const Icon(
@@ -330,7 +331,9 @@ class _RoleStepTile extends StatelessWidget {
                 border: Border.all(
                   color: isCompleted
                       ? ClubBlackoutTheme.neonGreen
-                      : (isCurrent ? roleColor : cs.outline.withValues(alpha: 0.3)),
+                      : (isCurrent
+                          ? roleColor
+                          : cs.outline.withValues(alpha: 0.3)),
                   width: 2,
                 ),
               ),
@@ -346,7 +349,9 @@ class _RoleStepTile extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: isCurrent ? roleColor : cs.onSurface.withValues(alpha: 0.6),
+                          color: isCurrent
+                              ? roleColor
+                              : cs.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
               ),

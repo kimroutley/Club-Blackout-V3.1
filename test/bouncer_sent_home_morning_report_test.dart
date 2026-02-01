@@ -76,16 +76,16 @@ void main() {
       final victim =
           gameEngine.players.firstWhere((p) => p.role.id == 'party_animal');
 
-        // Sober sends them home first.
-        executeStepById('sober_act', [victim.id]);
+      // Sober sends them home first.
+      executeStepById('sober_act', [victim.id]);
 
       expect(gameEngine.nightActions['sober_sent_home'], equals(victim.id));
 
-        // Bouncer attempts to ID-check the sent-home player; selection is allowed
-        // but should not apply.
-        executeStepById('bouncer_act', [victim.id]);
-        expect(gameEngine.nightActions['bouncer_check'], equals(victim.id));
-        expect(victim.idCheckedByBouncer, isFalse,
+      // Bouncer attempts to ID-check the sent-home player; selection is allowed
+      // but should not apply.
+      executeStepById('bouncer_act', [victim.id]);
+      expect(gameEngine.nightActions['bouncer_check'], equals(victim.id));
+      expect(victim.idCheckedByBouncer, isFalse,
           reason: 'Sent-home players are immune to Bouncer ID-checks.');
 
       // Resolve the rest of the night to day (builds the morning report).
@@ -110,18 +110,19 @@ void main() {
       expect(minor.minorHasBeenIDd, isFalse,
           reason: 'Test assumes Minor starts immune to Dealer kills.');
 
-        // Sober sends Minor home first.
-        executeStepById('sober_act', [minor.id]);
+      // Sober sends Minor home first.
+      executeStepById('sober_act', [minor.id]);
       expect(gameEngine.nightActions['sober_sent_home'], equals(minor.id));
 
-        // Bouncer attempts to ID-check the sent-home Minor; should not change immunity.
-        executeStepById('bouncer_act', [minor.id]);
-        expect(gameEngine.nightActions['bouncer_check'], equals(minor.id));
+      // Bouncer attempts to ID-check the sent-home Minor; should not change immunity.
+      executeStepById('bouncer_act', [minor.id]);
+      expect(gameEngine.nightActions['bouncer_check'], equals(minor.id));
 
-        final refreshedMinor = gameEngine.players.firstWhere((p) => p.id == minor.id);
-        expect(refreshedMinor.minorHasBeenIDd, isFalse,
+      final refreshedMinor =
+          gameEngine.players.firstWhere((p) => p.id == minor.id);
+      expect(refreshedMinor.minorHasBeenIDd, isFalse,
           reason: 'Sent-home Minor should remain immune to Dealer kills.');
-        expect(minor.minorHasBeenIDd, isFalse,
+      expect(minor.minorHasBeenIDd, isFalse,
           reason: 'Local reference should reflect the same immunity state.');
 
       // Resolve the rest of the night to day (builds the morning report).
