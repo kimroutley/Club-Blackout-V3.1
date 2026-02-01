@@ -116,7 +116,7 @@ class _GameFabMenuState extends State<GameFabMenu> {
     final canShowMeow = _hasRole('ally_cat');
 
     final hasAnyAction =
-      canShowRumour || canShowTaboo || canShowClinger || canShowMeow;
+        canShowRumour || canShowTaboo || canShowClinger || canShowMeow;
     if (!hasAnyAction) {
       if (_isOpen) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -303,7 +303,7 @@ class _GlassCircleFabButton extends StatelessWidget {
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
             child: Icon(
-              isOpen ? Icons.close_rounded : icon, 
+              isOpen ? Icons.close_rounded : icon,
               key: ValueKey(isOpen),
               size: 24,
             ),

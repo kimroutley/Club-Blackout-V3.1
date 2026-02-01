@@ -23,7 +23,8 @@ class ExportFileService {
     Directory baseDir;
     if (useDownloads) {
       try {
-        baseDir = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
+        baseDir = await getDownloadsDirectory() ??
+            await getApplicationDocumentsDirectory();
       } catch (_) {
         // Fallback to documents if downloads not available
         baseDir = await getApplicationDocumentsDirectory();
@@ -45,7 +46,7 @@ class ExportFileService {
     bool useDownloadsFolder = false,
   }) async {
     final exportsDir = await _getExportsDir(
-      subdirName: subdirName, 
+      subdirName: subdirName,
       useDownloads: useDownloadsFolder,
     );
     final file = File('${exportsDir.path}/$fileName');
@@ -62,12 +63,14 @@ class ExportFileService {
     );
   }
 
-  static Future<void> openExportsFolder({String subdirName = 'exports', bool useDownloads = false}) async {
+  static Future<void> openExportsFolder(
+      {String subdirName = 'exports', bool useDownloads = false}) async {
     if (!supportsOpenFolder) {
       throw UnsupportedError('Open folder is only supported on desktop.');
     }
 
-    final exportsDir = await _getExportsDir(subdirName: subdirName, useDownloads: useDownloads);
+    final exportsDir = await _getExportsDir(
+        subdirName: subdirName, useDownloads: useDownloads);
 
     if (Platform.isWindows) {
       await Process.run('explorer', [exportsDir.path]);

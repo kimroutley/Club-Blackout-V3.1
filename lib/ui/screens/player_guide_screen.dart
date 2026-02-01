@@ -240,7 +240,7 @@ Widget _buildSection(
 }) {
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
-  
+
   return Card(
     elevation: 0,
     color: cs.surfaceContainerLow,
@@ -329,7 +329,7 @@ Widget _buildSection(
 Widget _buildWelcomeCard(BuildContext context) {
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
-  
+
   return Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
@@ -395,7 +395,7 @@ Widget _buildWelcomeCard(BuildContext context) {
 Widget _buildFlowStep(BuildContext context, String label, String desc) {
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
-  
+
   return Container(
     margin: const EdgeInsets.only(bottom: 10),
     padding: const EdgeInsets.all(14),
