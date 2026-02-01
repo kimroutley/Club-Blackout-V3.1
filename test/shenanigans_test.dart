@@ -320,5 +320,29 @@ void main() {
       final ff = awards.firstWhere((a) => a.title == 'Friendly Fire Champion');
       expect(ff.playerName, equals('Traitor'));
     });
+
+    test('Tracks Nemesis Pair (One-Way Bug Repro)', () {
+      // Ensure pairs are detected even if only the "Larger ID" votes for "Smaller ID"
+      final p1 = Player(id: '1', name: 'SmallID', role: villagerRole);
+      final p2 = Player(id: '2', name: 'LargeID', role: villagerRole);
+      engine.players.addAll([p1, p2]);
+
+      // LargeID votes SmallID 3 times
+      for (int i = 0; i < 3; i++) {
+        engine.voteHistory.add(VoteCast(
+            day: i + 1,
+            voterId: '2',
+            targetId: '1',
+            timestamp: DateTime.now(),
+            sequence: i));
+      }
+
+      final awards = ShenanigansTracker.generateAwards(engine);
+      final nemesis = awards.firstWhere((a) => a.title == 'Nemesis Pair');
+
+      expect(nemesis.value, equals('3 clashes'));
+      expect(nemesis.playerName, contains('SmallID'));
+      expect(nemesis.playerName, contains('LargeID'));
+    });
   });
 }

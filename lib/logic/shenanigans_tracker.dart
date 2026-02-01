@@ -118,12 +118,29 @@ class ShenanigansTracker {
     for (final v1 in voteAdj.keys) {
       for (final t1 in voteAdj[v1]!.keys) {
         final int v1ot1 = voteAdj[v1]![t1]!;
-        final int t1ov1 = voteAdj[t1]?[v1] ?? 0;
-        final int conflict = v1ot1 + t1ov1;
-        if (conflict > maxConflict && v1.compareTo(t1) < 0) {
-          maxConflict = conflict;
-          p1 = v1;
-          p2 = t1;
+
+        if (v1.compareTo(t1) < 0) {
+          // Case 1: v1 (smaller) voted for t1 (larger)
+          // Include any return fire from t1
+          final int t1ov1 = voteAdj[t1]?[v1] ?? 0;
+          final int conflict = v1ot1 + t1ov1;
+          if (conflict > maxConflict) {
+            maxConflict = conflict;
+            p1 = v1;
+            p2 = t1;
+          }
+        } else {
+          // Case 2: v1 (larger) voted for t1 (smaller)
+          // Only process if t1 did NOT vote for v1 (otherwise handled in Case 1)
+          final bool smallVotedLarge = voteAdj[t1]?.containsKey(v1) ?? false;
+          if (!smallVotedLarge) {
+            // Conflict is one-way only
+            if (v1ot1 > maxConflict) {
+              maxConflict = v1ot1;
+              p1 = t1;
+              p2 = v1;
+            }
+          }
         }
       }
     }
