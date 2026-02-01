@@ -103,7 +103,7 @@ class InputValidator {
     return input
         .trim()
         .replaceAll(RegExp(r'\s+'), ' ') // Normalize whitespace
-        .replaceAll(RegExp(r"[^a-zA-Z0-9\s\-'\.]"), ''); // Remove special chars
+        .replaceAll(RegExp(r'[^\w\s\-\.]'), ''); // Remove special chars
   }
 
   /// Validate and sanitize player name
