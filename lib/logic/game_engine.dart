@@ -3999,12 +3999,13 @@ class GameEngine extends ChangeNotifier {
     final logJson = jsonEncode(logList);
 
     // New: single-blob save (preferred for robustness).
-    final blob = <String, dynamic>{
+    // Optimization: construct blob without large lists first, then inject
+    // the pre-encoded JSON strings to avoid double-encoding overhead.
+    final blobMap = <String, dynamic>{
       'schemaVersion': _saveSchemaVersion,
       'savedAt': DateTime.now().toIso8601String(),
       'hostName': hostName,
-      'players': playersList,
-      'log': logList,
+      // 'players' and 'log' injected manually below
       'phaseIndex': _currentPhase.index,
       'dayCount': dayCount,
       'scriptIndex': _scriptIndex,
@@ -4045,7 +4046,12 @@ class GameEngine extends ChangeNotifier {
         },
     };
 
-    await prefs.setString(_saveBlobKey(saveId), jsonEncode(blob));
+    final partialJson = jsonEncode(blobMap);
+    // Inject pre-encoded players and log. Assumes partialJson ends with '}'.
+    final finalJson =
+        '${partialJson.substring(0, partialJson.length - 1)},"players":$playersJson,"log":$logJson}';
+
+    await prefs.setString(_saveBlobKey(saveId), finalJson);
 
     // Legacy per-field keys (kept for backward compatibility + existing tests).
     await prefs.setString(_saveKey(saveId, 'players'), playersJson);

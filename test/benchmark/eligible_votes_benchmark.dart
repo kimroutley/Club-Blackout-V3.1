@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:club_blackout/data/role_repository.dart';
 import 'package:club_blackout/logic/game_engine.dart';
 import 'package:club_blackout/models/player.dart';
