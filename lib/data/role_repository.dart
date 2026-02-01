@@ -6,11 +6,19 @@ import '../utils/game_logger.dart';
 class RoleRepository {
   List<Role> _roles = [];
   Map<String, Role> _rolesMap = {};
-  final AssetBundle _bundle;
+  final AssetBundle? _bundle;
 
   RoleRepository({AssetBundle? bundle}) : _bundle = bundle ?? rootBundle;
 
+  /// Creates a repository with pre-loaded roles (e.g. for isolates or tests).
+  RoleRepository.fromRoles(List<Role> roles)
+      : _bundle = null,
+        _roles = roles,
+        _rolesMap = {for (var role in roles) role.id: role};
+
   Future<void> loadRoles() async {
+    if (_bundle == null) return;
+
     final started = DateTime.now();
     const candidates = <String>[
       'assets/data/roles.json',
