@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 
+import '../data/role_repository.dart';
+import '../models/role.dart';
 import '../models/script_step.dart';
 import 'game_engine.dart';
 
@@ -36,6 +41,68 @@ class MonteCarloWinOddsResult {
       };
 }
 
+class _SimulationRequest {
+  final Map<String, dynamic> baseMap;
+  final List<Role> roles;
+  final int runs;
+  final int seed;
+  final int maxStepsPerRun;
+  final SendPort sendPort;
+
+  _SimulationRequest({
+    required this.baseMap,
+    required this.roles,
+    required this.runs,
+    required this.seed,
+    required this.maxStepsPerRun,
+    required this.sendPort,
+  });
+}
+
+class _SimulationProgress {
+  final int completed;
+
+  _SimulationProgress(this.completed);
+}
+
+class _SimulationResult {
+  final Map<String, int> wins;
+  final int completed;
+
+  _SimulationResult(this.wins, this.completed);
+}
+
+Future<void> _runSimulation(_SimulationRequest request) async {
+  final repo = RoleRepository.fromRoles(request.roles);
+  final rng = Random(request.seed);
+  final wins = <String, int>{};
+  var completed = 0;
+
+  for (var i = 0; i < request.runs; i++) {
+    final sim = GameEngine(
+      roleRepository: repo,
+      loadNameHistory: false,
+      loadArchivedSnapshot: false,
+      silent: true,
+      persistenceEnabled: false,
+    );
+    await sim.importSaveBlobMap(request.baseMap, notify: false);
+
+    final winner = MonteCarloSimulator._playToEnd(sim, rng,
+        maxStepsPerRun: request.maxStepsPerRun);
+    if (winner != null) {
+      wins[winner] = (wins[winner] ?? 0) + 1;
+      completed++;
+    }
+
+    if ((i + 1) % 25 == 0) {
+      request.sendPort.send(_SimulationProgress(i + 1));
+    }
+  }
+
+  request.sendPort.send(_SimulationResult(wins, completed));
+}
+
 class MonteCarloSimulator {
   /// Runs a Monte Carlo simulation starting from the given engine state.
   ///
@@ -64,49 +131,100 @@ class MonteCarloSimulator {
     }
 
     final effectiveSeed = seed ?? DateTime.now().millisecondsSinceEpoch;
-    final rng = Random(effectiveSeed);
 
     final baseMap = base.exportSaveBlobMap(includeLog: false);
+    final roles = base.roleRepository.roles;
+
+    // Use multiple isolates to parallelize the simulation.
+    // Cap at 4 workers or number of processors, whichever is lower (but at least 1).
+    final workerCount = max(1, min(Platform.numberOfProcessors, 4));
+    final runsPerWorker = (runs / workerCount).ceil();
 
     final wins = <String, int>{};
-    var completed = 0;
+    var totalCompleted = 0;
 
-    for (var i = 0; i < runs; i++) {
-      final sim = GameEngine(
-          roleRepository: base.roleRepository, loadNameHistory: false);
-      await sim.importSaveBlobMap(baseMap, notify: false);
+    final workerProgress = List<int>.filled(workerCount, 0);
+    final completer = Completer<void>();
+    var activeWorkers = 0;
 
-      final winner = _playToEnd(sim, rng, maxStepsPerRun: maxStepsPerRun);
-      if (winner != null) {
-        wins[winner] = (wins[winner] ?? 0) + 1;
-        completed++;
-      }
+    // Launch workers
+    for (var i = 0; i < workerCount; i++) {
+      // Distribute remainder runs to the last worker or evenly?
+      // Simple logic: if runs=10, workers=4 -> ceil(2.5)=3.
+      // 3, 3, 3, 1.
+      final assignedRuns = (i == workerCount - 1)
+          ? max(0, runs - (runsPerWorker * i))
+          : runsPerWorker;
 
-      if (onProgress != null) {
-        onProgress(i + 1, runs);
-      }
+      if (assignedRuns <= 0) continue;
 
-      // Yield to the UI every ~25 runs.
-      if ((i + 1) % 25 == 0) {
-        await Future<void>.delayed(Duration.zero);
-      }
+      activeWorkers++;
+      final receivePort = ReceivePort();
+      final workerSeed = effectiveSeed + (i * 1093); // Diverge seeds
+
+      final request = _SimulationRequest(
+        baseMap: baseMap,
+        roles: roles,
+        runs: assignedRuns,
+        seed: workerSeed,
+        maxStepsPerRun: maxStepsPerRun,
+        sendPort: receivePort.sendPort,
+      );
+
+      // ignore: unawaited_futures
+      Isolate.spawn(_runSimulation, request);
+
+      final workerIndex = i;
+      receivePort.listen((message) {
+        if (message is _SimulationProgress) {
+          workerProgress[workerIndex] = message.completed;
+          if (onProgress != null) {
+            final currentTotal = workerProgress.reduce((a, b) => a + b);
+            onProgress(currentTotal, runs);
+          }
+        } else if (message is _SimulationResult) {
+          for (final e in message.wins.entries) {
+            wins[e.key] = (wins[e.key] ?? 0) + e.value;
+          }
+          totalCompleted += message.completed;
+
+          // Ensure we count strictly for the progress bar at the end
+          workerProgress[workerIndex] = message.completed;
+          if (onProgress != null) {
+            final currentTotal = workerProgress.reduce((a, b) => a + b);
+            onProgress(currentTotal, runs);
+          }
+
+          receivePort.close();
+          activeWorkers--;
+          if (activeWorkers == 0) {
+            completer.complete();
+          }
+        }
+      });
     }
 
+    if (activeWorkers == 0) {
+      completer.complete();
+    }
+
+    await completer.future;
+
     final odds = <String, double>{};
-    if (completed > 0) {
+    if (totalCompleted > 0) {
       for (final e in wins.entries) {
-        odds[e.key] = (e.value / completed).clamp(0.0, 1.0);
+        odds[e.key] = (e.value / totalCompleted).clamp(0.0, 1.0);
       }
     }
 
     return MonteCarloWinOddsResult(
       runs: runs,
-      completed: completed,
+      completed: totalCompleted,
       seed: effectiveSeed,
       wins: wins,
       odds: odds,
       note:
-          'Monte Carlo simulation from the current engine state. Random actions + votes; includes special vote rules (Whore/Predator) and pending reactions (Drama Queen/Predator).',
+          'Monte Carlo simulation from the current engine state. Random actions + votes; includes special vote rules (Whore/Predator) and pending reactions (Drama Queen/Predator). Parallelized across $workerCount isolates.',
     );
   }
 
