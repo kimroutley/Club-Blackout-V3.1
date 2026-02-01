@@ -4168,9 +4168,6 @@ class GameEngine extends ChangeNotifier {
   }
 
   Future<void> _deleteSaveKeys(SharedPreferences prefs, String saveId) async {
-    // Blob format
-    await prefs.remove(_saveBlobKey(saveId));
-
     // Legacy per-field keys.
     const fields = <String>[
       'players',
@@ -4195,9 +4192,11 @@ class GameEngine extends ChangeNotifier {
       'reactionHistory',
     ];
 
-    for (final f in fields) {
-      await prefs.remove(_saveKey(saveId, f));
-    }
+    // Parallelize all removals (Blob + Legacy fields)
+    await Future.wait([
+      prefs.remove(_saveBlobKey(saveId)),
+      ...fields.map((f) => prefs.remove(_saveKey(saveId, f))),
+    ]);
   }
 
   Future<bool> loadGame(String saveId) async {

@@ -10,6 +10,8 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  exclude:
+    - test/benchmark/**
   errors:
     missing_required_param: error
     missing_return: error
