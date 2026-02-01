@@ -88,13 +88,13 @@ class _ClubBlackoutAppState extends State<ClubBlackoutApp> {
       await _roleRepo.loadRoles();
       GameLogger.info('Creating GameEngine', context: 'Main');
       setState(() => _engine = GameEngine(roleRepository: _roleRepo));
-      
+
       // Initialize default theme from home background
       final themeService = DynamicThemeService();
       await themeService.updateFromBackground(
         'Backgrounds/Club Blackout V2 Home Menu.png',
       );
-      
+
       GameLogger.info('Init complete', context: 'Main');
     } catch (e) {
       GameLogger.error('Init failed', context: 'Main', error: e);
@@ -140,4 +140,5 @@ class _ClubBlackoutAppState extends State<ClubBlackoutApp> {
         );
       },
     );
-  }}
+  }
+}

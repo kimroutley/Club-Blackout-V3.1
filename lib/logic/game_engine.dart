@@ -173,7 +173,7 @@ class GameEngine extends ChangeNotifier {
   String? toastMessage;
   String? toastActionLabel;
   VoidCallback? toastAction;
-  
+
   // Persistent toast for important actions (AI commentary)
   int persistentToastVersion = 0;
   String? persistentToastTitle;
@@ -203,10 +203,10 @@ class GameEngine extends ChangeNotifier {
     toastVersion++;
     notifyListeners();
   }
-  
+
   void showPersistentToast({
     required String title,
-    required String message, 
+    required String message,
     String? content,
     VoidCallback? onShare,
     VoidCallback? onIgnore,
@@ -220,7 +220,7 @@ class GameEngine extends ChangeNotifier {
     persistentToastVersion++;
     notifyListeners();
   }
-  
+
   void dismissPersistentToast() {
     hasPersistentToast = false;
     persistentToastTitle = null;
@@ -409,28 +409,38 @@ class GameEngine extends ChangeNotifier {
   }
 
   String? _lastArchivedGameBlobJson;
+  DateTime? _cachedLastArchivedGameSavedAt;
 
   /// JSON-encoded save blob of the most recently archived game.
   ///
   /// This is written automatically before [resetToLobby] wipes the active game.
   String? get lastArchivedGameBlobJson => _lastArchivedGameBlobJson;
 
-  DateTime? get lastArchivedGameSavedAt {
+  DateTime? get lastArchivedGameSavedAt => _cachedLastArchivedGameSavedAt;
+
+  void _updateCachedSavedAt() {
     final json = _lastArchivedGameBlobJson;
-    if (json == null) return null;
+    if (json == null) {
+      _cachedLastArchivedGameSavedAt = null;
+      return;
+    }
     try {
       final decoded = (jsonDecode(json) as Map).cast<String, dynamic>();
       final savedAt = decoded['savedAt'] as String?;
-      if (savedAt == null) return null;
-      return DateTime.tryParse(savedAt);
+      if (savedAt == null) {
+        _cachedLastArchivedGameSavedAt = null;
+      } else {
+        _cachedLastArchivedGameSavedAt = DateTime.tryParse(savedAt);
+      }
     } catch (_) {
-      return null;
+      _cachedLastArchivedGameSavedAt = null;
     }
   }
 
   Future<void> _loadLastArchivedGameBlob() async {
     final prefs = await SharedPreferences.getInstance();
     _lastArchivedGameBlobJson = prefs.getString(_lastArchivedGameBlobKey);
+    _updateCachedSavedAt();
     notifyListeners();
   }
 
@@ -442,7 +452,7 @@ class GameEngine extends ChangeNotifier {
 
     // If roles were assigned at any point, preserve the snapshot.
     final anyAssigned =
-      players.where((p) => p.isEnabled).any((p) => p.role.id != 'temp');
+        players.where((p) => p.isEnabled).any((p) => p.role.id != 'temp');
     return anyAssigned;
   }
 
@@ -450,6 +460,7 @@ class GameEngine extends ChangeNotifier {
     final blob = exportSaveBlobMap(includeLog: true);
     final encoded = jsonEncode(blob);
     _lastArchivedGameBlobJson = encoded;
+    _updateCachedSavedAt();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastArchivedGameBlobKey, encoded);
     if (notify) {
@@ -459,6 +470,7 @@ class GameEngine extends ChangeNotifier {
 
   Future<void> clearArchivedGameBlob({bool notify = true}) async {
     _lastArchivedGameBlobJson = null;
+    _updateCachedSavedAt();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_lastArchivedGameBlobKey);
     if (notify) {
@@ -535,9 +547,9 @@ class GameEngine extends ChangeNotifier {
     // Ensure dead list contains any actually-dead players, but do not discard
     // persisted in-flight state (tests expect this).
     final derivedDead = players
-      .where((p) => p.isEnabled && !p.isAlive)
-      .map((p) => p.id)
-      .toList(growable: false);
+        .where((p) => p.isEnabled && !p.isAlive)
+        .map((p) => p.id)
+        .toList(growable: false);
     final merged =
         <String>{...deadPlayerIds, ...derivedDead}.toList(growable: true);
     deadPlayerIds = merged;
@@ -606,13 +618,13 @@ class GameEngine extends ChangeNotifier {
     final playerMap = {for (var p in players) p.id: p};
 
     final eligibleVoterIds = players
-      .where((p) => p.isAlive && p.isEnabled)
-      .where((p) => p.id != hostPlayerId && p.role.id != hostRoleId)
-      .where((p) => p.role.id != 'ally_cat')
-      .where((p) => !p.soberSentHome)
-      .where((p) => p.silencedDay != dayCount)
-      .map((p) => p.id)
-      .toSet();
+        .where((p) => p.isAlive && p.isEnabled)
+        .where((p) => p.id != hostPlayerId && p.role.id != hostRoleId)
+        .where((p) => p.role.id != 'ally_cat')
+        .where((p) => !p.soberSentHome)
+        .where((p) => p.silencedDay != dayCount)
+        .map((p) => p.id)
+        .toSet();
 
     final filtered = <String, List<String>>{};
     for (final entry in currentDayVotesByTarget.entries) {
@@ -956,7 +968,7 @@ class GameEngine extends ChangeNotifier {
     // Rules: wins immediately if every currently living player (besides herself)
     // has heard a rumour.
     final targets = players
-      .where((p) => p.isAlive && p.isEnabled)
+        .where((p) => p.isAlive && p.isEnabled)
         .where((p) => p.id != messyBitch.id)
         .toList();
 
@@ -1002,16 +1014,16 @@ class GameEngine extends ChangeNotifier {
     );
 
     final usedUniqueRoleIds = players
-      .map((p) => p.role.id)
-      .where((id) => id != 'temp')
-      .where((id) => !RoleValidator.multipleAllowedRoles.contains(id))
-      .toSet();
+        .map((p) => p.role.id)
+        .where((id) => id != 'temp')
+        .where((id) => !RoleValidator.multipleAllowedRoles.contains(id))
+        .toSet();
 
     final uniqueAvailable = allRoles
-      .where((r) => r.id != 'temp' && r.id != hostRoleId)
-      .where((r) => !RoleValidator.multipleAllowedRoles.contains(r.id))
-      .where((r) => !usedUniqueRoleIds.contains(r.id))
-      .toList();
+        .where((r) => r.id != 'temp' && r.id != hostRoleId)
+        .where((r) => !RoleValidator.multipleAllowedRoles.contains(r.id))
+        .where((r) => !usedUniqueRoleIds.contains(r.id))
+        .toList();
 
     final currentEnabled = players.where((p) => p.isEnabled).length;
     final newTotal = currentEnabled + 1;
@@ -1268,7 +1280,7 @@ class GameEngine extends ChangeNotifier {
 
     // Ensure bookkeeping starts clean
     deadPlayerIds = players
-      .where((p) => p.isEnabled && !p.isAlive)
+        .where((p) => p.isEnabled && !p.isAlive)
         .map((p) => p.id)
         .toList(growable: true);
 
@@ -1602,7 +1614,7 @@ class GameEngine extends ChangeNotifier {
 
     _handleCreepInheritance(victim);
     _handleClingerObsessionDeath(victim);
-    
+
     // Clear medic protection if medic dies
     if (victim.role.id == 'medic') {
       victim.medicProtectedPlayerId = null;
@@ -1737,27 +1749,35 @@ class GameEngine extends ChangeNotifier {
 
     // Bridge legacy nightActions into the ability queue (so resolution is deterministic)
     // Also check for persistent medic protection
-    final medic = players.where((p) => p.role.id == 'medic' && p.isActive).firstOrNull;
+    final medic =
+        players.where((p) => p.role.id == 'medic' && p.isActive).firstOrNull;
     String? protectTargetId = nightActions['protect'] as String?;
-    
+
     // If medic has PROTECT_DAILY mode and is protecting someone persistently
-    if (medic != null && 
-        medic.medicChoice == 'PROTECT_DAILY' && 
+    if (medic != null &&
+        medic.medicChoice == 'PROTECT_DAILY' &&
         medic.medicProtectedPlayerId != null &&
-        protectTargetId == null) { // Only apply if no new target was chosen this night
-      final protectedPlayer = players.where((p) => p.id == medic.medicProtectedPlayerId).firstOrNull;
-      if (protectedPlayer != null && protectedPlayer.isAlive && protectedPlayer.isEnabled) {
+        protectTargetId == null) {
+      // Only apply if no new target was chosen this night
+      final protectedPlayer = players
+          .where((p) => p.id == medic.medicProtectedPlayerId)
+          .firstOrNull;
+      if (protectedPlayer != null &&
+          protectedPlayer.isAlive &&
+          protectedPlayer.isEnabled) {
         protectTargetId = medic.medicProtectedPlayerId;
-        logAction('Medic Protection', 'Medic continues protecting ${protectedPlayer.name}.', 
+        logAction('Medic Protection',
+            'Medic continues protecting ${protectedPlayer.name}.',
             toast: _currentPhase == GamePhase.night);
       } else {
         // Clear protection if target is no longer valid
         medic.medicProtectedPlayerId = null;
-        logAction('Medic Protection', 'Medic protection cleared (target no longer valid).', 
+        logAction('Medic Protection',
+            'Medic protection cleared (target no longer valid).',
             toast: _currentPhase == GamePhase.night);
       }
     }
-    
+
     if (protectTargetId != null) {
       abilityResolver.queueAbility(
         ActiveAbility(
@@ -1876,7 +1896,8 @@ class GameEngine extends ChangeNotifier {
         // If Bouncer attempted to ID-check someone who was sent home by The Sober,
         // show that it had no effect.
         final bouncerTargetId = nightActions['bouncer_check'] as String?;
-        final bouncerDodgedId = nightActions['bouncer_sent_home_dodge'] as String?;
+        final bouncerDodgedId =
+            nightActions['bouncer_sent_home_dodge'] as String?;
         if ((bouncerTargetId != null && bouncerTargetId == target.id) ||
             (bouncerDodgedId != null && bouncerDodgedId == target.id)) {
           addLine(
@@ -2485,7 +2506,8 @@ class GameEngine extends ChangeNotifier {
   }
 
   void clearPendingTeaSpillerReveal({String? reason, bool notify = true}) {
-    if (pendingTeaSpillerId == null && pendingTeaSpillerEligibleVoterIds.isEmpty) {
+    if (pendingTeaSpillerId == null &&
+        pendingTeaSpillerEligibleVoterIds.isEmpty) {
       return;
     }
 
@@ -2652,7 +2674,8 @@ class GameEngine extends ChangeNotifier {
       }
 
       final candidates = roleRepository.roles
-          .where((r) => r.id != 'dealer' && r.id != 'temp' && r.id != hostRoleId)
+          .where(
+              (r) => r.id != 'dealer' && r.id != 'temp' && r.id != hostRoleId)
           .where((r) => !usedUniqueRoleIds.contains(r.id))
           .toList()
         ..shuffle(random);
@@ -2727,7 +2750,8 @@ class GameEngine extends ChangeNotifier {
       throw const ValidationException('No dead Medic found to self-revive.');
     }
 
-    final medicChoseRevive = (medic.medicChoice ?? '').toUpperCase() == 'REVIVE';
+    final medicChoseRevive =
+        (medic.medicChoice ?? '').toUpperCase() == 'REVIVE';
     final eligible =
         medicChoseRevive && !medic.reviveUsed && medic.deathDay == dayCount;
     if (!eligible) {
@@ -2945,16 +2969,17 @@ class GameEngine extends ChangeNotifier {
               'A Dealer was sent home by The Sober — no murders tonight.');
           break;
         }
-        
+
         // Block Dealers from targeting themselves.
         if (sourcePlayer != null && target.id == sourcePlayer.id) {
           logAction(step.title,
               'Invalid target: Dealers cannot eliminate themselves.');
           break;
         }
-        
+
         nightActions['kill'] = target.id;
-        logAction(step.title, 'Dealers selected ${target.name} as their target.',
+        logAction(
+            step.title, 'Dealers selected ${target.name} as their target.',
             toast: _currentPhase == GamePhase.night);
         break;
 
@@ -2998,8 +3023,8 @@ class GameEngine extends ChangeNotifier {
 
         // Prevent self-targeting
         if (sourcePlayer != null && target.id == sourcePlayer.id) {
-          logAction(step.title,
-              'Invalid target: Sober cannot send themselves home.');
+          logAction(
+              step.title, 'Invalid target: Sober cannot send themselves home.');
           break;
         }
 
@@ -3022,8 +3047,7 @@ class GameEngine extends ChangeNotifier {
         // Sent-home players are immune for the whole night.
         // If Bouncer already checked them earlier in the script, retroactively
         // cancel the ID check and remember it for the morning report.
-        final bouncerWasGoingToHit =
-            priorBouncerTargetId == target.id ||
+        final bouncerWasGoingToHit = priorBouncerTargetId == target.id ||
             priorBouncerTargetLegacy == target.id ||
             target.idCheckedByBouncer;
         if (bouncerWasGoingToHit) {
@@ -3043,11 +3067,12 @@ class GameEngine extends ChangeNotifier {
 
         // Preserve the original Roofi selection for archiving/debugging/tests,
         // even if its effect is dodged by being sent home.
-        nightActions['roofi'] ??=
-            priorRoofiTargetId ?? priorRoofiTargetLegacy ?? priorRoofiTargetStolen;
+        nightActions['roofi'] ??= priorRoofiTargetId ??
+            priorRoofiTargetLegacy ??
+            priorRoofiTargetStolen;
 
         nightActions['bouncer_check'] ??=
-          priorBouncerTargetId ?? priorBouncerTargetLegacy;
+            priorBouncerTargetId ?? priorBouncerTargetLegacy;
 
         if (target.role.id == 'dealer') {
           nightActions['no_murders_tonight'] = true;
@@ -3122,7 +3147,8 @@ class GameEngine extends ChangeNotifier {
             // Set persistent protection - this will continue until medic changes target or target dies
             medic.medicProtectedPlayerId = target.id;
             nightActions['protect'] = target.id;
-            logAction(step.title, 'Medic is now protecting ${target.name} (until changed).',
+            logAction(step.title,
+                'Medic is now protecting ${target.name} (until changed).',
                 toast: _currentPhase == GamePhase.night);
           } else if (medic.medicChoice == 'REVIVE') {
             // Only allow if not already used
@@ -3146,27 +3172,28 @@ class GameEngine extends ChangeNotifier {
         }
 
         final target = resolvePlayer(selections.first);
-        
+
         // Prevent self-targeting
         if (sourcePlayer != null && target.id == sourcePlayer.id) {
-          logAction(step.title,
-              'Invalid target: Bouncer cannot check themselves.');
+          logAction(
+              step.title, 'Invalid target: Bouncer cannot check themselves.');
           break;
         }
-        
+
         // Check if target was sent home by Sober
         if (target.soberSentHome) {
           nightActions['bouncer_check'] = target.id;
           queueHostAlert(
             title: 'Sent Home Early',
-            message: '${target.name} was sent home early and is immune to all night requests.',
+            message:
+                '${target.name} was sent home early and is immune to all night requests.',
           );
-          logAction(
-              step.title, 'Bouncer tried to ID ${target.name}, but they were sent home by The Sober.',
+          logAction(step.title,
+              'Bouncer tried to ID ${target.name}, but they were sent home by The Sober.',
               toast: _currentPhase == GamePhase.night);
           break;
         }
-        
+
         final wasMinorImmune =
             target.role.id == 'minor' && target.minorHasBeenIDd == false;
         nightActions['bouncer_check'] = target.id;
@@ -3176,7 +3203,8 @@ class GameEngine extends ChangeNotifier {
           // Store the prior Minor vulnerability state so it can be rolled back
           // if the target is later sent home by The Sober.
           nightActions['bouncer_minor_checked_id'] = target.id;
-          nightActions['bouncer_minor_prev_has_been_idd'] = target.minorHasBeenIDd;
+          nightActions['bouncer_minor_prev_has_been_idd'] =
+              target.minorHasBeenIDd;
           target.minorHasBeenIDd = true;
           if (wasMinorImmune) {
             // Track that this check changed Minor's immunity so it can be
@@ -3233,22 +3261,24 @@ class GameEngine extends ChangeNotifier {
         final actingPlayer = stolenByBouncer ?? activeRoofi;
 
         final target = resolvePlayer(selections.first);
-        
-        // Prevent self-targeting  
+
+        // Prevent self-targeting
         if (actingPlayer != null && target.id == actingPlayer.id) {
-          logAction(step.title,
-              'Invalid target: Roofi cannot silence themselves.');
+          logAction(
+              step.title, 'Invalid target: Roofi cannot silence themselves.');
           break;
         }
-        
+
         // Check if target was sent home by Sober
         if (target.soberSentHome) {
           nightActions['roofi'] = target.id;
-          final actorLabel =
-              stolenByBouncer != null ? 'Bouncer (stolen Roofi powers)' : 'Roofi';
+          final actorLabel = stolenByBouncer != null
+              ? 'Bouncer (stolen Roofi powers)'
+              : 'Roofi';
           queueHostAlert(
             title: 'Sent Home Early',
-            message: '${target.name} was sent home early and is immune to all night requests.',
+            message:
+                '${target.name} was sent home early and is immune to all night requests.',
           );
           logAction(
             step.title,
@@ -3257,7 +3287,7 @@ class GameEngine extends ChangeNotifier {
           );
           break;
         }
-        
+
         nightActions['roofi'] = target.id;
         target.silencedDay = dayCount + 1;
         if (target.role.id == 'dealer') target.blockedKillNight = dayCount + 1;
@@ -3313,7 +3343,7 @@ class GameEngine extends ChangeNotifier {
             logAction(step.title, 'Invalid target selection.');
             break;
           }
-          
+
           // Block targeting sent-home players
           if (target.soberSentHome) {
             logAction(step.title,
@@ -3358,14 +3388,14 @@ class GameEngine extends ChangeNotifier {
 
       case 'lightweight':
         final target = resolvePlayer(selections.first);
-        
+
         // Block targeting sent-home players
         if (target.soberSentHome) {
           logAction(step.title,
               'Invalid target: ${target.name} was sent home by The Sober — cannot be targeted tonight.');
           break;
         }
-        
+
         nightActions['lightweight_taboo'] = target.id;
         if (sourcePlayer != null &&
             !sourcePlayer.tabooNames.contains(target.name)) {
@@ -3419,7 +3449,7 @@ class GameEngine extends ChangeNotifier {
               step.title, 'Messy Bitch must choose another living player.');
           break;
         }
-        
+
         // Block targeting sent-home players
         if (rumourTarget.soberSentHome) {
           logAction(step.title,
@@ -3438,15 +3468,15 @@ class GameEngine extends ChangeNotifier {
         if (selections.length >= 2) {
           final a = resolvePlayer(selections[0]);
           final b = resolvePlayer(selections[1]);
-          
+
           // Prevent self-targeting in Drama Queen swap
-          if (sourcePlayer != null && 
+          if (sourcePlayer != null &&
               (a.id == sourcePlayer.id || b.id == sourcePlayer.id)) {
             logAction(step.title,
                 'Invalid selection: Drama Queen cannot include themselves in the swap.');
             break;
           }
-          
+
           nightActions['drama_swap_a'] = a.id;
           nightActions['drama_swap_b'] = b.id;
           dramaQueenMarkedAId = a.id;
@@ -3461,7 +3491,7 @@ class GameEngine extends ChangeNotifier {
         if (selections.length >= 2) {
           final a = resolvePlayer(selections[0]);
           final b = resolvePlayer(selections[1]);
-          
+
           // Check if any target was sent home by Sober
           if (a.soberSentHome || b.soberSentHome) {
             final sentHomeName = a.soberSentHome ? a.name : b.name;
@@ -3469,14 +3499,15 @@ class GameEngine extends ChangeNotifier {
             nightActions['bartender_b'] = b.id;
             queueHostAlert(
               title: 'Sent Home Early',
-              message: '$sentHomeName was sent home early and is immune to all night requests.',
+              message:
+                  '$sentHomeName was sent home early and is immune to all night requests.',
             );
             logAction(step.title,
                 'Bartender tried to check, but $sentHomeName was sent home by The Sober.',
                 toast: _currentPhase == GamePhase.night);
             break;
           }
-          
+
           final sameTeam = a.alliance == b.alliance;
           nightActions['bartender_a'] = a.id;
           nightActions['bartender_b'] = b.id;
@@ -3608,12 +3639,13 @@ class GameEngine extends ChangeNotifier {
           logAction(step.title, 'Club Manager must choose a fellow player.');
           break;
         }
-        
+
         // Check if target was sent home by Sober
         if (target.soberSentHome) {
           queueHostAlert(
             title: 'Sent Home Early',
-            message: '${target.name} was sent home early and is immune to all night requests.',
+            message:
+                '${target.name} was sent home early and is immune to all night requests.',
           );
           logAction(step.title,
               'Club Manager tried to view ${target.name}, but they were sent home by The Sober.',
@@ -4171,7 +4203,7 @@ class GameEngine extends ChangeNotifier {
     // Ensure dead list contains any actually-dead players, but do not discard
     // persisted in-flight state (tests expect this).
     final derivedDead = players
-      .where((p) => p.isEnabled && !p.isAlive)
+        .where((p) => p.isEnabled && !p.isAlive)
         .map((p) => p.id)
         .toList(growable: false);
     final merged =
@@ -4226,12 +4258,11 @@ class GameEngine extends ChangeNotifier {
     }
     players = loadedPlayers;
 
-    final effectiveHostName =
-        (blobHostName != null && blobHostName.isNotEmpty)
-            ? blobHostName
-            : (migratedHostName != null && migratedHostName.isNotEmpty)
-                ? migratedHostName
-                : null;
+    final effectiveHostName = (blobHostName != null && blobHostName.isNotEmpty)
+        ? blobHostName
+        : (migratedHostName != null && migratedHostName.isNotEmpty)
+            ? migratedHostName
+            : null;
     if (effectiveHostName != null) {
       _setHostNameInternal(effectiveHostName, notify: false);
     }

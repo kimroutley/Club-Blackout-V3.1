@@ -35,9 +35,8 @@ class GuidesScreen extends StatelessWidget {
           child: Scaffold(
             backgroundColor: isNight ? null : Colors.transparent,
             appBar: AppBar(
-              backgroundColor: isNight
-                  ? cs.surface
-                  : Colors.black.withValues(alpha: 0.3),
+              backgroundColor:
+                  isNight ? cs.surface : Colors.black.withValues(alpha: 0.3),
               surfaceTintColor: isNight ? cs.surfaceTint : Colors.transparent,
               elevation: 0,
               iconTheme: IconThemeData(
@@ -83,11 +82,15 @@ class GuidesScreen extends StatelessWidget {
                     splashFactory: InkSparkle.splashFactory,
                     overlayColor: WidgetStateProperty.resolveWith((states) {
                       if (states.contains(WidgetState.pressed)) {
-                        return (isNight ? cs.primary : ClubBlackoutTheme.neonOrange)
+                        return (isNight
+                                ? cs.primary
+                                : ClubBlackoutTheme.neonOrange)
                             .withValues(alpha: 0.12);
                       }
                       if (states.contains(WidgetState.hovered)) {
-                        return (isNight ? cs.primary : ClubBlackoutTheme.neonOrange)
+                        return (isNight
+                                ? cs.primary
+                                : ClubBlackoutTheme.neonOrange)
                             .withValues(alpha: 0.08);
                       }
                       return null;
@@ -95,7 +98,8 @@ class GuidesScreen extends StatelessWidget {
                     tabs: const [
                       Tab(
                         text: 'HOST',
-                        icon: Icon(Icons.admin_panel_settings_rounded, size: 20),
+                        icon:
+                            Icon(Icons.admin_panel_settings_rounded, size: 20),
                         iconMargin: EdgeInsets.only(bottom: 4),
                       ),
                       Tab(

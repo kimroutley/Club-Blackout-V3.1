@@ -49,7 +49,8 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
   int _requiredVotesToReachVerdict(GameEngine engine) {
     final eligibleVoterCount = engine.players.where((p) {
       if (!p.isActive) return false;
-      if (p.id == GameEngine.hostPlayerId || p.role.id == GameEngine.hostRoleId) {
+      if (p.id == GameEngine.hostPlayerId ||
+          p.role.id == GameEngine.hostRoleId) {
         return false;
       }
       if (p.role.id == 'ally_cat') return false;
@@ -61,6 +62,7 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
     final majority = (eligibleVoterCount ~/ 2) + 1;
     return majority < 2 ? 2 : majority;
   }
+
   bool _discussionRunning = false;
   bool _timerStarted = false;
   int _maxVotes = 0;
@@ -68,10 +70,10 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
   RoleFactsContext _factsContextNow() {
     final engine = widget.gameEngine;
     final enabledGuests = engine.guests
-      .where((p) => p.isEnabled)
-      .where((p) => p.id != GameEngine.hostPlayerId)
-      .where((p) => p.role.id != GameEngine.hostRoleId)
-      .toList(growable: false);
+        .where((p) => p.isEnabled)
+        .where((p) => p.id != GameEngine.hostPlayerId)
+        .where((p) => p.role.id != GameEngine.hostRoleId)
+        .toList(growable: false);
     final aliveGuests =
         enabledGuests.where((p) => p.isAlive).toList(growable: false);
     final dealerKillersAlive =
@@ -167,14 +169,16 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
         ? 0.0
         : (_discussionRemaining.inSeconds / _discussionDuration.inSeconds)
             .clamp(0.0, 1.0);
-    
+
     // Color changes based on time remaining
     final percentRemaining = progress;
     final isLowTime = percentRemaining < 0.2;
 
     final timerColor = isDone
-      ? ClubBlackoutTheme.neonRed
-      : (isLowTime ? ClubBlackoutTheme.neonGold : ClubBlackoutTheme.neonOrange);
+        ? ClubBlackoutTheme.neonRed
+        : (isLowTime
+            ? ClubBlackoutTheme.neonGold
+            : ClubBlackoutTheme.neonOrange);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -362,7 +366,8 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                       },
                       style: FilledButton.styleFrom(
                         backgroundColor: timerColor,
-                        foregroundColor: ClubBlackoutTheme.contrastOn(timerColor),
+                        foregroundColor:
+                            ClubBlackoutTheme.contrastOn(timerColor),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -394,8 +399,7 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
     final tt = Theme.of(context).textTheme;
     final engine = widget.gameEngine;
     final summary = engine.lastNightSummary.trim();
-    final alive = sortedPlayersByDisplayName(
-      engine.guests
+    final alive = sortedPlayersByDisplayName(engine.guests
         .where((p) => p.isAlive && p.isEnabled)
         .where((p) => p.id != GameEngine.hostPlayerId)
         .where((p) => p.role.id != GameEngine.hostRoleId));
@@ -498,135 +502,137 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                  MorningReportWidget(
-                    summary: summary,
-                    players: widget.gameEngine.players,
-                  ),
+                    MorningReportWidget(
+                      summary: summary,
+                      players: widget.gameEngine.players,
+                    ),
 
-                  // --- CUSTOM TOAST/REMINDER FOR HOST ---
-                  if (engine.players.any((p) =>
-                      p.role.id == 'second_wind' &&
-                      p.secondWindPendingConversion))
-                    Padding(
-                      padding: ClubBlackoutTheme.topInset16,
-                      child: Card(
-                        elevation: 0,
-                        color:
-                            cs.surfaceContainerHighest.withValues(alpha: 0.45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: ClubBlackoutTheme.borderRadiusMdAll,
-                          side: BorderSide(
-                            color: ClubBlackoutTheme.neonPink
-                                .withValues(alpha: 0.6),
-                            width: 1.2,
+                    // --- CUSTOM TOAST/REMINDER FOR HOST ---
+                    if (engine.players.any((p) =>
+                        p.role.id == 'second_wind' &&
+                        p.secondWindPendingConversion))
+                      Padding(
+                        padding: ClubBlackoutTheme.topInset16,
+                        child: Card(
+                          elevation: 0,
+                          color: cs.surfaceContainerHighest
+                              .withValues(alpha: 0.45),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: ClubBlackoutTheme.borderRadiusMdAll,
+                            side: BorderSide(
+                              color: ClubBlackoutTheme.neonPink
+                                  .withValues(alpha: 0.6),
+                              width: 1.2,
+                            ),
                           ),
-                        ),
-                        child: Padding(
-                          padding: ClubBlackoutTheme.inset16,
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.flash_on_rounded,
-                                color: ClubBlackoutTheme.neonPink,
-                              ),
-                              ClubBlackoutTheme.hGap12,
-                              Expanded(
-                                child: Text(
-                                  'Second Wind: eligible for conversion next night (${engine.hostDisplayName} only). Dealers must forfeit their kill to convert.',
-                                  style: tt.bodyMedium?.copyWith(
-                                    color: cs.onSurface.withValues(alpha: 0.92),
-                                    fontWeight: FontWeight.w800,
+                          child: Padding(
+                            padding: ClubBlackoutTheme.inset16,
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.flash_on_rounded,
+                                  color: ClubBlackoutTheme.neonPink,
+                                ),
+                                ClubBlackoutTheme.hGap12,
+                                Expanded(
+                                  child: Text(
+                                    'Second Wind: eligible for conversion next night (${engine.hostDisplayName} only). Dealers must forfeit their kill to convert.',
+                                    style: tt.bodyMedium?.copyWith(
+                                      color:
+                                          cs.onSurface.withValues(alpha: 0.92),
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
+
+                    ClubBlackoutTheme.gap24,
+                    _buildDiscussionTimer(context),
+                    ClubBlackoutTheme.gap32,
+
+                    ClubBlackoutTheme.gap8,
+                    VotingWidget(
+                      players: alive,
+                      gameEngine: engine,
+                      isVotingEnabled:
+                          _timerStarted && _discussionRemaining.inSeconds > 0,
+                      onMaxVotesChanged: (max) =>
+                          setState(() => _maxVotes = max),
+                      onComplete: (eliminated, verdict) {
+                        _pauseDiscussionTimer();
+                        _showResults(context, eliminated, verdict);
+                      },
                     ),
-
-                  ClubBlackoutTheme.gap24,
-                  _buildDiscussionTimer(context),
-                  ClubBlackoutTheme.gap32,
-
-                  ClubBlackoutTheme.gap8,
-                  VotingWidget(
-                    players: alive,
-                    gameEngine: engine,
-                    isVotingEnabled:
-                        _timerStarted && _discussionRemaining.inSeconds > 0,
-                    onMaxVotesChanged: (max) => setState(() => _maxVotes = max),
-                    onComplete: (eliminated, verdict) {
-                      _pauseDiscussionTimer();
-                      _showResults(context, eliminated, verdict);
-                    },
-                  ),
-                  if (_discussionRemaining.inSeconds <= 0 &&
-                      _timerStarted &&
-                      _maxVotes < _requiredVotesToReachVerdict(engine))
-                    Padding(
-                      padding: ClubBlackoutTheme.topInset24,
-                      child: Card(
-                        elevation: 0,
-                        color:
-                            cs.surfaceContainerHighest.withValues(alpha: 0.45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: ClubBlackoutTheme.borderRadiusMdAll,
-                          side: BorderSide(
-                            color: ClubBlackoutTheme.neonBlue
-                                .withValues(alpha: 0.6),
-                            width: 1.2,
+                    if (_discussionRemaining.inSeconds <= 0 &&
+                        _timerStarted &&
+                        _maxVotes < _requiredVotesToReachVerdict(engine))
+                      Padding(
+                        padding: ClubBlackoutTheme.topInset24,
+                        child: Card(
+                          elevation: 0,
+                          color: cs.surfaceContainerHighest
+                              .withValues(alpha: 0.45),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: ClubBlackoutTheme.borderRadiusMdAll,
+                            side: BorderSide(
+                              color: ClubBlackoutTheme.neonBlue
+                                  .withValues(alpha: 0.6),
+                              width: 1.2,
+                            ),
                           ),
-                        ),
-                        child: Padding(
-                          padding: ClubBlackoutTheme.inset16,
-                          child: Column(
-                            children: [
-                              const Icon(
-                                Icons.nightlight_rounded,
-                                color: ClubBlackoutTheme.neonBlue,
-                                size: 40,
-                              ),
-                              ClubBlackoutTheme.gap12,
-                              Text(
-                                'Voting closed',
-                                style: ClubBlackoutTheme.neonGlowTextStyle(
-                                  base: tt.headlineSmall,
+                          child: Padding(
+                            padding: ClubBlackoutTheme.inset16,
+                            child: Column(
+                              children: [
+                                const Icon(
+                                  Icons.nightlight_rounded,
                                   color: ClubBlackoutTheme.neonBlue,
-                                  fontWeight: FontWeight.w800,
-                                  glowIntensity: 0.85,
+                                  size: 40,
                                 ),
-                              ),
-                              ClubBlackoutTheme.gap8,
-                              Text(
-                                'Not enough votes were cast to reach a verdict. No one was eliminated today.',
-                                textAlign: TextAlign.center,
-                                style: tt.bodyMedium?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
-                              ),
-                              ClubBlackoutTheme.gap16,
-                              SizedBox(
-                                width: double.infinity,
-                                child: FilledButton.icon(
-                                  onPressed: () {
-                                    widget.onComplete();
-                                    Navigator.of(context).pop();
-                                  },
-                                  style: ClubBlackoutTheme.neonButtonStyle(
-                                    ClubBlackoutTheme.neonBlue,
-                                    isPrimary: true,
+                                ClubBlackoutTheme.gap12,
+                                Text(
+                                  'Voting closed',
+                                  style: ClubBlackoutTheme.neonGlowTextStyle(
+                                    base: tt.headlineSmall,
+                                    color: ClubBlackoutTheme.neonBlue,
+                                    fontWeight: FontWeight.w800,
+                                    glowIntensity: 0.85,
                                   ),
-                                  icon: const Icon(Icons.nights_stay_rounded),
-                                  label: const Text('Go to night'),
                                 ),
-                              ),
-                            ],
+                                ClubBlackoutTheme.gap8,
+                                Text(
+                                  'Not enough votes were cast to reach a verdict. No one was eliminated today.',
+                                  textAlign: TextAlign.center,
+                                  style: tt.bodyMedium?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                                ClubBlackoutTheme.gap16,
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: FilledButton.icon(
+                                    onPressed: () {
+                                      widget.onComplete();
+                                      Navigator.of(context).pop();
+                                    },
+                                    style: ClubBlackoutTheme.neonButtonStyle(
+                                      ClubBlackoutTheme.neonBlue,
+                                      isPrimary: true,
+                                    ),
+                                    icon: const Icon(Icons.nights_stay_rounded),
+                                    label: const Text('Go to night'),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ClubBlackoutTheme.gap40,
+                    ClubBlackoutTheme.gap40,
                   ],
                 ),
               ),

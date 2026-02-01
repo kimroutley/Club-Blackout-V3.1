@@ -86,8 +86,7 @@ void main() {
           .whereType<File>()
           .where((f) => f.path.toLowerCase().endsWith('.dart')),
       ...extraUiFiles,
-    ]
-      ..sort((a, b) => a.path.compareTo(b.path));
+    ]..sort((a, b) => a.path.compareTo(b.path));
 
     for (final file in dartFiles) {
       final contents = file.readAsStringSync();
@@ -110,7 +109,8 @@ void main() {
 
     if (violations.isNotEmpty) {
       final joined = violations.join('\n');
-      fail('UI must not mutate engine state directly. Found violations:\n\n$joined');
+      fail(
+          'UI must not mutate engine state directly. Found violations:\n\n$joined');
     }
   });
 }
