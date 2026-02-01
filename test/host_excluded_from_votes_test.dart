@@ -16,7 +16,8 @@ void main() {
   const sharedPrefsChannel =
       MethodChannel('plugins.flutter.io/shared_preferences');
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(sharedPrefsChannel, (MethodCall methodCall) async {
+      .setMockMethodCallHandler(sharedPrefsChannel,
+          (MethodCall methodCall) async {
     if (methodCall.method == 'getAll') {
       return <String, dynamic>{};
     }
@@ -42,7 +43,8 @@ void main() {
       engine.dayCount = 1;
 
       final voter = Player(id: 'p1', name: 'Voter', role: makeRole('villager'));
-      final target = Player(id: 'p2', name: 'Target', role: makeRole('villager'));
+      final target =
+          Player(id: 'p2', name: 'Target', role: makeRole('villager'));
       engine.players.addAll([voter, target]);
 
       engine.recordVote(voterId: GameEngine.hostPlayerId, targetId: target.id);
@@ -64,7 +66,8 @@ void main() {
         isEnabled: true,
         isAlive: true,
       );
-      final target = Player(id: 'p2', name: 'Target', role: makeRole('villager'));
+      final target =
+          Player(id: 'p2', name: 'Target', role: makeRole('villager'));
       engine.players.addAll([host, target]);
 
       engine.recordVote(voterId: host.id, targetId: target.id);

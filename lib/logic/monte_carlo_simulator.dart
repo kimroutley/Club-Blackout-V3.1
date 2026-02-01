@@ -204,12 +204,12 @@ class MonteCarloSimulator {
 
   static void _simulateDayVote(GameEngine engine, Random rng) {
     final voters = engine.players
-      .where((p) => p.isAlive && p.isEnabled)
+        .where((p) => p.isAlive && p.isEnabled)
         .where((p) => !p.soberSentHome)
         .toList(growable: false);
 
     final targets = engine.players
-      .where((p) => p.isAlive && p.isEnabled)
+        .where((p) => p.isAlive && p.isEnabled)
         .toList(growable: false);
 
     if (voters.isEmpty || targets.isEmpty) {
@@ -339,9 +339,8 @@ class MonteCarloSimulator {
   static String? _pickTargetId(GameEngine engine, ScriptStep step, Random rng) {
     final roleId = step.roleId;
 
-    final candidates = engine.players
-      .where((p) => p.isAlive && p.isEnabled)
-        .toList();
+    final candidates =
+        engine.players.where((p) => p.isAlive && p.isEnabled).toList();
 
     if (candidates.isEmpty) return null;
 
@@ -363,7 +362,7 @@ class MonteCarloSimulator {
   static List<String> _pickTwoTargetIds(
       GameEngine engine, ScriptStep step, Random rng) {
     final candidates = engine.players
-      .where((p) => p.isAlive && p.isEnabled)
+        .where((p) => p.isAlive && p.isEnabled)
         .map((p) => p.id)
         .toList();
 

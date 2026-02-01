@@ -82,7 +82,10 @@ class _MainScreenState extends State<MainScreen> {
     final isNight = widget.gameEngine.currentPhase == GamePhase.night;
     // GuidesScreen (index 2) and LobbyScreen (index 1) provide their own AppBars.
     // HomeScreen (index 0) also provides its own AppBar.
-    final hideAppBar = isNight || _selectedIndex == 0 || _selectedIndex == 1 || _selectedIndex == 2;
+    final hideAppBar = isNight ||
+        _selectedIndex == 0 ||
+        _selectedIndex == 1 ||
+        _selectedIndex == 2;
 
     return Scaffold(
       key: _scaffoldKey,

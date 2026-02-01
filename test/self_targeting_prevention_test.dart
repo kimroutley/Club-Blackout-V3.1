@@ -1,4 +1,4 @@
-﻿import 'package:club_blackout/logic/game_engine.dart';
+import 'package:club_blackout/logic/game_engine.dart';
 import 'package:club_blackout/models/script_step.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,7 +71,8 @@ void main() {
       expect(engine.nightActions.containsKey('kill'), isFalse);
       expect(
         engine.gameLog.any(
-          (log) => log.description.contains('Dealers cannot eliminate themselves'),
+          (log) =>
+              log.description.contains('Dealers cannot eliminate themselves'),
         ),
         isTrue,
       );
@@ -94,7 +95,8 @@ void main() {
 
     test('Drama Queen cannot include themselves in swap', () async {
       await startWithMinimumPlayers(['drama_queen', 'dealer', 'party_animal']);
-      final drama = engine.players.firstWhere((p) => p.role.id == 'drama_queen');
+      final drama =
+          engine.players.firstWhere((p) => p.role.id == 'drama_queen');
       final dealer = engine.players.firstWhere((p) => p.role.id == 'dealer');
 
       const step = ScriptStep(
@@ -113,7 +115,8 @@ void main() {
       expect(engine.nightActions.containsKey('drama_swap_b'), isFalse);
       expect(
         engine.gameLog.any(
-          (log) => log.description.contains('Drama Queen cannot include themselves'),
+          (log) =>
+              log.description.contains('Drama Queen cannot include themselves'),
         ),
         isTrue,
       );
@@ -188,7 +191,8 @@ void main() {
       expect(engine.nightActions.containsKey('sober_sent_home'), isFalse);
       expect(
         engine.gameLog.any(
-          (log) => log.description.contains('Sober cannot send themselves home'),
+          (log) =>
+              log.description.contains('Sober cannot send themselves home'),
         ),
         isTrue,
       );
@@ -214,7 +218,8 @@ void main() {
       expect(fox.alibiDay, isNull);
       expect(
         engine.gameLog.any(
-          (log) => log.description.contains('Silver Fox cannot give themselves an alibi'),
+          (log) => log.description
+              .contains('Silver Fox cannot give themselves an alibi'),
         ),
         isTrue,
       );
@@ -222,7 +227,8 @@ void main() {
 
     test('Club Manager cannot reveal themselves', () async {
       await startWithMinimumPlayers(['club_manager', 'party_animal']);
-      final clubManager = engine.players.firstWhere((p) => p.role.id == 'club_manager');
+      final clubManager =
+          engine.players.firstWhere((p) => p.role.id == 'club_manager');
 
       const step = ScriptStep(
         id: 'club_manager_act',
@@ -238,7 +244,8 @@ void main() {
 
       expect(
         engine.gameLog.any(
-          (log) => log.description.contains('Club Manager must choose a fellow player.'),
+          (log) => log.description
+              .contains('Club Manager must choose a fellow player.'),
         ),
         isTrue,
       );
@@ -265,7 +272,8 @@ void main() {
 
       expect(
         engine.gameLog.any(
-          (log) => log.description.contains('Club Manager cannot view the host.'),
+          (log) =>
+              log.description.contains('Club Manager cannot view the host.'),
         ),
         isTrue,
       );

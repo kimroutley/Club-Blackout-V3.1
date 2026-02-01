@@ -65,15 +65,7 @@ class PlayerTile extends StatelessWidget {
 
     Color? roleColor(String roleId) {
       if (engine == null) return null;
-      try {
-        return engine.players
-            .where((p) => p.role.id == roleId)
-            .first
-            .role
-            .color;
-      } catch (_) {
-        return null;
-      }
+      return engine.getRoleColor(roleId);
     }
 
     Color? byRoleOrTheme(String roleId, Color fallback) {

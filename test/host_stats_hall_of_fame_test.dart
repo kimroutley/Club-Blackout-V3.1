@@ -102,8 +102,8 @@ void main() {
 
     await service.processGameStats(game, const []);
 
-    final profile = service.allProfiles
-        .firstWhere((p) => p.name.toLowerCase() == 'casey');
+    final profile =
+        service.allProfiles.firstWhere((p) => p.name.toLowerCase() == 'casey');
 
     expect(profile.totalHostedGames, 1);
     expect(profile.hostedPartyWins, 1);

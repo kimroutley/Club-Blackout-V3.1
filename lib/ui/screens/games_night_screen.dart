@@ -193,14 +193,12 @@ class _GamesNightScreenState extends State<GamesNightScreen> {
     // Unified AppBar structure for both night and day modes
     PreferredSizeWidget? buildAppBar() {
       if (!canPop) return null; // Handled by MainScreen
-      
+
       return AppBar(
         title: const Text('Games Night Stats'),
         backgroundColor: isNight ? null : Colors.transparent,
         elevation: 0,
-        iconTheme: isNight 
-          ? null 
-          : const IconThemeData(color: Colors.white),
+        iconTheme: isNight ? null : const IconThemeData(color: Colors.white),
       );
     }
 
