@@ -143,6 +143,11 @@ class Player {
       lives = 9;
     }
 
+    // Check if role requires one-time setup
+    if (['clinger', 'creep', 'medic', 'whore'].contains(role.id)) {
+      needsSetup = true;
+    }
+
     // Some roles start on a different alliance than their base descriptor.
     // Note: roles.json uses "Variable" (not "VARIABLE"), so treat this as
     // case-insensitive and primarily key off startAlliance.

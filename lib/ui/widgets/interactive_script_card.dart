@@ -6,6 +6,7 @@ import '../../models/role.dart';
 import '../../models/script_step.dart';
 import '../styles.dart';
 import 'player_icon.dart';
+import 'unified_player_tile.dart';
 
 class InteractiveScriptCard extends StatelessWidget {
   final ScriptStep step;
@@ -43,6 +44,7 @@ class InteractiveScriptCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final showPlayerTile = player != null;
     final accent =
         isActive ? (stepColor ?? role?.color ?? cs.primary) : cs.outline;
     final tt = Theme.of(context).textTheme;
@@ -236,7 +238,23 @@ class InteractiveScriptCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                if (isActive && role != null) ...[
+                if (showPlayerTile) ...[
+                  Flexible(
+                    flex: 0,
+                    child: UnifiedPlayerTile(
+                      player: player!,
+                      gameEngine: gameEngine,
+                      config: const PlayerTileConfig(
+                        variant: PlayerTileVariant.minimal,
+                        isInteractive: false,
+                        showStatusChips: false,
+                        showSubtitle: false,
+                        wrapInCard: false,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                ] else if (isActive && role != null) ...[
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
@@ -278,7 +296,7 @@ class InteractiveScriptCard extends StatelessWidget {
                 ],
                 Expanded(
                   child: Text(
-                    byline == null || byline.isEmpty
+                    (showPlayerTile || byline == null || byline.isEmpty)
                         ? step.title
                         : '${step.title} · $byline',
                     style: headerStyle,

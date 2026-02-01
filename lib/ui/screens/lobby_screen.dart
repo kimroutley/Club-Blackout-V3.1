@@ -13,13 +13,11 @@ import '../../services/dynamic_theme_service.dart';
 import '../styles.dart';
 import '../utils/player_sort.dart';
 import '../widgets/bulletin_dialog_shell.dart';
-import '../widgets/dynamic_themed_background.dart';
-import '../widgets/fade_slide_tab_view.dart';
 import '../widgets/game_toast_listener.dart';
 import '../widgets/loading_overlay.dart';
-import '../widgets/player_tile.dart';
 import '../widgets/role_assignment_dialog.dart';
 import '../widgets/setup_phase_helper.dart';
+import '../widgets/unified_player_tile.dart';
 import 'game_screen.dart';
 
 class LobbyScreen extends StatefulWidget {
@@ -244,75 +242,69 @@ class _LobbyScreenState extends State<LobbyScreen>
           indicatorWeight: 3,
         );
 
-        return DynamicThemedBackground(
-          backgroundAsset: 'Backgrounds/Club Blackout V2 Home Menu.png',
-          child: buildWithLoading(
-            child: DefaultTabController(
-              length: 2,
-              child: Scaffold(
-                backgroundColor: cs.surface,
-                appBar: AppBar(
-                  title: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              ClubBlackoutTheme.neonPurple
-                                  .withValues(alpha: 0.25),
-                              ClubBlackoutTheme.neonPink.withValues(alpha: 0.2),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: ClubBlackoutTheme.neonPurple
-                                .withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.people_alt_rounded,
-                          color: ClubBlackoutTheme.neonPurple,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text('Lobby'),
-                    ],
-                  ),
-                  backgroundColor: cs.surface,
-                  surfaceTintColor: Colors.transparent,
-                  scrolledUnderElevation: 3,
-                  elevation: 0,
-                  centerTitle: true,
-                  leading: IconButton(
-                    icon: const Icon(Icons.menu),
-                    onPressed: () => Scaffold.of(context).openDrawer(),
-                  ),
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(kToolbarHeight),
-                    child: tabBar,
-                  ),
-                ),
-                body: SafeArea(
-                  top: false,
-                  child: Stack(
-                    children: [
-                      // Main Content
-                      FadeSlideTabBarView(
-                        children: [
-                          _buildGuestsTab(context, cs, engine, guests),
-                          _buildGameSetupTab(context, cs, engine, guests),
+        return DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            backgroundColor: cs.surface,
+            appBar: AppBar(
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          ClubBlackoutTheme.neonPurple.withValues(alpha: 0.25),
+                          ClubBlackoutTheme.neonPink.withValues(alpha: 0.2),
                         ],
                       ),
-
-                      // Overlays
-                      GameToastListener(engine: engine),
-                      _buildNotificationOverlay(context),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color:
+                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.people_alt_rounded,
+                      color: ClubBlackoutTheme.neonPurple,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text('Lobby'),
+                ],
+              ),
+              backgroundColor: cs.surface,
+              surfaceTintColor: Colors.transparent,
+              scrolledUnderElevation: 3,
+              elevation: 0,
+              centerTitle: true,
+              leading: IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(kToolbarHeight),
+                child: tabBar,
+              ),
+            ),
+            body: SafeArea(
+              top: false,
+              child: Stack(
+                children: [
+                  // Main Content
+                  TabBarView(
+                    children: [
+                      _buildGuestsTab(context, cs, engine, guests),
+                      _buildGameSetupTab(context, cs, engine, guests),
                     ],
                   ),
-                ),
+
+                  // Overlays
+                  GameToastListener(engine: engine),
+                  _buildNotificationOverlay(context),
+                ],
               ),
             ),
           ),
@@ -563,14 +555,14 @@ class _LobbyScreenState extends State<LobbyScreen>
                                   color:
                                       cs.outlineVariant.withValues(alpha: 0.3)),
                             ),
-                            child: PlayerTile(
+                            child: UnifiedPlayerTile.compact(
                               player: player,
                               gameEngine: engine,
-                              isCompact: true,
+                              isSelected: false,
                               subtitleOverride: player.role.id == 'temp'
                                   ? 'Awaiting assignment'
                                   : player.role.name,
-                              showEffectChips: false,
+                              showStatusChips: false,
                               wrapInCard: false,
                               trailing: IconButton(
                                 icon: const Icon(Icons.edit_rounded, size: 20),
@@ -866,14 +858,13 @@ class _LobbyScreenState extends State<LobbyScreen>
                                   ),
                                 ],
                               ),
-                              child: PlayerTile(
+                              child: UnifiedPlayerTile.compact(
                                 player: p,
                                 gameEngine: engine,
-                                isCompact: true,
                                 subtitleOverride: p.role.id == 'temp'
                                     ? 'Awaiting assignment'
                                     : p.role.name,
-                                showEffectChips: false,
+                                showStatusChips: false,
                                 wrapInCard: false,
                               ),
                             );

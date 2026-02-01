@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/player.dart';
-import 'inline_player_tile.dart';
+import 'unified_player_tile.dart';
 
 class PlayerMentionText extends StatelessWidget {
   final String text;
@@ -101,7 +101,7 @@ class PlayerMentionText extends StatelessWidget {
             alignment: PlaceholderAlignment.middle,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: InlinePlayerTile(player: player),
+              child: UnifiedPlayerTile.minimal(player: player),
             ),
           ),
         );

@@ -261,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ).createShader(bounds),
                                 child: Text(
-                                  'Welcome Back',
+                                  'Who Can You Trust?',
                                   style: tt.headlineMedium?.copyWith(
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 1.0,
@@ -272,12 +272,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Ready for another night of deception?',
+                                'Navigate deadly nights, uncover hidden roles, and survive the ultimate social deduction game',
+                                textAlign: TextAlign.center,
                                 style: tt.bodyLarge?.copyWith(
                                   color: Colors.white.withValues(alpha: 0.9),
                                   fontWeight: FontWeight.w600,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
                             ],
                           ),

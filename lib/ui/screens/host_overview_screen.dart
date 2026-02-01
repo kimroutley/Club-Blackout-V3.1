@@ -28,10 +28,9 @@ import '../widgets/drama_queen_swap_dialog.dart';
 import '../widgets/game_drawer.dart';
 import '../widgets/game_toast_listener.dart';
 import '../widgets/host_alert_listener.dart';
-import '../widgets/host_player_status_card.dart';
-import '../widgets/inline_player_tile.dart';
 import '../widgets/neon_background.dart';
 import '../widgets/neon_page_scaffold.dart';
+import '../widgets/unified_player_tile.dart';
 
 class HostOverviewScreen extends StatefulWidget {
   final GameEngine gameEngine;
@@ -2364,7 +2363,10 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                   ),
                   if (stepPlayer != null) ...[
                     const SizedBox(width: 10),
-                    InlinePlayerTile(player: stepPlayer),
+                    UnifiedPlayerTile.minimal(
+                      player: stepPlayer,
+                      gameEngine: engine,
+                    ),
                   ],
                 ],
               );
@@ -3649,10 +3651,9 @@ class _HostPlayersTabState extends State<_HostPlayersTab> {
     }
 
     Widget buildPlayerCard(Player p) {
-      return HostPlayerStatusCard(
+      return UnifiedPlayerTile.dashboard(
         player: p,
         gameEngine: engine,
-        showControls: true,
         isSelected: _selectedPlayerId == p.id,
         onTap: () => setState(() => _selectedPlayerId = p.id),
         trailing: (p.role.id == 'clinger' &&

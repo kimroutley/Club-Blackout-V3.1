@@ -47,60 +47,6 @@ class ScriptBuilder {
       );
     }
 
-    // SPECIAL SETUP PHASE (For mid-game role swaps like Drama Queen)
-    // If a player swapped into a role requiring setup (Clinger, Creep, Medic), run it now.
-    if (dayCount > 0) {
-      final setupRoles = players
-          .where((p) => p.needsSetup && p.isActive)
-          .map((p) => p.role.id)
-          .toSet();
-
-      if (setupRoles.contains('clinger')) {
-        steps.add(
-          const ScriptStep(
-            id: 'clinger_obsession',
-            title: 'The Clinger - Setup',
-            readAloudText:
-                'Clinger, open your eyes.\n\nChoose the player you will be obsessed with.\n\nYou will see their role card now.\n\nNow close your eyes.',
-            instructionText:
-                'Select the partner in the app to reveal their role card.',
-            actionType: ScriptActionType.selectPlayer,
-            roleId: 'clinger',
-          ),
-        );
-      }
-
-      if (setupRoles.contains('creep')) {
-        steps.add(
-          const ScriptStep(
-            id: 'creep_act',
-            title: 'The Creep - Setup',
-            readAloudText:
-                'Creep, open your eyes.\n\nChoose a player whose role you wish to mimic.\n\nYou will see their role card now.\n\nNow close your eyes.',
-            instructionText:
-                'Select the target in the app to reveal their role card.',
-            actionType: ScriptActionType.selectPlayer,
-            roleId: 'creep',
-          ),
-        );
-      }
-
-      if (setupRoles.contains('medic')) {
-        steps.add(
-          const ScriptStep(
-            id: 'medic_setup_choice',
-            title: 'The Medic - Setup',
-            readAloudText:
-                'Medic, open your eyes.\n\nChoose your ability for the rest of the game.\n\nNow close your eyes.',
-            instructionText:
-                'Select Protect (daily) or Revive (once per game).',
-            actionType: ScriptActionType.toggleOption,
-            roleId: 'medic',
-          ),
-        );
-      }
-    }
-
     // 2. Identify Active Roles with Night Actions
     // NOTE: Some roles have night interactions even if their nightPriority is 0
     // (e.g., Whore/Wallflower/Ally Cat are woken alongside other roles).
@@ -314,6 +260,36 @@ class ScriptBuilder {
       }
     }
 
+    // Ensure Creep's mimicked role is active (even if original owner is dead)
+    try {
+      final activeCreep = players
+          .where((p) => p.isActive && !p.soberSentHome && p.role.id == 'creep')
+          .firstOrNull;
+      if (activeCreep != null && activeCreep.creepTargetId != null) {
+        final target = players
+            .where((p) => p.id == activeCreep.creepTargetId)
+            .firstOrNull;
+        if (target != null) {
+          // Special Clinger handling: only add if Creep-as-Clinger is triggered
+          if (target.role.id == 'clinger') {
+            if (activeCreep.clingerFreedAsAttackDog &&
+                !activeCreep.clingerAttackDogUsed) {
+              activeRoles.add(target.role);
+            }
+          } else {
+            // Include roles that would normally wake
+            if (target.role.nightPriority > 0 ||
+                target.role.id == 'lightweight' ||
+                nightActionPriorityRoleIds.contains(target.role.id)) {
+              activeRoles.add(target.role);
+            }
+          }
+        }
+      }
+    } catch (_) {
+      // Ignore creep lookup errors
+    }
+
     // Sort by priority
     final List<Role> sortedRoles = activeRoles.toList()
       ..sort((a, b) => a.nightPriority.compareTo(b.nightPriority));
@@ -485,18 +461,6 @@ class ScriptBuilder {
 
     final String creepText = isCreepTarget ? ' (and The Creep)' : '';
 
-    // Whore deflection selection is a one-time choice on Night 1 only.
-    // After Night 1, the opportunity is lost (permanent selection or forfeit).
-    final hasWhore = dayCount == 1 &&
-        players.any(
-          (p) =>
-              p.isActive &&
-              !p.soberSentHome &&
-              p.role.id == 'whore' &&
-              p.whoreDeflectionTargetId == null &&
-              !p.whoreDeflectionUsed,
-        );
-
     // Check if any Dealer was sent home by the Sober (cancels murders tonight).
     final anyDealerSentHome = players.any(
       (p) => p.role.id == 'dealer' && p.soberSentHome,
@@ -509,7 +473,6 @@ class ScriptBuilder {
         );
 
     final wakeExtras = <String>[];
-    if (hasWhore) wakeExtras.add('Whore');
     if (hasWallflower) wakeExtras.add('Wallflower');
 
     final wakeText = wakeExtras.isEmpty
@@ -525,8 +488,7 @@ class ScriptBuilder {
           id: 'dealer_kill_blocked',
           title: 'Dealers - Kill Blocked',
           readAloudText:
-              '$wakeText\n\nA Dealer was sent home. There will be NO MURDERS tonight.'
-              '${hasWhore ? "" : "\n\nNow close your eyes."}',
+              '$wakeText\n\nA Dealer was sent home. There will be NO MURDERS tonight.\n\nNow close your eyes.',
           instructionText: 'Wait a beat, then continue.',
           actionType: ScriptActionType.showInfo,
           roleId: 'dealer',
@@ -545,28 +507,11 @@ class ScriptBuilder {
           id: 'dealer_act',
           title: 'The Party Crashers',
           readAloudText: '$wakeText\n\n$actionText'
-              '${(!hasWhore && !hasWallflower) ? "\n\nNow close your eyes." : ""}',
+              '${(!hasWallflower) ? "\n\nNow close your eyes." : ""}',
           instructionText:
               'Wait for the Dealers to agree, then select the target in the app.',
           actionType: ScriptActionType.selectPlayer,
           roleId: 'dealer',
-        ),
-      );
-    }
-
-    if (hasWhore) {
-      final shouldCloseAfterWhore = !hasWallflower || anyDealerSentHome;
-      finalSteps.add(
-        ScriptStep(
-          id: 'whore_deflect',
-          title: 'The Whore',
-          readAloudText:
-              'Whore, TONIGHT ONLY, you may pick your bitch. If you point to someone, this choice is permanent — so choose wisely.\n\nIf you or a Dealer is voted out later, your bitch will take the fall instead.'
-              '${shouldCloseAfterWhore ? "\n\nNow close your eyes." : ""}',
-          instructionText:
-              'If the Whore points to someone, select that player (alive, not the Whore, not a Dealer). If she does not point to anyone, she forfeits this ability. Tap NEXT to continue.',
-          actionType: ScriptActionType.selectPlayer,
-          roleId: 'whore',
         ),
       );
     }

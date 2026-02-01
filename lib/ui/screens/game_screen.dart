@@ -24,12 +24,12 @@ import '../widgets/bulletin_dialog_shell.dart';
 import '../widgets/club_alert_dialog.dart';
 import '../widgets/day_scene_dialog.dart';
 import '../widgets/game_drawer.dart';
+import '../widgets/host_alert_listener.dart';
 import '../widgets/interactive_script_card.dart';
-import '../widgets/night_phase_player_tile.dart';
 import '../widgets/phase_card.dart';
-import '../widgets/player_tile.dart';
 import '../widgets/role_reveal_widget.dart';
 import '../widgets/swap_setup_flow.dart';
+import '../widgets/unified_player_tile.dart';
 import 'host_overview_screen.dart';
 
 class GameScreen extends StatefulWidget {
@@ -1471,9 +1471,10 @@ class _GameScreenState extends State<GameScreen>
                 child: ListView(
                   children: killTargets
                       .map(
-                        (player) => PlayerTile(
+                        (player) => UnifiedPlayerTile.selection(
                           player: player,
                           gameEngine: widget.gameEngine,
+                          isSelected: false,
                           onTap: () {
                             Navigator.pop(context);
                             _executeAttackDogKill(clinger, player);
@@ -2028,6 +2029,7 @@ class _GameScreenState extends State<GameScreen>
               if (_abilityFabExpanded) _buildAbilityFabMenu(),
               if (_rumourMillExpanded)
                 Positioned.fill(child: _buildRumourMillPanel()),
+              HostAlertListener(engine: widget.gameEngine),
             ],
           ),
         );
@@ -2294,7 +2296,7 @@ class _GameScreenState extends State<GameScreen>
           return Row(
             children: [
               Expanded(
-                child: PlayerTile(
+                child: UnifiedPlayerTile.compact(
                   player: player,
                   gameEngine: widget.gameEngine,
                   voteCount: votes,
@@ -2473,16 +2475,15 @@ class _GameScreenState extends State<GameScreen>
                   stats = 'Prey: ${prey.name}';
                 }
 
-                return NightPhasePlayerTile(
+                return UnifiedPlayerTile.nightPhase(
                   player: p,
-                  isSelected: isSelected,
                   gameEngine: widget.gameEngine,
+                  isSelected: isSelected,
                   statsText: stats,
                   onTap: () {
                     // Standard selection toggle
                     _onPlayerSelected(p.id);
                   },
-                  onConfirm: null,
                 );
               },
             ),
@@ -3515,10 +3516,9 @@ class _GameScreenState extends State<GameScreen>
                       itemBuilder: (context, index) {
                         final player = alivePlayers[index];
                         final isSelected = selected.contains(player.id);
-                        return PlayerTile(
+                        return UnifiedPlayerTile.compact(
                           gameEngine: widget.gameEngine,
                           player: player,
-                          isCompact: true,
                           isSelected: isSelected,
                           onTap: () {
                             setStateDialog(() {

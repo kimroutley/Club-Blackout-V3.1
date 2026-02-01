@@ -15,6 +15,7 @@ class ExportFileService {
     required String fileName,
     required String content,
     String subdirName = 'exports',
+    bool useDownloadsFolder = false,
   }) {
     throw UnsupportedError('Saving exports is not supported on web.');
   }
@@ -23,7 +24,10 @@ class ExportFileService {
     throw UnsupportedError('Sharing exports is not supported on web.');
   }
 
-  static Future<void> openExportsFolder({String subdirName = 'exports'}) {
+  static Future<void> openExportsFolder({
+    String subdirName = 'exports',
+    bool useDownloads = false,
+  }) {
     throw UnsupportedError('Open folder is not supported on web.');
   }
 }

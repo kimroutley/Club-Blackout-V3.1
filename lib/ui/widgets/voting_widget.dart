@@ -7,7 +7,7 @@ import '../../models/player.dart';
 import '../../services/sound_service.dart';
 import '../animations.dart';
 import '../styles.dart';
-import 'player_tile.dart';
+import 'unified_player_tile.dart';
 
 class VotingWidget extends StatefulWidget {
   final List<Player> players;
@@ -433,13 +433,11 @@ class _VotingWidgetState extends State<VotingWidget> {
                     dense: true,
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    title: PlayerTile(
+                    title: UnifiedPlayerTile.compact(
                       player: candidate,
                       gameEngine: widget.gameEngine,
-                      isCompact: true,
                       wrapInCard: false,
-                      effectChipsAsBanner: true,
-                      showEffectChips: true,
+                      showStatusChips: true,
                       enabledOverride: widget.isVotingEnabled,
                       trailing: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),

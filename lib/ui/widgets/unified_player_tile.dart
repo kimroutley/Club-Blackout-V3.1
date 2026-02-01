@@ -89,6 +89,54 @@ class PlayerTileConfig {
     this.onConfirm,
   });
 
+  PlayerTileConfig copyWith({
+    PlayerTileVariant? variant,
+    bool? isSelected,
+    bool? isInteractive,
+    bool? showStatusChips,
+    bool? statusChipsAsBanner,
+    int? voteCount,
+    String? subtitleOverride,
+    String? statsText,
+    Widget? leading,
+    Widget? trailing,
+    Color? tileColor,
+    bool? enabledOverride,
+    EdgeInsets? contentPadding,
+    bool? wrapInCard,
+    bool? showRoleIcon,
+    bool? showPlayerName,
+    bool? showSubtitle,
+    VoidCallback? onTap,
+    VoidCallback? onLongPress,
+    VoidCallback? onDoubleTap,
+    VoidCallback? onConfirm,
+  }) {
+    return PlayerTileConfig(
+      variant: variant ?? this.variant,
+      isSelected: isSelected ?? this.isSelected,
+      isInteractive: isInteractive ?? this.isInteractive,
+      showStatusChips: showStatusChips ?? this.showStatusChips,
+      statusChipsAsBanner: statusChipsAsBanner ?? this.statusChipsAsBanner,
+      voteCount: voteCount ?? this.voteCount,
+      subtitleOverride: subtitleOverride ?? this.subtitleOverride,
+      statsText: statsText ?? this.statsText,
+      leading: leading ?? this.leading,
+      trailing: trailing ?? this.trailing,
+      tileColor: tileColor ?? this.tileColor,
+      enabledOverride: enabledOverride ?? this.enabledOverride,
+      contentPadding: contentPadding ?? this.contentPadding,
+      wrapInCard: wrapInCard ?? this.wrapInCard,
+      showRoleIcon: showRoleIcon ?? this.showRoleIcon,
+      showPlayerName: showPlayerName ?? this.showPlayerName,
+      showSubtitle: showSubtitle ?? this.showSubtitle,
+      onTap: onTap ?? this.onTap,
+      onLongPress: onLongPress ?? this.onLongPress,
+      onDoubleTap: onDoubleTap ?? this.onDoubleTap,
+      onConfirm: onConfirm ?? this.onConfirm,
+    );
+  }
+
   /// Compact variant for lists
   factory PlayerTileConfig.compact({
     bool isSelected = false,
@@ -233,23 +281,91 @@ class UnifiedPlayerTile extends StatelessWidget {
   });
 
   /// Quick constructor for compact variant
-  const UnifiedPlayerTile.compact({
+  UnifiedPlayerTile.compact({
     super.key,
     required this.player,
     this.gameEngine,
     bool isSelected = false,
     VoidCallback? onTap,
     int? voteCount,
-  }) : config = const PlayerTileConfig(variant: PlayerTileVariant.compact);
+    bool showStatusChips = true,
+    String? subtitleOverride,
+    bool wrapInCard = true,
+    bool? enabledOverride,
+    Widget? trailing,
+  }) : config = PlayerTileConfig.compact(
+          isSelected: isSelected,
+          onTap: onTap,
+          voteCount: voteCount,
+          showStatusChips: showStatusChips,
+        ).copyWith(
+          subtitleOverride: subtitleOverride,
+          wrapInCard: wrapInCard,
+          enabledOverride: enabledOverride,
+          trailing: trailing,
+        );
 
   /// Quick constructor for selection variant
-  const UnifiedPlayerTile.selection({
+  UnifiedPlayerTile.selection({
     super.key,
     required this.player,
     this.gameEngine,
     required bool isSelected,
     required VoidCallback onTap,
-  }) : config = const PlayerTileConfig(variant: PlayerTileVariant.selection);
+    bool? enabledOverride,
+  }) : config = PlayerTileConfig.selection(
+          isSelected: isSelected,
+          onTap: onTap,
+        ).copyWith(
+          enabledOverride: enabledOverride,
+        );
+
+  /// Quick constructor for night phase variant
+  UnifiedPlayerTile.nightPhase({
+    super.key,
+    required this.player,
+    this.gameEngine,
+    required bool isSelected,
+    VoidCallback? onTap,
+    String? statsText,
+    bool? enabledOverride,
+  }) : config = PlayerTileConfig.nightPhase(
+          isSelected: isSelected,
+          onTap: onTap,
+          statsText: statsText,
+        ).copyWith(
+          enabledOverride: enabledOverride,
+        );
+
+  /// Quick constructor for dashboard variant
+  UnifiedPlayerTile.dashboard({
+    super.key,
+    required this.player,
+    this.gameEngine,
+    bool isSelected = false,
+    VoidCallback? onTap,
+    bool? enabledOverride,
+    Widget? trailing,
+  }) : config = PlayerTileConfig.dashboard(
+          onTap: onTap,
+        ).copyWith(
+          isSelected: isSelected,
+          enabledOverride: enabledOverride,
+          trailing: trailing,
+        );
+
+  /// Quick constructor for minimal variant
+  UnifiedPlayerTile.minimal({
+    super.key,
+    required this.player,
+    this.gameEngine,
+    VoidCallback? onTap,
+    bool? enabledOverride,
+  }) : config = PlayerTileConfig.minimal(
+          onTap: onTap,
+        ).copyWith(
+          enabledOverride: enabledOverride,
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -272,6 +388,7 @@ class UnifiedPlayerTile extends StatelessWidget {
         config.statsText ??
         '${player.role.name} · ${player.alliance}';
     final isEnabled = config.enabledOverride ?? player.isEnabled;
+    final isInteractive = config.isInteractive && isEnabled;
     final isCompact = config.variant == PlayerTileVariant.compact;
 
     final effectChips = config.showStatusChips
@@ -305,9 +422,9 @@ class UnifiedPlayerTile extends StatelessWidget {
     final resolvedTrailing = config.trailing ?? badge;
 
     Widget content = InkWell(
-      onTap: config.isInteractive ? config.onTap : null,
-      onLongPress: config.isInteractive ? config.onLongPress : null,
-      onDoubleTap: config.isInteractive ? config.onDoubleTap : null,
+      onTap: isInteractive ? config.onTap : null,
+      onLongPress: isInteractive ? config.onLongPress : null,
+      onDoubleTap: isInteractive ? config.onDoubleTap : null,
       borderRadius: ClubBlackoutTheme.borderRadiusSmAll,
       child: Padding(
         padding: config.contentPadding ??
@@ -456,6 +573,8 @@ class UnifiedPlayerTile extends StatelessWidget {
     final subtitle = config.statsText ?? player.role.name;
     final accent = player.role.color;
     final cs = Theme.of(context).colorScheme;
+    final isEnabled = config.enabledOverride ?? player.isEnabled;
+    final isInteractive = config.isInteractive && isEnabled;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -467,27 +586,27 @@ class UnifiedPlayerTile extends StatelessWidget {
           gradient: config.isSelected
               ? LinearGradient(
                   colors: [
-                    accent.withValues(alpha: 0.35),
-                    accent.withValues(alpha: 0.15),
+                    accent.withValues(alpha: isEnabled ? 0.35 : 0.15),
+                    accent.withValues(alpha: isEnabled ? 0.15 : 0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
               : LinearGradient(
                   colors: [
-                    cs.surfaceContainerHigh.withValues(alpha: 0.9),
-                    cs.surfaceContainerHigh.withValues(alpha: 0.7),
+                    cs.surfaceContainerHigh.withValues(alpha: isEnabled ? 0.9 : 0.4),
+                    cs.surfaceContainerHigh.withValues(alpha: isEnabled ? 0.7 : 0.3),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
           border: Border.all(
             color: config.isSelected
-                ? accent
-                : cs.outlineVariant.withValues(alpha: 0.3),
+                ? accent.withValues(alpha: isEnabled ? 1.0 : 0.4)
+                : cs.outlineVariant.withValues(alpha: isEnabled ? 0.3 : 0.1),
             width: config.isSelected ? 2.5 : 1.5,
           ),
-          boxShadow: config.isSelected
+          boxShadow: config.isSelected && isEnabled
               ? [
                   BoxShadow(
                     color: accent.withValues(alpha: 0.3),
@@ -512,7 +631,7 @@ class UnifiedPlayerTile extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: config.onTap,
+            onTap: isInteractive ? config.onTap : null,
             borderRadius: BorderRadius.circular(20),
             child: Padding(
               padding: const EdgeInsets.all(18),
@@ -521,7 +640,7 @@ class UnifiedPlayerTile extends StatelessWidget {
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      boxShadow: config.isSelected
+                      boxShadow: config.isSelected && isEnabled
                           ? [
                               BoxShadow(
                                 color: accent.withValues(alpha: 0.5),
@@ -536,8 +655,8 @@ class UnifiedPlayerTile extends StatelessWidget {
                       glowColor: accent,
                       size: 56,
                       isAlive: player.isAlive,
-                      isEnabled: player.isEnabled,
-                      glowIntensity: config.isSelected ? 1.5 : 1.0,
+                      isEnabled: isEnabled,
+                      glowIntensity: config.isSelected && isEnabled ? 1.5 : 1.0,
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -551,8 +670,10 @@ class UnifiedPlayerTile extends StatelessWidget {
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.0,
-                            color: cs.onSurface,
-                            shadows: config.isSelected
+                            color: isEnabled
+                                ? cs.onSurface
+                                : cs.onSurface.withValues(alpha: 0.4),
+                            shadows: config.isSelected && isEnabled
                                 ? ClubBlackoutTheme.textGlow(accent)
                                 : null,
                           ),
@@ -563,13 +684,14 @@ class UnifiedPlayerTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: accent.withValues(alpha: 0.85),
+                            color: accent.withValues(
+                                alpha: isEnabled ? 0.85 : 0.3),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (config.isSelected && config.onConfirm != null)
+                  if (config.isSelected && config.onConfirm != null && isEnabled)
                     IconButton(
                       icon: Icon(Icons.check_circle_rounded, color: accent),
                       iconSize: 32,
@@ -588,26 +710,28 @@ class UnifiedPlayerTile extends StatelessWidget {
   Widget _buildBannerVariant(BuildContext context) {
     final roleColor = player.role.color;
     final cs = Theme.of(context).colorScheme;
+    final isEnabled = config.enabledOverride ?? player.isEnabled;
+    final isInteractive = config.isInteractive && isEnabled;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            roleColor.withValues(alpha: 0.2),
-            roleColor.withValues(alpha: 0.1),
+            roleColor.withValues(alpha: isEnabled ? 0.2 : 0.05),
+            roleColor.withValues(alpha: isEnabled ? 0.1 : 0.02),
           ],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: roleColor.withValues(alpha: 0.4),
+          color: roleColor.withValues(alpha: isEnabled ? 0.4 : 0.1),
           width: 1.5,
         ),
       ),
       child: InkWell(
-        onTap: config.onTap,
+        onTap: isInteractive ? config.onTap : null,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -618,7 +742,7 @@ class UnifiedPlayerTile extends StatelessWidget {
                 glowColor: roleColor,
                 size: 40,
                 isAlive: player.isAlive,
-                isEnabled: player.isEnabled,
+                isEnabled: isEnabled,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -631,7 +755,9 @@ class UnifiedPlayerTile extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: cs.onSurface,
+                        color: isEnabled
+                            ? cs.onSurface
+                            : cs.onSurface.withValues(alpha: 0.4),
                       ),
                     ),
                     if (config.showStatusChips) ...[
@@ -658,9 +784,11 @@ class UnifiedPlayerTile extends StatelessWidget {
   /// Build minimal variant (icon + name only)
   Widget _buildMinimalVariant(BuildContext context) {
     final roleColor = player.role.color;
+    final isEnabled = config.enabledOverride ?? player.isEnabled;
+    final isInteractive = config.isInteractive && isEnabled;
 
     return InkWell(
-      onTap: config.onTap,
+      onTap: isInteractive ? config.onTap : null,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.all(8),
@@ -672,7 +800,7 @@ class UnifiedPlayerTile extends StatelessWidget {
               glowColor: roleColor,
               size: 32,
               isAlive: player.isAlive,
-              isEnabled: player.isEnabled,
+              isEnabled: isEnabled,
             ),
             const SizedBox(width: 8),
             Text(
@@ -680,7 +808,12 @@ class UnifiedPlayerTile extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: isEnabled
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.4),
               ),
             ),
           ],
