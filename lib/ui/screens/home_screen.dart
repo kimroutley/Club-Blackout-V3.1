@@ -33,9 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _updateTheme() {
     if (!mounted) return;
-    
+
     try {
-      final themeService = Provider.of<DynamicThemeService>(context, listen: false);
+      final themeService =
+          Provider.of<DynamicThemeService>(context, listen: false);
       themeService.updateFromBackground(
         'Backgrounds/Club Blackout V2 Home Menu.png',
       );
@@ -46,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showStartOptions(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    
+
     showModalBottomSheet(
       context: context,
       useSafeArea: true,
@@ -73,7 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+                        color:
+                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
                       ),
                     ),
                     child: const Icon(
@@ -90,15 +92,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           'Start Playing',
                           style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
                         ),
                         Text(
                           'Choose your game mode',
                           style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                            color: cs.onSurface.withValues(alpha: 0.7),
-                          ),
+                                color: cs.onSurface.withValues(alpha: 0.7),
+                              ),
                         ),
                       ],
                     ),
@@ -133,7 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: const Icon(Icons.play_circle_outline_rounded, size: 20),
                 label: const Text('Normal Game'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.15),
+                  backgroundColor:
+                      ClubBlackoutTheme.neonBlue.withValues(alpha: 0.15),
                   foregroundColor: cs.onSurface,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   textStyle: const TextStyle(
@@ -155,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    
+
     // Phase-aware styling
     final isNight = widget.gameEngine.currentPhase == GamePhase.night;
 
@@ -217,8 +220,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              ClubBlackoutTheme.neonPurple.withValues(alpha: 0.15),
-                              ClubBlackoutTheme.neonBlue.withValues(alpha: 0.12),
+                              ClubBlackoutTheme.neonPurple
+                                  .withValues(alpha: 0.15),
+                              ClubBlackoutTheme.neonBlue
+                                  .withValues(alpha: 0.12),
                               ClubBlackoutTheme.neonPink.withValues(alpha: 0.1),
                             ],
                             begin: Alignment.topLeft,
@@ -226,12 +231,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.4),
+                            color: ClubBlackoutTheme.neonPurple
+                                .withValues(alpha: 0.4),
                             width: 2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+                              color: ClubBlackoutTheme.neonPurple
+                                  .withValues(alpha: 0.3),
                               blurRadius: 24,
                               spreadRadius: 4,
                             ),
@@ -244,14 +251,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
-                                    ClubBlackoutTheme.neonPink.withValues(alpha: 0.25),
+                                    ClubBlackoutTheme.neonPurple
+                                        .withValues(alpha: 0.3),
+                                    ClubBlackoutTheme.neonPink
+                                        .withValues(alpha: 0.25),
                                   ],
                                 ),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.5),
+                                    color: ClubBlackoutTheme.neonPurple
+                                        .withValues(alpha: 0.5),
                                     blurRadius: 16,
                                     spreadRadius: 2,
                                   ),
@@ -296,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 32),
                     ],
-                    
+
                     // Main action buttons
                     FilledButton.icon(
                       onPressed: () => _showStartOptions(context),
@@ -307,7 +317,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         elevation: 0,
-                        shadowColor: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.5),
+                        shadowColor:
+                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.5),
                         textStyle: tt.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.8,
@@ -323,12 +334,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: const Icon(Icons.menu_book_rounded, size: 22),
                       label: const Text('Game Guides'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: isNight 
-                          ? cs.secondaryContainer 
-                          : ClubBlackoutTheme.neonBlue.withValues(alpha: 0.2),
-                        foregroundColor: isNight 
-                          ? cs.onSecondaryContainer 
-                          : Colors.white,
+                        backgroundColor: isNight
+                            ? cs.secondaryContainer
+                            : ClubBlackoutTheme.neonBlue.withValues(alpha: 0.2),
+                        foregroundColor:
+                            isNight ? cs.onSecondaryContainer : Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         textStyle: tt.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
@@ -337,25 +347,27 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(
-                            color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.4),
+                            color: ClubBlackoutTheme.neonBlue
+                                .withValues(alpha: 0.4),
                             width: 1.5,
                           ),
                         ),
                       ),
                     ),
-                    
+
                     // Stats row (if available)
                     if (widget.gameEngine.guests.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isNight 
-                            ? cs.surfaceContainerHighest 
-                            : Colors.black.withValues(alpha: 0.4),
+                          color: isNight
+                              ? cs.surfaceContainerHighest
+                              : Colors.black.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.3),
+                            color: ClubBlackoutTheme.neonBlue
+                                .withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -372,7 +384,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             Container(
                               width: 1,
                               height: 40,
-                              color: (isNight ? cs.outline : Colors.white).withValues(alpha: 0.3),
+                              color: (isNight ? cs.outline : Colors.white)
+                                  .withValues(alpha: 0.3),
                             ),
                             _buildStatItem(
                               context,
@@ -396,46 +409,47 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-  Widget _buildStatItem(
-    BuildContext context,
-    IconData icon,
-    String value,
-    String label,
-    Color color,
-    bool isNight,
-  ) {
-    final cs = Theme.of(context).colorScheme;
-    
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 20),
+
+Widget _buildStatItem(
+  BuildContext context,
+  IconData icon,
+  String value,
+  String label,
+  Color color,
+  bool isNight,
+) {
+  final cs = Theme.of(context).colorScheme;
+
+  return Column(
+    children: [
+      Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(10),
         ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
-            color: isNight ? cs.onSurface : Colors.white,
-          ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        value,
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w900,
+          color: isNight ? cs.onSurface : Colors.white,
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isNight 
-              ? cs.onSurface.withValues(alpha: 0.7) 
+      ),
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: isNight
+              ? cs.onSurface.withValues(alpha: 0.7)
               : Colors.white.withValues(alpha: 0.8),
-            letterSpacing: 0.5,
-          ),
+          letterSpacing: 0.5,
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}

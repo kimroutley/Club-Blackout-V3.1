@@ -163,8 +163,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
     final allRoles = _eligibleNonHostRoles(
       widget.gameEngine.roleRepository.roles,
     );
-    final playersToAssign =
-        widget.players.where((p) => p.isEnabled).toList();
+    final playersToAssign = widget.players.where((p) => p.isEnabled).toList();
     final playerCount = playersToAssign.length;
 
     final random = Random();

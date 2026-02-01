@@ -263,7 +263,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                       ),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+                        color:
+                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
                       ),
                     ),
                     child: const Icon(
@@ -297,7 +298,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   // Main Content
                   TabBarView(
                     children: [
-                          _buildGuestsTab(context, cs, engine, guests),
+                      _buildGuestsTab(context, cs, engine, guests),
                       _buildGameSetupTab(context, cs, engine, guests),
                     ],
                   ),
@@ -445,7 +446,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                   label: const Text('Clear All'),
                   style: TextButton.styleFrom(
                     foregroundColor: cs.error,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
               ],
@@ -464,15 +466,19 @@ class _LobbyScreenState extends State<LobbyScreen>
                             decoration: BoxDecoration(
                               gradient: RadialGradient(
                                 colors: [
-                                  ClubBlackoutTheme.neonPurple.withValues(alpha: 0.15),
-                                  ClubBlackoutTheme.neonPurple.withValues(alpha: 0.05),
+                                  ClubBlackoutTheme.neonPurple
+                                      .withValues(alpha: 0.15),
+                                  ClubBlackoutTheme.neonPurple
+                                      .withValues(alpha: 0.05),
                                   Colors.transparent,
                                 ],
                               ),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.person_add_outlined,
-                                size: 64, color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.6)),
+                                size: 64,
+                                color: ClubBlackoutTheme.neonPurple
+                                    .withValues(alpha: 0.6)),
                           ),
                           const SizedBox(height: 24),
                           Text(
@@ -626,7 +632,7 @@ class _LobbyScreenState extends State<LobbyScreen>
   Widget _buildHostNameRow(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final hasHost = widget.gameEngine.hostName?.isNotEmpty ?? false;
-    
+
     return Row(
       children: [
         Expanded(
@@ -767,23 +773,36 @@ class _LobbyScreenState extends State<LobbyScreen>
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: players.length < 4 ? [
-                            ClubBlackoutTheme.neonOrange.withValues(alpha: 0.25),
-                            ClubBlackoutTheme.neonRed.withValues(alpha: 0.2),
-                          ] : [
-                            ClubBlackoutTheme.neonGreen.withValues(alpha: 0.25),
-                            ClubBlackoutTheme.neonBlue.withValues(alpha: 0.2),
-                          ],
+                          colors: players.length < 4
+                              ? [
+                                  ClubBlackoutTheme.neonOrange
+                                      .withValues(alpha: 0.25),
+                                  ClubBlackoutTheme.neonRed
+                                      .withValues(alpha: 0.2),
+                                ]
+                              : [
+                                  ClubBlackoutTheme.neonGreen
+                                      .withValues(alpha: 0.25),
+                                  ClubBlackoutTheme.neonBlue
+                                      .withValues(alpha: 0.2),
+                                ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: (players.length < 4 ? ClubBlackoutTheme.neonOrange : ClubBlackoutTheme.neonGreen).withValues(alpha: 0.4),
+                          color: (players.length < 4
+                                  ? ClubBlackoutTheme.neonOrange
+                                  : ClubBlackoutTheme.neonGreen)
+                              .withValues(alpha: 0.4),
                         ),
                       ),
                       child: Icon(
-                        players.length < 4 ? Icons.info_outline_rounded : Icons.check_circle_outline_rounded,
+                        players.length < 4
+                            ? Icons.info_outline_rounded
+                            : Icons.check_circle_outline_rounded,
                         size: 28,
-                        color: players.length < 4 ? ClubBlackoutTheme.neonOrange : ClubBlackoutTheme.neonGreen,
+                        color: players.length < 4
+                            ? ClubBlackoutTheme.neonOrange
+                            : ClubBlackoutTheme.neonGreen,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -792,7 +811,9 @@ class _LobbyScreenState extends State<LobbyScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            players.length < 4 ? 'Need More Guests' : 'Ready to Start!',
+                            players.length < 4
+                                ? 'Need More Guests'
+                                : 'Ready to Start!',
                             style: TextStyle(
                               color: cs.onSurface,
                               fontWeight: FontWeight.bold,
@@ -801,9 +822,9 @@ class _LobbyScreenState extends State<LobbyScreen>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            players.length < 4 
-                              ? 'Minimum 4 guests required • ${players.length} added'
-                              : '${players.length} guests ready for role assignment',
+                            players.length < 4
+                                ? 'Minimum 4 guests required • ${players.length} added'
+                                : '${players.length} guests ready for role assignment',
                             style: TextStyle(
                               color: cs.onSurfaceVariant,
                               fontSize: 14,
@@ -845,8 +866,7 @@ class _LobbyScreenState extends State<LobbyScreen>
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _buildLastGameSnapshotCard(context, cs, engine),
           ),
-        if (engine.lastArchivedGameBlobJson != null)
-          const SizedBox(height: 12),
+        if (engine.lastArchivedGameBlobJson != null) const SizedBox(height: 12),
 
         // Middle: Player List (Expanded)
         Expanded(
@@ -866,8 +886,9 @@ class _LobbyScreenState extends State<LobbyScreen>
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                   child: Row(
                     children: [
-                      Icon(Icons.people_outline_rounded, 
-                        size: 20, 
+                      Icon(
+                        Icons.people_outline_rounded,
+                        size: 20,
                         color: cs.primary,
                       ),
                       const SizedBox(width: 8),
@@ -882,7 +903,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                       ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: cs.primaryContainer,
                           borderRadius: BorderRadius.circular(12),
@@ -899,7 +921,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                     ],
                   ),
                 ),
-                Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.2)),
+                Divider(
+                    height: 1, color: cs.outlineVariant.withValues(alpha: 0.2)),
                 Expanded(
                   child: players.isEmpty
                       ? Center(
@@ -909,7 +932,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                               Icon(
                                 Icons.person_add_outlined,
                                 size: 56,
-                                color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+                                color:
+                                    cs.onSurfaceVariant.withValues(alpha: 0.3),
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -924,7 +948,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                               Text(
                                 'Go to the Guests tab to add players',
                                 style: TextStyle(
-                                  color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                                  color: cs.onSurfaceVariant
+                                      .withValues(alpha: 0.7),
                                   fontSize: 13,
                                 ),
                               ),
@@ -934,7 +959,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                       : ListView.separated(
                           padding: const EdgeInsets.all(12),
                           itemCount: players.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 8),
                           itemBuilder: (context, index) {
                             final p = players[index];
                             return Container(
@@ -942,7 +968,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                                 color: cs.surface,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: cs.outlineVariant.withValues(alpha: 0.3),
+                                  color:
+                                      cs.outlineVariant.withValues(alpha: 0.3),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
@@ -1027,7 +1054,10 @@ class _LobbyScreenState extends State<LobbyScreen>
     int totalPlayers = 0;
     int alivePlayers = 0;
     if (playersJson is List) {
-      final enabled = playersJson.whereType<Map>().map((m) => m.cast<String, dynamic>()).where(
+      final enabled = playersJson
+          .whereType<Map>()
+          .map((m) => m.cast<String, dynamic>())
+          .where(
             (p) => (p['isEnabled'] as bool?) ?? true,
           );
       totalPlayers = enabled
@@ -1065,8 +1095,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   decoration: BoxDecoration(
                     color: accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
-                    border:
-                        Border.all(color: accent.withValues(alpha: 0.25)),
+                    border: Border.all(color: accent.withValues(alpha: 0.25)),
                   ),
                   child: const Icon(Icons.archive_rounded, color: accent),
                 ),
@@ -1265,7 +1294,9 @@ class _LobbyScreenState extends State<LobbyScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  savedAt == null ? 'Saved snapshot' : 'Saved: ${savedAt.toLocal()}',
+                  savedAt == null
+                      ? 'Saved snapshot'
+                      : 'Saved: ${savedAt.toLocal()}',
                   style: TextStyle(
                     color: cs.onSurface.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w700,
@@ -1342,7 +1373,9 @@ class _LobbyScreenState extends State<LobbyScreen>
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    stats.entries.map((e) => '• ${e.key}: ${e.value}').join('\n'),
+                    stats.entries
+                        .map((e) => '• ${e.key}: ${e.value}')
+                        .join('\n'),
                     style: TextStyle(
                       color: cs.onSurface.withValues(alpha: 0.9),
                       fontWeight: FontWeight.w600,
@@ -1385,7 +1418,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                 await Clipboard.setData(ClipboardData(text: raw));
                 if (!ctx.mounted) return;
                 Navigator.pop(ctx);
-                engine.showToast('Snapshot copied to clipboard.', title: 'Copied');
+                engine.showToast('Snapshot copied to clipboard.',
+                    title: 'Copied');
               },
               child: const Text('COPY JSON'),
             ),
@@ -1551,10 +1585,11 @@ class _LobbyScreenState extends State<LobbyScreen>
       await engine.createTestGame(fullRoster: false);
       await engine.startGame();
       await engine.saveGame(_quickTestSaveName, overwriteId: existing?.id);
-      
+
       // Update theme based on assigned roles
       if (context.mounted) {
-        final themeService = Provider.of<DynamicThemeService>(context, listen: false);
+        final themeService =
+            Provider.of<DynamicThemeService>(context, listen: false);
         final activeRoles = engine.guests.map((p) => p.role).toList();
         if (activeRoles.isNotEmpty) {
           await themeService.updateFromBackgroundAndRoles(
@@ -1695,13 +1730,17 @@ class _LobbyScreenState extends State<LobbyScreen>
                               width: constraints.maxWidth,
                               margin: const EdgeInsets.only(top: 8),
                               child: ListView.separated(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
                                 shrinkWrap: true,
                                 itemCount: options.length,
-                                separatorBuilder: (context, index) =>
-                                    Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.3)),
+                                separatorBuilder: (context, index) => Divider(
+                                    height: 1,
+                                    color: cs.outlineVariant
+                                        .withValues(alpha: 0.3)),
                                 itemBuilder: (BuildContext context, int index) {
-                                  final String option = options.elementAt(index);
+                                  final String option =
+                                      options.elementAt(index);
                                   return ListTile(
                                     dense: true,
                                     title: Text(
@@ -1710,7 +1749,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    leading: Icon(Icons.history_rounded, 
+                                    leading: Icon(
+                                      Icons.history_rounded,
                                       color: cs.primary,
                                       size: 20,
                                     ),
@@ -1784,7 +1824,8 @@ class _LobbyScreenState extends State<LobbyScreen>
               icon: const Icon(Icons.add_rounded, size: 20),
               label: const Text('Add'),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
             ),
           ],

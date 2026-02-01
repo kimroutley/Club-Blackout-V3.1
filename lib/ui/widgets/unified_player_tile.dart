@@ -438,9 +438,8 @@ class UnifiedPlayerTile extends StatelessWidget {
       padding: EdgeInsets.only(bottom: isCompact ? 8 : 12),
       child: Container(
         decoration: ClubBlackoutTheme.neonFrame(
-          color: config.isSelected
-              ? baseColor
-              : baseColor.withValues(alpha: 0.5),
+          color:
+              config.isSelected ? baseColor : baseColor.withValues(alpha: 0.5),
           borderRadius: 16,
           opacity: config.isSelected ? 0.3 : (isEnabled ? 0.6 : 0.3),
           borderWidth: config.isSelected ? 1.5 : 0.5,
