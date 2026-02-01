@@ -31,29 +31,33 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
 
   List<Role> get filteredRoles {
     var filtered = widget.roles;
-    
+
     // Apply alliance filter
     if (_filterAlliance != 'All') {
       if (_filterAlliance == 'Dealers') {
-        filtered = filtered.where((r) => r.alliance.contains('Dealer')).toList();
+        filtered =
+            filtered.where((r) => r.alliance.contains('Dealer')).toList();
       } else if (_filterAlliance == 'Party Animals') {
-        filtered = filtered.where((r) => r.alliance.contains('Party Animal')).toList();
+        filtered =
+            filtered.where((r) => r.alliance.contains('Party Animal')).toList();
       } else if (_filterAlliance == 'Wild Cards') {
-        filtered = filtered.where((r) => 
-          !r.alliance.contains('Dealer') && 
-          !r.alliance.contains('Party Animal')
-        ).toList();
+        filtered = filtered
+            .where((r) =>
+                !r.alliance.contains('Dealer') &&
+                !r.alliance.contains('Party Animal'))
+            .toList();
       }
     }
-    
+
     // Apply search
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((r) => 
-        r.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        r.description.toLowerCase().contains(_searchQuery.toLowerCase())
-      ).toList();
+      filtered = filtered
+          .where((r) =>
+              r.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              r.description.toLowerCase().contains(_searchQuery.toLowerCase()))
+          .toList();
     }
-    
+
     return filtered;
   }
 
@@ -62,8 +66,9 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
     // Sort roles by alliance
     final dealerTeam =
         filteredRoles.where((r) => r.alliance.contains('Dealer')).toList();
-    final partyAnimals =
-        filteredRoles.where((r) => r.alliance.contains('Party Animal')).toList();
+    final partyAnimals = filteredRoles
+        .where((r) => r.alliance.contains('Party Animal'))
+        .toList();
     final neutrals = filteredRoles
         .where(
           (r) =>
@@ -73,7 +78,9 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
         .toList();
 
     final list = ListView(
-      padding: widget.embedded ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12) : const EdgeInsets.all(20),
+      padding: widget.embedded
+          ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
+          : const EdgeInsets.all(20),
       children: [
         if (!widget.embedded) ...[
           _buildHeaderCard(context),
@@ -111,8 +118,7 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
             context,
           ),
         ],
-        if (filteredRoles.isEmpty)
-          _buildEmptyState(context),
+        if (filteredRoles.isEmpty) _buildEmptyState(context),
         const SizedBox(height: 32),
       ],
     );
@@ -121,11 +127,11 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
     final double maxWidth = width >= 1200 ? 1180.0 : 920.0;
 
     final content = (widget.isNight && !widget.embedded)
-      ? SafeArea(child: list)
-      : ClubBlackoutTheme.centeredConstrained(
-        maxWidth: maxWidth,
-        child: list,
-        );
+        ? SafeArea(child: list)
+        : ClubBlackoutTheme.centeredConstrained(
+            maxWidth: maxWidth,
+            child: list,
+          );
 
     if (widget.embedded) return content;
     return SafeArea(child: content);
@@ -193,7 +199,8 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
@@ -411,7 +418,9 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
                     Icon(
                       _getIconForAlliance(alliance),
                       size: 18,
-                      color: isSelected ? color : cs.onSurface.withValues(alpha: 0.6),
+                      color: isSelected
+                          ? color
+                          : cs.onSurface.withValues(alpha: 0.6),
                     ),
                   if (alliance != 'All') const SizedBox(width: 6),
                   Text(alliance),
@@ -533,97 +542,96 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
               ],
             ),
             const SizedBox(height: 20),
-              _buildAllianceRow(
-                context,
-                Icons.dangerous_rounded,
-                'DEALERS',
-                'Eliminate all Party Animals',
-                ClubBlackoutTheme.neonRed,
+            _buildAllianceRow(
+              context,
+              Icons.dangerous_rounded,
+              'DEALERS',
+              'Eliminate all Party Animals',
+              ClubBlackoutTheme.neonRed,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Divider(
+                  color: cs.onSurface.withValues(alpha: 0.1), height: 1),
+            ),
+            _buildAllianceRow(
+              context,
+              Icons.celebration_rounded,
+              'PARTY ANIMALS',
+              'Vote out all Dealers',
+              ClubBlackoutTheme.neonBlue,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Divider(
+                  color: cs.onSurface.withValues(alpha: 0.1), height: 1),
+            ),
+            _buildAllianceRow(
+              context,
+              Icons.auto_awesome_rounded,
+              'WILD CARDS',
+              'Unique/Secret win conditions',
+              ClubBlackoutTheme.neonPurple,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: ClubBlackoutTheme.neonOrange.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: ClubBlackoutTheme.neonOrange.withValues(alpha: 0.2)),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Divider(
-                    color: cs.onSurface.withValues(alpha: 0.1), height: 1),
-              ),
-              _buildAllianceRow(
-                context,
-                Icons.celebration_rounded,
-                'PARTY ANIMALS',
-                'Vote out all Dealers',
-                ClubBlackoutTheme.neonBlue,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Divider(
-                    color: cs.onSurface.withValues(alpha: 0.1), height: 1),
-              ),
-              _buildAllianceRow(
-                context,
-                Icons.auto_awesome_rounded,
-                'WILD CARDS',
-                'Unique/Secret win conditions',
-                ClubBlackoutTheme.neonPurple,
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: ClubBlackoutTheme.neonOrange.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color:
-                          ClubBlackoutTheme.neonOrange.withValues(alpha: 0.2)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(
-                          Icons.swap_horiz_rounded,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.swap_horiz_rounded,
+                        color: ClubBlackoutTheme.neonOrange,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'CONVERSION POSSIBILITIES',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
                           color: ClubBlackoutTheme.neonOrange,
-                          size: 20,
                         ),
-                        SizedBox(width: 8),
-                        Text(
-                          'CONVERSION POSSIBILITIES',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: ClubBlackoutTheme.neonOrange,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    _buildConversionRow(
-                      context,
-                      'Second Wind',
-                      'PARTY ANIMAL → DEALER',
-                      'If killed by Dealers, can join them',
-                      cs,
-                    ),
-                    _buildConversionRow(
-                      context,
-                      'Clinger',
-                      'ANY → ATTACK DOG',
-                      'If obsession calls them "controller"',
-                      cs,
-                    ),
-                    _buildConversionRow(
-                      context,
-                      'Creep',
-                      'NEUTRAL → MIMIC',
-                      'Becomes their chosen target\'s role',
-                      cs,
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildConversionRow(
+                    context,
+                    'Second Wind',
+                    'PARTY ANIMAL → DEALER',
+                    'If killed by Dealers, can join them',
+                    cs,
+                  ),
+                  _buildConversionRow(
+                    context,
+                    'Clinger',
+                    'ANY → ATTACK DOG',
+                    'If obsession calls them "controller"',
+                    cs,
+                  ),
+                  _buildConversionRow(
+                    context,
+                    'Creep',
+                    'NEUTRAL → MIMIC',
+                    'Becomes their chosen target\'s role',
+                    cs,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildAllianceRow(

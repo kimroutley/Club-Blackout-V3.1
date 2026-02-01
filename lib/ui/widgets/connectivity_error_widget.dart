@@ -14,7 +14,8 @@ class ConnectivityErrorWidget extends StatelessWidget {
   const ConnectivityErrorWidget({
     super.key,
     this.title = 'Connection Lost',
-    this.message = 'Unable to connect to the game server. Check your internet connection and try again.',
+    this.message =
+        'Unable to connect to the game server. Check your internet connection and try again.',
     this.onRetry,
     this.onGoOffline,
     this.showOfflineOption = false,
@@ -26,7 +27,7 @@ class ConnectivityErrorWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = accentColor ?? ClubBlackoutTheme.neonOrange;
     final cs = Theme.of(context).colorScheme;
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       margin: const EdgeInsets.all(16),
@@ -71,7 +72,7 @@ class ConnectivityErrorWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Title
           Text(
             title,
@@ -84,7 +85,7 @@ class ConnectivityErrorWidget extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
-          
+
           // Message
           Text(
             message,
@@ -96,7 +97,7 @@ class ConnectivityErrorWidget extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 28),
-          
+
           // Action buttons
           Column(
             children: [
@@ -133,7 +134,6 @@ class ConnectivityErrorWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-              
               if (showOfflineOption && onGoOffline != null) ...[
                 const SizedBox(height: 12),
                 SizedBox(
@@ -194,7 +194,8 @@ class ErrorBoundary extends StatefulWidget {
     this.errorBuilder,
     this.onError,
     this.fallbackTitle = 'Something went wrong',
-    this.fallbackMessage = 'An unexpected error occurred. Please try restarting the app.',
+    this.fallbackMessage =
+        'An unexpected error occurred. Please try restarting the app.',
   });
 
   @override
@@ -211,7 +212,7 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
       if (widget.errorBuilder != null) {
         return widget.errorBuilder!(_error!, _stackTrace!);
       }
-      
+
       return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: Center(

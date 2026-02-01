@@ -54,9 +54,8 @@ class NightPhasePlayerTile extends StatelessWidget {
                   end: Alignment.bottomRight,
                 ),
           border: Border.all(
-            color: isSelected
-                ? accent
-                : cs.outlineVariant.withValues(alpha: 0.3),
+            color:
+                isSelected ? accent : cs.outlineVariant.withValues(alpha: 0.3),
             width: isSelected ? 2.5 : 1.5,
           ),
           boxShadow: isSelected

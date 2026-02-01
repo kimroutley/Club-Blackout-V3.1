@@ -151,40 +151,38 @@ class VotingInsights {
       actionsByDay[v.day] = (actionsByDay[v.day] ?? 0) + 1;
     }
 
-    final daySnapshots = finalByDay.entries
-        .map((entry) {
-          final day = entry.key;
-          final finalByVoter = entry.value;
-          final votesByTarget = <String, List<String>>{};
-          final abstained = <String>[];
+    final daySnapshots = finalByDay.entries.map((entry) {
+      final day = entry.key;
+      final finalByVoter = entry.value;
+      final votesByTarget = <String, List<String>>{};
+      final abstained = <String>[];
 
-          for (final row in finalByVoter.entries) {
-            final voterId = row.key;
-            final targetId = row.value;
-            if (targetId == null) {
-              abstained.add(voterId);
-            } else {
-              votesByTarget.putIfAbsent(targetId, () => <String>[]).add(voterId);
-            }
-          }
+      for (final row in finalByVoter.entries) {
+        final voterId = row.key;
+        final targetId = row.value;
+        if (targetId == null) {
+          abstained.add(voterId);
+        } else {
+          votesByTarget.putIfAbsent(targetId, () => <String>[]).add(voterId);
+        }
+      }
 
-          // Stable ordering for deterministic UI/tests.
-          for (final voters in votesByTarget.values) {
-            voters.sort();
-          }
-          abstained.sort();
+      // Stable ordering for deterministic UI/tests.
+      for (final voters in votesByTarget.values) {
+        voters.sort();
+      }
+      abstained.sort();
 
-          final participating = finalByVoter.keys.toList(growable: false)..sort();
+      final participating = finalByVoter.keys.toList(growable: false)..sort();
 
-          return DayVoteSnapshot(
-            day: day,
-            votesByTarget: votesByTarget,
-            participatingVoterIds: participating,
-            abstainedVoterIds: abstained,
-            voteActions: actionsByDay[day] ?? 0,
-          );
-        })
-        .toList(growable: false);
+      return DayVoteSnapshot(
+        day: day,
+        votesByTarget: votesByTarget,
+        participatingVoterIds: participating,
+        abstainedVoterIds: abstained,
+        voteActions: actionsByDay[day] ?? 0,
+      );
+    }).toList(growable: false);
 
     daySnapshots.sort((a, b) => b.day.compareTo(a.day));
 

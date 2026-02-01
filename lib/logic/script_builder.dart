@@ -609,14 +609,14 @@ class ScriptBuilder {
           .where((p) => p.id == medic.medicProtectedPlayerId)
           .firstOrNull;
       if (currentlyProtected != null && currentlyProtected.isAlive) {
-        instructionText = 
+        instructionText =
             'Currently protecting: ${currentlyProtected.name}. Select the same player to continue protection, or select a new player to change your protection target.';
       } else {
-        instructionText = 
+        instructionText =
             'If you chose Protect: the target is safe tonight. If you chose Revive: you can revive one player who died tonight (once per game).';
       }
     } else {
-      instructionText = 
+      instructionText =
           'If you chose Protect: the target is safe tonight. If you chose Revive: you can revive one player who died tonight (once per game).';
     }
 
