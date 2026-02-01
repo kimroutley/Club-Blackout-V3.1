@@ -25,6 +25,34 @@ class DynamicThemeService extends ChangeNotifier {
   ColorScheme? get lightScheme => _lightScheme;
   ColorScheme? get darkScheme => _darkScheme;
 
+  /// Load and cache palette from asset with downsampling
+  Future<PaletteGenerator> _loadPalette(String assetPath) async {
+    if (_paletteCache.containsKey(assetPath)) {
+      return _paletteCache[assetPath]!;
+    }
+
+    final ByteData data = await rootBundle.load(assetPath);
+    final Uint8List bytes = data.buffer.asUint8List();
+
+    // Optimize: Decode image at reduced resolution for palette generation.
+    // This significantly reduces memory usage and decoding time for large backgrounds.
+    final ui.Codec codec = await ui.instantiateImageCodec(
+      bytes,
+      targetWidth: 128,
+    );
+
+    final ui.FrameInfo frameInfo = await codec.getNextFrame();
+    final ui.Image image = frameInfo.image;
+
+    final palette = await PaletteGenerator.fromImage(
+      image,
+      maximumColorCount: 20,
+    );
+
+    _paletteCache[assetPath] = palette;
+    return palette;
+  }
+
   /// Extract colors from a background image and generate theme
   Future<void> updateFromBackground(String assetPath) async {
     if (_currentBackground == assetPath && _paletteCache.containsKey(assetPath)) {
@@ -33,26 +61,7 @@ class DynamicThemeService extends ChangeNotifier {
     }
 
     try {
-      // Check cache first
-      PaletteGenerator palette;
-      if (_paletteCache.containsKey(assetPath)) {
-        palette = _paletteCache[assetPath]!;
-      } else {
-        // Load and decode image
-        final ByteData data = await rootBundle.load(assetPath);
-        final Uint8List bytes = data.buffer.asUint8List();
-        final ui.Codec codec = await ui.instantiateImageCodec(bytes);
-        final ui.FrameInfo frameInfo = await codec.getNextFrame();
-        final ui.Image image = frameInfo.image;
-
-        // Generate palette
-        palette = await PaletteGenerator.fromImage(
-          image,
-          maximumColorCount: 20,
-        );
-        
-        _paletteCache[assetPath] = palette;
-      }
+      final palette = await _loadPalette(assetPath);
 
       _currentBackground = assetPath;
       _generateThemeFromPalette(palette);
@@ -86,24 +95,7 @@ class DynamicThemeService extends ChangeNotifier {
     }
 
     try {
-      // Get background palette
-      PaletteGenerator palette;
-      if (_paletteCache.containsKey(assetPath)) {
-        palette = _paletteCache[assetPath]!;
-      } else {
-        final ByteData data = await rootBundle.load(assetPath);
-        final Uint8List bytes = data.buffer.asUint8List();
-        final ui.Codec codec = await ui.instantiateImageCodec(bytes);
-        final ui.FrameInfo frameInfo = await codec.getNextFrame();
-        final ui.Image image = frameInfo.image;
-
-        palette = await PaletteGenerator.fromImage(
-          image,
-          maximumColorCount: 20,
-        );
-        
-        _paletteCache[assetPath] = palette;
-      }
+      final palette = await _loadPalette(assetPath);
 
       _currentBackground = assetPath;
       _generateHybridTheme(palette, roles);
