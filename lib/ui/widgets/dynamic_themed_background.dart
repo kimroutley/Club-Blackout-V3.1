@@ -20,7 +20,8 @@ class DynamicThemedBackground extends StatefulWidget {
   });
 
   @override
-  State<DynamicThemedBackground> createState() => _DynamicThemedBackgroundState();
+  State<DynamicThemedBackground> createState() =>
+      _DynamicThemedBackgroundState();
 }
 
 class _DynamicThemedBackgroundState extends State<DynamicThemedBackground> {
@@ -33,7 +34,7 @@ class _DynamicThemedBackgroundState extends State<DynamicThemedBackground> {
   @override
   void didUpdateWidget(DynamicThemedBackground oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Update theme if background or roles changed
     if (oldWidget.backgroundAsset != widget.backgroundAsset ||
         oldWidget.activeRoles != widget.activeRoles ||
@@ -44,10 +45,13 @@ class _DynamicThemedBackgroundState extends State<DynamicThemedBackground> {
 
   Future<void> _updateTheme() async {
     if (!mounted) return;
-    
-    final themeService = Provider.of<DynamicThemeService>(context, listen: false);
-    
-    if (widget.useRoleColors && widget.activeRoles != null && widget.activeRoles!.isNotEmpty) {
+
+    final themeService =
+        Provider.of<DynamicThemeService>(context, listen: false);
+
+    if (widget.useRoleColors &&
+        widget.activeRoles != null &&
+        widget.activeRoles!.isNotEmpty) {
       // Hybrid mode: combine background and role colors
       await themeService.updateFromBackgroundAndRoles(
         widget.backgroundAsset,

@@ -32,7 +32,7 @@ void main() {
       roleRepo = FileRoleRepository();
       await roleRepo.loadRoles();
       engine = GameEngine(roleRepository: roleRepo);
-      
+
       soberRole = roleRepo.getRoleById('sober')!;
       medicRole = roleRepo.getRoleById('medic')!;
       bouncerRole = roleRepo.getRoleById('bouncer')!;
@@ -57,17 +57,18 @@ void main() {
 
       // Try to kill the sent-home player
       final step = ScriptBuilder.buildNightScript([sober, dealer, victim], 1)
-          .firstWhere((s) => s.roleId == 'dealer', orElse: () => throw StateError('No dealer step'));
+          .firstWhere((s) => s.roleId == 'dealer',
+              orElse: () => throw StateError('No dealer step'));
 
       // Attempt to target sent-home player
       engine.handleScriptAction(step, [victim.id]);
 
-        // Verify action was queued, but sent-home protection prevents the death.
-        expect(engine.nightActions['kill'], equals(victim.id),
+      // Verify action was queued, but sent-home protection prevents the death.
+      expect(engine.nightActions['kill'], equals(victim.id),
           reason: 'Dealer kill should be recorded even for sent-home player');
 
-        // Simulate kill resolution: sent-home players cannot die to night murders.
-        engine.processDeath(victim, cause: 'night_kill');
+      // Simulate kill resolution: sent-home players cannot die to night murders.
+      engine.processDeath(victim, cause: 'night_kill');
       expect(victim.isAlive, isTrue,
           reason: 'Sent-home player should remain alive');
     });
@@ -77,14 +78,16 @@ void main() {
       victim.soberSentHome = true;
 
       final step = ScriptBuilder.buildNightScript([sober, bouncer, victim], 1)
-          .firstWhere((s) => s.roleId == 'bouncer', orElse: () => throw StateError('No bouncer step'));
+          .firstWhere((s) => s.roleId == 'bouncer',
+              orElse: () => throw StateError('No bouncer step'));
 
       // Attempt to check sent-home player
       engine.handleScriptAction(step, [victim.id]);
 
       // Verify action was queued but player not actually ID'd
       expect(engine.nightActions.containsKey('bouncer_check'), isTrue,
-          reason: 'Bouncer check should be queued (to trigger immunity message)');
+          reason:
+              'Bouncer check should be queued (to trigger immunity message)');
       expect(victim.idCheckedByBouncer, isFalse,
           reason: 'Sent-home player should not actually be ID checked');
     });
@@ -94,14 +97,16 @@ void main() {
       victim.soberSentHome = true;
 
       final step = ScriptBuilder.buildNightScript([sober, roofi, victim], 1)
-          .firstWhere((s) => s.roleId == 'roofi', orElse: () => throw StateError('No roofi step'));
+          .firstWhere((s) => s.roleId == 'roofi',
+              orElse: () => throw StateError('No roofi step'));
 
       // Attempt to silence sent-home player
       engine.handleScriptAction(step, [victim.id]);
 
       // Verify action was queued but player not actually silenced
       expect(engine.nightActions.containsKey('roofi'), isTrue,
-          reason: 'Roofi action should be queued (to trigger immunity message)');
+          reason:
+              'Roofi action should be queued (to trigger immunity message)');
       expect(victim.silencedDay, isNull,
           reason: 'Sent-home player should not actually be silenced');
 
@@ -122,14 +127,16 @@ void main() {
       medic.medicChoice = 'PROTECT_DAILY';
 
       final step = ScriptBuilder.buildNightScript([sober, medic, victim], 1)
-          .firstWhere((s) => s.roleId == 'medic', orElse: () => throw StateError('No medic step'));
+          .firstWhere((s) => s.roleId == 'medic',
+              orElse: () => throw StateError('No medic step'));
 
       // Medic protects sent-home player
       engine.handleScriptAction(step, [victim.id]);
 
       // Verify action WAS queued (Medic can target them)
       expect(engine.nightActions['protect'], equals(victim.id),
-          reason: 'Medic protection should be queued even for sent-home player');
+          reason:
+              'Medic protection should be queued even for sent-home player');
 
       // Verify wasted message appears in morning report
       // Note: We can't easily test the morning report message without full phase transition
@@ -139,7 +146,8 @@ void main() {
     test('Multiple targets - rejects if any are sent home', () {
       // For roles that can target multiple players (like Bartender)
       final bartenderRole = roleRepo.getRoleById('bartender')!;
-      final bartender = Player(id: 'bart1', name: 'Bartender', role: bartenderRole);
+      final bartender =
+          Player(id: 'bart1', name: 'Bartender', role: bartenderRole);
       final player2Role = roleRepo.getRoleById('party_animal')!;
       final player2 = Player(id: 'p2', name: 'Player2', role: player2Role);
 
@@ -148,22 +156,25 @@ void main() {
       // Send one player home
       victim.soberSentHome = true;
 
-      final step = ScriptBuilder.buildNightScript([sober, bartender, victim, player2], 1)
-          .firstWhere((s) => s.roleId == 'bartender', orElse: () => throw StateError('No bartender step'));
+      final step =
+          ScriptBuilder.buildNightScript([sober, bartender, victim, player2], 1)
+              .firstWhere((s) => s.roleId == 'bartender',
+                  orElse: () => throw StateError('No bartender step'));
 
       // Try to target both (one is sent home)
       engine.handleScriptAction(step, [victim.id, player2.id]);
 
       // Verify action was queued but shows immunity message instead of normal result
       expect(engine.nightActions.containsKey('bartender_a'), isTrue,
-          reason: 'Bartender action should be queued (to trigger immunity message)');
+          reason:
+              'Bartender action should be queued (to trigger immunity message)');
     });
 
     test('Sent home status resets during phase transition', () {
       // This is a documentation test - soberSentHome is reset in skipToNextPhase
       // when transitioning from night to day (see game_engine.dart line 1202)
       victim.soberSentHome = true;
-      
+
       // Reset happens automatically during phase transitions
       // Just verify the flag can be set and cleared
       expect(victim.soberSentHome, isTrue);

@@ -120,7 +120,8 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(32),
                         side: BorderSide(
-                          color: widget.phaseColor.withValues(alpha: 0.5 * _fadeAnimation.value),
+                          color: widget.phaseColor
+                              .withValues(alpha: 0.5 * _fadeAnimation.value),
                           width: 2,
                         ),
                       ),
@@ -154,7 +155,8 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: widget.phaseColor.withValues(alpha: 0.4 * _fadeAnimation.value),
+                                      color: widget.phaseColor.withValues(
+                                          alpha: 0.4 * _fadeAnimation.value),
                                       blurRadius: 32,
                                       spreadRadius: 8,
                                     ),
@@ -166,14 +168,15 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
                                   color: widget.phaseColor,
                                   shadows: [
                                     Shadow(
-                                      color: widget.phaseColor.withValues(alpha: 0.8),
+                                      color: widget.phaseColor
+                                          .withValues(alpha: 0.8),
                                       blurRadius: 16,
                                     ),
                                   ],
                                 ),
                               ),
                               const SizedBox(height: 24),
-                              
+
                               // Phase name
                               ShaderMask(
                                 shaderCallback: (bounds) => LinearGradient(
@@ -193,17 +196,21 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
                                   ),
                                 ),
                               ),
-                              
+
                               // Stats row
-                              if (widget.dayNumber != null || widget.playersAlive != null) ...[
+                              if (widget.dayNumber != null ||
+                                  widget.playersAlive != null) ...[
                                 const SizedBox(height: 20),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 12),
                                   decoration: BoxDecoration(
-                                    color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                                    color: cs.surfaceContainerHighest
+                                        .withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: widget.phaseColor.withValues(alpha: 0.3),
+                                      color: widget.phaseColor
+                                          .withValues(alpha: 0.3),
                                     ),
                                   ),
                                   child: Row(
@@ -213,7 +220,8 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
                                         Icon(
                                           Icons.calendar_today_rounded,
                                           size: 18,
-                                          color: widget.phaseColor.withValues(alpha: 0.8),
+                                          color: widget.phaseColor
+                                              .withValues(alpha: 0.8),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
@@ -225,20 +233,24 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
                                           ),
                                         ),
                                       ],
-                                      if (widget.dayNumber != null && widget.playersAlive != null)
+                                      if (widget.dayNumber != null &&
+                                          widget.playersAlive != null)
                                         Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12),
                                           child: Container(
                                             width: 1,
                                             height: 20,
-                                            color: cs.outline.withValues(alpha: 0.3),
+                                            color: cs.outline
+                                                .withValues(alpha: 0.3),
                                           ),
                                         ),
                                       if (widget.playersAlive != null) ...[
                                         Icon(
                                           Icons.groups_rounded,
                                           size: 18,
-                                          color: widget.phaseColor.withValues(alpha: 0.8),
+                                          color: widget.phaseColor
+                                              .withValues(alpha: 0.8),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
@@ -254,17 +266,19 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
                                   ),
                                 ),
                               ],
-                              
+
                               // Tip/instruction
                               if (widget.tip != null) ...[
                                 const SizedBox(height: 20),
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: widget.phaseColor.withValues(alpha: 0.08),
+                                    color: widget.phaseColor
+                                        .withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: widget.phaseColor.withValues(alpha: 0.2),
+                                      color: widget.phaseColor
+                                          .withValues(alpha: 0.2),
                                     ),
                                   ),
                                   child: Row(
@@ -281,7 +295,8 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
-                                            color: cs.onSurface.withValues(alpha: 0.9),
+                                            color: cs.onSurface
+                                                .withValues(alpha: 0.9),
                                             height: 1.4,
                                           ),
                                         ),

@@ -52,11 +52,13 @@ void main() {
     }
 
     test('Correct challenge revokes Roofi and grants stolen power', () async {
-      await startWithMinimumPlayers(['bouncer', 'roofi', 'dealer', 'party_animal']);
+      await startWithMinimumPlayers(
+          ['bouncer', 'roofi', 'dealer', 'party_animal']);
 
       final bouncer = engine.players.firstWhere((p) => p.role.id == 'bouncer');
       final roofi = engine.players.firstWhere((p) => p.role.id == 'roofi');
-      final target = engine.players.firstWhere((p) => p.role.id == 'party_animal');
+      final target =
+          engine.players.firstWhere((p) => p.role.id == 'party_animal');
 
       final ok = engine.resolveBouncerRoofiChallenge(roofi.id);
       expect(ok, isTrue);
@@ -82,7 +84,8 @@ void main() {
     });
 
     test('Stolen Roofi powers cannot self-target the Bouncer', () async {
-      await startWithMinimumPlayers(['bouncer', 'roofi', 'dealer', 'party_animal']);
+      await startWithMinimumPlayers(
+          ['bouncer', 'roofi', 'dealer', 'party_animal']);
 
       final bouncer = engine.players.firstWhere((p) => p.role.id == 'bouncer');
       final roofi = engine.players.firstWhere((p) => p.role.id == 'roofi');
@@ -112,11 +115,13 @@ void main() {
     });
 
     test('Incorrect challenge revokes Bouncer ID checks', () async {
-      await startWithMinimumPlayers(['bouncer', 'roofi', 'dealer', 'party_animal']);
+      await startWithMinimumPlayers(
+          ['bouncer', 'roofi', 'dealer', 'party_animal']);
 
       final bouncer = engine.players.firstWhere((p) => p.role.id == 'bouncer');
       final roofi = engine.players.firstWhere((p) => p.role.id == 'roofi');
-      final suspect = engine.players.firstWhere((p) => p.role.id == 'party_animal');
+      final suspect =
+          engine.players.firstWhere((p) => p.role.id == 'party_animal');
 
       final ok = engine.resolveBouncerRoofiChallenge(suspect.id);
       expect(ok, isTrue);

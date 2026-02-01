@@ -20,7 +20,8 @@ Future<void> runSwapTriggeredSetup({
 
     switch (p.role.id) {
       case 'clinger':
-        await _runClingerSetup(context: context, engine: gameEngine, clinger: p);
+        await _runClingerSetup(
+            context: context, engine: gameEngine, clinger: p);
         break;
       case 'creep':
         await _runCreepSetup(context: context, engine: gameEngine, creep: p);
@@ -105,10 +106,7 @@ Future<void> _runClingerSetup({
 }) async {
   final candidates = engine.players
       .where(
-        (p) =>
-            p.isEnabled &&
-            p.isAlive &&
-            p.id != clinger.id,
+        (p) => p.isEnabled && p.isAlive && p.id != clinger.id,
       )
       .toList();
 
@@ -155,10 +153,7 @@ Future<void> _runCreepSetup({
 }) async {
   final candidates = engine.players
       .where(
-        (p) =>
-            p.isEnabled &&
-            p.isAlive &&
-            p.id != creep.id,
+        (p) => p.isEnabled && p.isAlive && p.id != creep.id,
       )
       .toList();
 
@@ -316,7 +311,8 @@ Future<Player?> _pickPlayer({
                     title: Text(p.name),
                     subtitle: Text(
                       p.role.name,
-                      style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+                      style:
+                          TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
                     ),
                     onTap: () => Navigator.of(ctx).pop(p),
                   );
