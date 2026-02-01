@@ -432,28 +432,38 @@ class GameEngine extends ChangeNotifier {
   }
 
   String? _lastArchivedGameBlobJson;
+  DateTime? _cachedLastArchivedGameSavedAt;
 
   /// JSON-encoded save blob of the most recently archived game.
   ///
   /// This is written automatically before [resetToLobby] wipes the active game.
   String? get lastArchivedGameBlobJson => _lastArchivedGameBlobJson;
 
-  DateTime? get lastArchivedGameSavedAt {
+  DateTime? get lastArchivedGameSavedAt => _cachedLastArchivedGameSavedAt;
+
+  void _updateCachedSavedAt() {
     final json = _lastArchivedGameBlobJson;
-    if (json == null) return null;
+    if (json == null) {
+      _cachedLastArchivedGameSavedAt = null;
+      return;
+    }
     try {
       final decoded = (jsonDecode(json) as Map).cast<String, dynamic>();
       final savedAt = decoded['savedAt'] as String?;
-      if (savedAt == null) return null;
-      return DateTime.tryParse(savedAt);
+      if (savedAt == null) {
+        _cachedLastArchivedGameSavedAt = null;
+      } else {
+        _cachedLastArchivedGameSavedAt = DateTime.tryParse(savedAt);
+      }
     } catch (_) {
-      return null;
+      _cachedLastArchivedGameSavedAt = null;
     }
   }
 
   Future<void> _loadLastArchivedGameBlob() async {
     final prefs = await SharedPreferences.getInstance();
     _lastArchivedGameBlobJson = prefs.getString(_lastArchivedGameBlobKey);
+    _updateCachedSavedAt();
     notifyListeners();
   }
 
@@ -473,6 +483,7 @@ class GameEngine extends ChangeNotifier {
     final blob = exportSaveBlobMap(includeLog: true);
     final encoded = jsonEncode(blob);
     _lastArchivedGameBlobJson = encoded;
+    _updateCachedSavedAt();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastArchivedGameBlobKey, encoded);
     if (notify) {
@@ -482,6 +493,7 @@ class GameEngine extends ChangeNotifier {
 
   Future<void> clearArchivedGameBlob({bool notify = true}) async {
     _lastArchivedGameBlobJson = null;
+    _updateCachedSavedAt();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_lastArchivedGameBlobKey);
     if (notify) {
