@@ -3947,16 +3947,20 @@ class GameEngine extends ChangeNotifier {
       await _deleteSaveKeys(prefs, saveId);
     }
 
-    final playersJson = jsonEncode(players.map((p) => p.toJson()).toList());
-    final logJson = jsonEncode(_gameLog.map((l) => l.toJson()).toList());
+    // Optimization: Avoid redundant decode by serializing lists once.
+    final playersList = players.map((p) => p.toJson()).toList();
+    final logList = _gameLog.map((l) => l.toJson()).toList();
+
+    final playersJson = jsonEncode(playersList);
+    final logJson = jsonEncode(logList);
 
     // New: single-blob save (preferred for robustness).
     final blob = <String, dynamic>{
       'schemaVersion': _saveSchemaVersion,
       'savedAt': DateTime.now().toIso8601String(),
       'hostName': hostName,
-      'players': jsonDecode(playersJson),
-      'log': jsonDecode(logJson),
+      'players': playersList,
+      'log': logList,
       'phaseIndex': _currentPhase.index,
       'dayCount': dayCount,
       'scriptIndex': _scriptIndex,
