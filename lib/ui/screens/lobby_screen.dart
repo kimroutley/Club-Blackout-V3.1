@@ -458,38 +458,39 @@ class _LobbyScreenState extends State<LobbyScreen>
               ? const SizedBox.shrink()
               : (guests.isEmpty)
                   ? Center(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                gradient: RadialGradient(
-                                  colors: [
-                                    ClubBlackoutTheme.neonPurple
-                                        .withValues(alpha: 0.15),
-                                    ClubBlackoutTheme.neonPurple
-                                        .withValues(alpha: 0.05),
-                                    Colors.transparent,
-                                  ],
-                                ),
-                                shape: BoxShape.circle,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              gradient: RadialGradient(
+                                colors: [
+                                  ClubBlackoutTheme.neonPurple
+                                      .withValues(alpha: 0.15),
+                                  ClubBlackoutTheme.neonPurple
+                                      .withValues(alpha: 0.05),
+                                  Colors.transparent,
+                                ],
                               ),
                               child: Icon(Icons.person_add_outlined,
                                   size: 64,
                                   color: ClubBlackoutTheme.neonPurple
                                       .withValues(alpha: 0.6)),
                             ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'No Guests Yet',
-                              style: TextStyle(
-                                color: cs.onSurface,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.3,
-                              ),
+                            child: Icon(Icons.person_add_outlined,
+                                size: 64,
+                                color: ClubBlackoutTheme.neonPurple
+                                    .withValues(alpha: 0.6)),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'No Guests Yet',
+                            style: TextStyle(
+                              color: cs.onSurface,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
                             ),
                             const SizedBox(height: 8),
                             Text(

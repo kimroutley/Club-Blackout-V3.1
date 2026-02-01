@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -81,6 +82,25 @@ class GameEngine extends ChangeNotifier {
   String _saveKey(String saveId, String field) =>
       '$_savePrefix${saveId}_$field';
   String _saveBlobKey(String saveId) => '$_savePrefix$saveId$_saveBlobSuffix';
+
+  // Optimization: cached map of active role colors
+  Map<String, Color>? _activeRoleColorsCache;
+
+  Color? getRoleColor(String roleId) {
+    if (_activeRoleColorsCache == null) {
+      _activeRoleColorsCache = {};
+      for (final p in players) {
+        _activeRoleColorsCache![p.role.id] = p.role.color;
+      }
+    }
+    return _activeRoleColorsCache![roleId];
+  }
+
+  @override
+  void notifyListeners() {
+    _activeRoleColorsCache = null;
+    super.notifyListeners();
+  }
 
   void refreshUi() {
     notifyListeners();
