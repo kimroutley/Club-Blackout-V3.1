@@ -244,13 +244,13 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
     }
   }
 
-
   Future<void> _toggleArchivedView() async {
     final hasArchived = gameEngine.lastArchivedGameBlobJson != null;
     if (!hasArchived && !_viewingArchived) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No archived game snapshot available yet.')),
+        const SnackBar(
+            content: Text('No archived game snapshot available yet.')),
       );
       return;
     }
@@ -378,7 +378,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
   int _engineOddsSignature(GameEngine engine) {
     final players = engine.players
-      .where((p) => p.isEnabled)
+        .where((p) => p.isEnabled)
         .map((p) => Object.hash(
               p.id,
               p.role.id,
@@ -566,7 +566,8 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
         final stats = insights.stats;
         final dashboard = insights.dashboard;
 
-        final isNightM3 = !_viewingArchived && viewEngine.currentPhase == GamePhase.night;
+        final isNightM3 =
+            !_viewingArchived && viewEngine.currentPhase == GamePhase.night;
 
         // Unified AppBar for both night and day modes
         AppBar buildUnifiedAppBar() {
@@ -575,39 +576,48 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
             elevation: 0,
             iconTheme: IconThemeData(
               color: isNightM3 ? null : accent,
-              shadows: isNightM3 ? null : [const Shadow(color: accent, blurRadius: 8)],
+              shadows: isNightM3
+                  ? null
+                  : [const Shadow(color: accent, blurRadius: 8)],
             ),
             actionsIconTheme: IconThemeData(
               color: isNightM3 ? null : accent,
-              shadows: isNightM3 ? null : [const Shadow(color: accent, blurRadius: 8)],
+              shadows: isNightM3
+                  ? null
+                  : [const Shadow(color: accent, blurRadius: 8)],
             ),
-            title: isNightM3 ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        ClubBlackoutTheme.neonBlue.withValues(alpha: 0.25),
-                        ClubBlackoutTheme.neonPurple.withValues(alpha: 0.2),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.dashboard_customize_rounded,
-                    color: ClubBlackoutTheme.neonBlue,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Text('Host Dashboard'),
-              ],
-            ) : null,
+            title: isNightM3
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              ClubBlackoutTheme.neonBlue
+                                  .withValues(alpha: 0.25),
+                              ClubBlackoutTheme.neonPurple
+                                  .withValues(alpha: 0.2),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: ClubBlackoutTheme.neonBlue
+                                .withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.dashboard_customize_rounded,
+                          color: ClubBlackoutTheme.neonBlue,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text('Host Dashboard'),
+                    ],
+                  )
+                : null,
             actions: [
               // Phase Badge
               Container(
@@ -760,9 +770,10 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                                 child: TabBarView(
                                   children: [
                                     _buildOverviewTab(
-                                            context, viewEngine, stats, dashboard),
-                                        _buildStatsTab(context, viewEngine, dashboard),
-                                        _buildPlayersTab(context, viewEngine),
+                                        context, viewEngine, stats, dashboard),
+                                    _buildStatsTab(
+                                        context, viewEngine, dashboard),
+                                    _buildPlayersTab(context, viewEngine),
                                   ],
                                 ),
                               ),
@@ -901,12 +912,21 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                   crossAxisSpacing: 8,
                   childAspectRatio: 1.35,
                   children: [
-                    statTile('Players', stats.totalPlayers.toString(), ClubBlackoutTheme.neonBlue, Icons.groups_rounded),
-                    statTile('Alive', stats.aliveCount.toString(), ClubBlackoutTheme.neonGreen, Icons.favorite_rounded),
-                    statTile('Dead', stats.deadCount.toString(), ClubBlackoutTheme.neonRed, Icons.cancel_rounded),
-                    statTile('Dealers', stats.dealerAliveCount.toString(), ClubBlackoutTheme.neonRed, Icons.dangerous_rounded),
-                    statTile('Party', stats.partyAliveCount.toString(), ClubBlackoutTheme.neonBlue, Icons.celebration_rounded),
-                    statTile('Neutral', stats.neutralAliveCount.toString(), ClubBlackoutTheme.neonPurple, Icons.auto_awesome_rounded),
+                    statTile('Players', stats.totalPlayers.toString(),
+                        ClubBlackoutTheme.neonBlue, Icons.groups_rounded),
+                    statTile('Alive', stats.aliveCount.toString(),
+                        ClubBlackoutTheme.neonGreen, Icons.favorite_rounded),
+                    statTile('Dead', stats.deadCount.toString(),
+                        ClubBlackoutTheme.neonRed, Icons.cancel_rounded),
+                    statTile('Dealers', stats.dealerAliveCount.toString(),
+                        ClubBlackoutTheme.neonRed, Icons.dangerous_rounded),
+                    statTile('Party', stats.partyAliveCount.toString(),
+                        ClubBlackoutTheme.neonBlue, Icons.celebration_rounded),
+                    statTile(
+                        'Neutral',
+                        stats.neutralAliveCount.toString(),
+                        ClubBlackoutTheme.neonPurple,
+                        Icons.auto_awesome_rounded),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -1287,7 +1307,8 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
       engine: engine,
       dashboard: dashboard,
       voting: voting,
-      buildVotingHighlightsCard: (ctx, v, e) => _buildVotingHighlightsCard(ctx, v, e),
+      buildVotingHighlightsCard: (ctx, v, e) =>
+          _buildVotingHighlightsCard(ctx, v, e),
       buildVotingCard: _buildVotingCard,
       buildVotingHistoryCard: (ctx) => _buildVotingHistoryCard(ctx, engine),
       buildRoleChipsCard: (ctx) => _buildRoleChipsCard(ctx, dashboard),
@@ -1391,12 +1412,18 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
         crossAxisSpacing: 10,
         childAspectRatio: 1.15,
         children: [
-          tile('PLAYERS', s.totalPlayers.toString(), ClubBlackoutTheme.neonBlue, Icons.groups_rounded),
-          tile('ALIVE', s.aliveCount.toString(), ClubBlackoutTheme.neonGreen, Icons.favorite_rounded),
-          tile('DEAD', s.deadCount.toString(), ClubBlackoutTheme.neonRed, Icons.cancel_rounded),
-          tile('DEALERS', s.dealerAliveCount.toString(), ClubBlackoutTheme.neonRed, Icons.dangerous_rounded),
-          tile('PARTY', s.partyAliveCount.toString(), ClubBlackoutTheme.neonBlue, Icons.celebration_rounded),
-          tile('NEUTRAL', s.neutralAliveCount.toString(), ClubBlackoutTheme.neonPurple, Icons.auto_awesome_rounded),
+          tile('PLAYERS', s.totalPlayers.toString(), ClubBlackoutTheme.neonBlue,
+              Icons.groups_rounded),
+          tile('ALIVE', s.aliveCount.toString(), ClubBlackoutTheme.neonGreen,
+              Icons.favorite_rounded),
+          tile('DEAD', s.deadCount.toString(), ClubBlackoutTheme.neonRed,
+              Icons.cancel_rounded),
+          tile('DEALERS', s.dealerAliveCount.toString(),
+              ClubBlackoutTheme.neonRed, Icons.dangerous_rounded),
+          tile('PARTY', s.partyAliveCount.toString(),
+              ClubBlackoutTheme.neonBlue, Icons.celebration_rounded),
+          tile('NEUTRAL', s.neutralAliveCount.toString(),
+              ClubBlackoutTheme.neonPurple, Icons.auto_awesome_rounded),
         ],
       ),
     );
@@ -1404,7 +1431,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
   Widget _buildNightHistoryCard(BuildContext context, GameEngine engine) {
     final cs = Theme.of(context).colorScheme;
-    
+
     return NeonGlassCard(
       glowColor: ClubBlackoutTheme.neonPurple,
       child: ExpansionTile(
@@ -1420,22 +1447,24 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
         children: engine.nightHistory.asMap().entries.map((entry) {
           final nightNum = entry.key + 1;
           final nightData = entry.value;
-          
+
           // Extract summary from night data
           final summary = (nightData['summary'] ??
                   nightData['description'] ??
                   nightData['recap'] ??
                   'Night $nightNum data recorded')
               .toString();
-          
+
           return ListTile(
             dense: true,
             leading: CircleAvatar(
-              backgroundColor: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.2),
+              backgroundColor:
+                  ClubBlackoutTheme.neonPurple.withValues(alpha: 0.2),
               foregroundColor: ClubBlackoutTheme.neonPurple,
               child: Text(
                 '$nightNum',
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
               ),
             ),
             title: Text(
@@ -1443,9 +1472,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
             subtitle: Text(
-              summary.length > 100 
-                ? '${summary.substring(0, 97)}...' 
-                : summary,
+              summary.length > 100 ? '${summary.substring(0, 97)}...' : summary,
               style: TextStyle(
                 fontSize: 12,
                 color: cs.onSurface.withValues(alpha: 0.7),
@@ -1458,13 +1485,14 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
     );
   }
 
-  void _showNightDetails(BuildContext context, int nightNum, dynamic nightData) {
+  void _showNightDetails(
+      BuildContext context, int nightNum, dynamic nightData) {
     final cs = Theme.of(context).colorScheme;
-    
+
     String getDetailedSummary() {
       if (nightData is Map) {
         final buffer = StringBuffer();
-        
+
         // Show all available data in a readable format
         nightData.forEach((key, value) {
           if (key != null && value != null) {
@@ -1472,21 +1500,22 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
             buffer.writeln();
           }
         });
-        
-        return buffer.toString().trim().isNotEmpty 
-          ? buffer.toString() 
-          : 'No detailed data available for Night $nightNum';
+
+        return buffer.toString().trim().isNotEmpty
+            ? buffer.toString()
+            : 'No detailed data available for Night $nightNum';
       }
       return nightData?.toString() ?? 'No data';
     }
-    
+
     showDialog(
       context: context,
       builder: (ctx) => BulletinDialogShell(
         accent: ClubBlackoutTheme.neonPurple,
         title: Text(
           'NIGHT $nightNum DETAILS',
-          style: ClubBlackoutTheme.bulletinHeaderStyle(ClubBlackoutTheme.neonPurple),
+          style: ClubBlackoutTheme.bulletinHeaderStyle(
+              ClubBlackoutTheme.neonPurple),
         ),
         content: SingleChildScrollView(
           child: Text(
@@ -1571,11 +1600,11 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
         .toList(growable: false);
 
     final votedVoterIds = eligibleVoterIds
-      .where((id) => engine.currentDayVotesByVoter[id] != null)
+        .where((id) => engine.currentDayVotesByVoter[id] != null)
         .toList(growable: false);
 
     final abstainedVoterIds = eligibleVoterIds
-      .where((id) => engine.currentDayVotesByVoter[id] == null)
+        .where((id) => engine.currentDayVotesByVoter[id] == null)
         .toList(growable: false);
 
     final totalVoters = votedVoterIds.length;
@@ -1599,7 +1628,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
         final bn = playersById[b]?.name ?? b;
         return an.compareTo(bn);
       });
-    
+
     return NeonGlassCard(
       glowColor: ClubBlackoutTheme.neonPurple,
       child: ExpansionTile(
@@ -1675,8 +1704,8 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                                 style: const TextStyle(fontSize: 11),
                               ),
                               visualDensity: VisualDensity.compact,
-                              backgroundColor:
-                                  cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                              backgroundColor: cs.surfaceContainerHighest
+                                  .withValues(alpha: 0.5),
                               side: BorderSide(
                                 color: ClubBlackoutTheme.neonRed
                                     .withValues(alpha: 0.35),
@@ -1742,7 +1771,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
     final abstainers = abstainedVoterIds
         .map((id) => playersById[id]?.name ?? id)
         .toList(growable: false);
-    
+
     if (abstainers.isEmpty) {
       return Text(
         'Everyone voted!',
@@ -1752,23 +1781,26 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
         ),
       );
     }
-    
+
     return Wrap(
       spacing: 6,
       runSpacing: 4,
-      children: abstainers.map((name) =>
-        Chip(
-          label: Text(
-            name,
-            style: const TextStyle(fontSize: 11),
-          ),
-          visualDensity: VisualDensity.compact,
-          backgroundColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-          side: BorderSide(
-            color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
-          ),
-        ),
-      ).toList(),
+      children: abstainers
+          .map(
+            (name) => Chip(
+              label: Text(
+                name,
+                style: const TextStyle(fontSize: 11),
+              ),
+              visualDensity: VisualDensity.compact,
+              backgroundColor:
+                  cs.surfaceContainerHighest.withValues(alpha: 0.5),
+              side: BorderSide(
+                color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -1790,7 +1822,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
         ),
       );
     }
-    
+
     return NeonGlassCard(
       glowColor: ClubBlackoutTheme.neonPurple,
       child: ExpansionTile(
@@ -1825,7 +1857,8 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
-                        color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.4),
+                        color:
+                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.4),
                       ),
                       backgroundColor: cs.surface,
                     ),
@@ -1840,7 +1873,8 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                             children: [
                               Text(
                                 'Day ${snapshot.day}',
-                                style: const TextStyle(fontWeight: FontWeight.w800),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w800),
                               ),
                               const SizedBox(height: 2),
                               Text(
@@ -2395,8 +2429,9 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                     ClubBlackoutTheme.neonOrange,
                     isPrimary: true,
                   ),
-                  onPressed:
-                      _isExportingStory ? null : () => _copyStorySnapshotJson(context),
+                  onPressed: _isExportingStory
+                      ? null
+                      : () => _copyStorySnapshotJson(context),
                   icon: _isExportingStory
                       ? const SizedBox(
                           width: 18,
@@ -2509,12 +2544,14 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+                      color:
+                          ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -2619,11 +2656,15 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                     ),
                     const SizedBox(width: 6),
                     Tooltip(
-                      message: 'Formula: (Leader chance × 65%) + (Separation from runner-up × 35%)\n\nHIGH: ≥72% | MEDIUM: 52-72% | LOW: <52%',
+                      message:
+                          'Formula: (Leader chance × 65%) + (Separation from runner-up × 35%)\n\nHIGH: ≥72% | MEDIUM: 52-72% | LOW: <52%',
                       child: Icon(
                         Icons.info_outline,
                         size: 16,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.5),
                       ),
                     ),
                   ],
@@ -2939,18 +2980,18 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
       if (!context.mounted) return;
       engine.showToast(
-      'Saved AI Game Stats JSON to ${file.path}',
-      actionLabel:
-          ExportFileService.supportsOpenFolder ? 'OPEN FOLDER' : 'SHARE',
-      onAction: () {
-        if (ExportFileService.supportsOpenFolder) {
-          _openExportsFolder(context, engine);
-          return;
-        }
-        ExportFileService.shareFile(file,
-            subject: 'Club Blackout: AI Game Stats');
-      },
-    );
+        'Saved AI Game Stats JSON to ${file.path}',
+        actionLabel:
+            ExportFileService.supportsOpenFolder ? 'OPEN FOLDER' : 'SHARE',
+        onAction: () {
+          if (ExportFileService.supportsOpenFolder) {
+            _openExportsFolder(context, engine);
+            return;
+          }
+          ExportFileService.shareFile(file,
+              subject: 'Club Blackout: AI Game Stats');
+        },
+      );
     } finally {
       if (mounted) setState(() => _isExportingAiStats = false);
     }
@@ -2994,7 +3035,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
       );
 
       if (!context.mounted) return;
-      
+
       // Show persistent toast that remains until user takes action
       engine.showPersistentToast(
         title: 'AI Commentary Prompt Saved',
@@ -3038,7 +3079,8 @@ class _HostStatsTab extends StatelessWidget {
   final dynamic dashboard;
   final VotingInsights voting;
 
-  final Widget Function(BuildContext context, VotingInsights voting, GameEngine engine)
+  final Widget Function(
+          BuildContext context, VotingInsights voting, GameEngine engine)
       buildVotingHighlightsCard;
   final Widget Function(BuildContext context, VotingInsights voting)
       buildVotingCard;

@@ -58,7 +58,7 @@ void main() {
     throw StateError('Step $stepId not found in script queue.');
   }
 
-    test(
+  test(
       'If Sober sends someone home, they dodge Roofi paralysis and the morning report explains it',
       () async {
     // Advance: Setup night -> Night 1.
@@ -73,7 +73,7 @@ void main() {
     executeStepById('sober_act', [victim.id]);
 
     expect(gameEngine.nightActions['sober_sent_home'], equals(victim.id),
-      reason: 'Sober selection should be recorded in nightActions.');
+        reason: 'Sober selection should be recorded in nightActions.');
 
     // Roofi attempts to paralyze the sent-home player, but it should not apply.
     executeStepById('roofi_act', [victim.id]);
@@ -92,7 +92,7 @@ void main() {
     expect(archived['roofi'], equals(victim.id));
 
     expect(victim.soberSentHome, isTrue,
-      reason: 'Victim should still be marked as sent home for this night.');
+        reason: 'Victim should still be marked as sent home for this night.');
 
     // Critically: Roofi paralysis should not apply for tomorrow.
     expect(victim.silencedDay, isNull,

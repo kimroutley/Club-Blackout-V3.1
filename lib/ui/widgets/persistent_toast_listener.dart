@@ -13,7 +13,8 @@ class PersistentToastListener extends StatefulWidget {
   });
 
   @override
-  State<PersistentToastListener> createState() => _PersistentToastListenerState();
+  State<PersistentToastListener> createState() =>
+      _PersistentToastListenerState();
 }
 
 class _PersistentToastListenerState extends State<PersistentToastListener>
@@ -31,7 +32,7 @@ class _PersistentToastListenerState extends State<PersistentToastListener>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _scaleAnimation = Tween<double>(
       begin: 0.8,
       end: 1.0,
@@ -39,7 +40,7 @@ class _PersistentToastListenerState extends State<PersistentToastListener>
       parent: _animationController,
       curve: Curves.elasticOut,
     ));
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 1),
       end: Offset.zero,
@@ -47,7 +48,7 @@ class _PersistentToastListenerState extends State<PersistentToastListener>
       parent: _animationController,
       curve: Curves.easeOutBack,
     ));
-    
+
     widget.gameEngine.addListener(_handleToastUpdate);
   }
 
@@ -61,13 +62,13 @@ class _PersistentToastListenerState extends State<PersistentToastListener>
 
   void _handleToastUpdate() {
     if (!mounted) return;
-    
+
     final version = widget.gameEngine.persistentToastVersion;
     final hasPersistent = widget.gameEngine.hasPersistentToast;
-    
+
     if (version != _lastVersion) {
       _lastVersion = version;
-      
+
       if (hasPersistent) {
         _showPersistentToast();
       } else {
@@ -170,7 +171,8 @@ class _PersistentToastOverlay extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+                      color:
+                          ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
                       blurRadius: 24,
                       spreadRadius: 4,
                     ),
@@ -190,7 +192,8 @@ class _PersistentToastOverlay extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.2),
+                            color: ClubBlackoutTheme.neonPurple
+                                .withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(

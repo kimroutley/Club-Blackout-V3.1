@@ -74,9 +74,8 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
         title: const Text('Hall of Fame'),
         backgroundColor: widget.isNight ? null : Colors.transparent,
         elevation: 0,
-        iconTheme: widget.isNight 
-          ? null 
-          : const IconThemeData(color: Colors.white),
+        iconTheme:
+            widget.isNight ? null : const IconThemeData(color: Colors.white),
         actions: [
           if (_mergeMode)
             TextButton(
@@ -335,7 +334,8 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
                                                     ClubBlackoutTheme.neonPink),
                                           if (p.totalHostedGames > 0)
                                             _StatBadge(
-                                              icon: Icons.local_fire_department_rounded,
+                                              icon: Icons
+                                                  .local_fire_department_rounded,
                                               label:
                                                   '${(p.dealerWinRateWhileHosting * 100).toInt()}% Dealer (host)',
                                               color: ClubBlackoutTheme.neonRed,

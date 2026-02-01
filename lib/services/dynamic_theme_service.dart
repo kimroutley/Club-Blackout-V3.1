@@ -15,10 +15,10 @@ class DynamicThemeService extends ChangeNotifier {
   // Current theme colors
   ColorScheme? _lightScheme;
   ColorScheme? _darkScheme;
-  
+
   // Cache for background palettes
   final Map<String, PaletteGenerator> _paletteCache = {};
-  
+
   // Current active background
   String? _currentBackground;
 
@@ -27,7 +27,8 @@ class DynamicThemeService extends ChangeNotifier {
 
   /// Extract colors from a background image and generate theme
   Future<void> updateFromBackground(String assetPath) async {
-    if (_currentBackground == assetPath && _paletteCache.containsKey(assetPath)) {
+    if (_currentBackground == assetPath &&
+        _paletteCache.containsKey(assetPath)) {
       // Already loaded this background
       return;
     }
@@ -50,7 +51,7 @@ class DynamicThemeService extends ChangeNotifier {
           image,
           maximumColorCount: 20,
         );
-        
+
         _paletteCache[assetPath] = palette;
       }
 
@@ -101,7 +102,7 @@ class DynamicThemeService extends ChangeNotifier {
           image,
           maximumColorCount: 20,
         );
-        
+
         _paletteCache[assetPath] = palette;
       }
 
@@ -118,8 +119,10 @@ class DynamicThemeService extends ChangeNotifier {
   void _generateThemeFromPalette(PaletteGenerator palette) {
     // Extract dominant colors
     final vibrant = palette.vibrantColor?.color ?? ClubBlackoutTheme.neonPurple;
-    final darkVibrant = palette.darkVibrantColor?.color ?? ClubBlackoutTheme.neonBlue;
-    final lightVibrant = palette.lightVibrantColor?.color ?? ClubBlackoutTheme.neonPink;
+    final darkVibrant =
+        palette.darkVibrantColor?.color ?? ClubBlackoutTheme.neonBlue;
+    final lightVibrant =
+        palette.lightVibrantColor?.color ?? ClubBlackoutTheme.neonPink;
 
     // Ensure colors are vibrant enough for Club Blackout aesthetic
     final primary = _boostSaturation(vibrant, targetSaturation: 0.7);
@@ -147,7 +150,7 @@ class DynamicThemeService extends ChangeNotifier {
   void _generateThemeFromRoles(List<Role> roles) {
     // Get all role colors
     final roleColors = roles.map((r) => r.color).toList();
-    
+
     if (roleColors.isEmpty) {
       _generateDefaultTheme();
       return;
@@ -160,14 +163,14 @@ class DynamicThemeService extends ChangeNotifier {
       return satB.compareTo(satA);
     });
 
-    final primary = roleColors.isNotEmpty 
+    final primary = roleColors.isNotEmpty
         ? _boostSaturation(roleColors[0], targetSaturation: 0.75)
         : ClubBlackoutTheme.neonPurple;
-    
+
     final secondary = roleColors.length > 1
         ? _boostSaturation(roleColors[1], targetSaturation: 0.7)
         : ClubBlackoutTheme.neonBlue;
-    
+
     final tertiary = roleColors.length > 2
         ? _boostSaturation(roleColors[2], targetSaturation: 0.65)
         : ClubBlackoutTheme.neonPink;
@@ -192,9 +195,11 @@ class DynamicThemeService extends ChangeNotifier {
   /// Generate hybrid theme combining background palette and role colors
   void _generateHybridTheme(PaletteGenerator palette, List<Role> roles) {
     // Extract background colors
-    final bgVibrant = palette.vibrantColor?.color ?? ClubBlackoutTheme.neonPurple;
-    final bgDark = palette.darkVibrantColor?.color ?? ClubBlackoutTheme.neonBlue;
-    
+    final bgVibrant =
+        palette.vibrantColor?.color ?? ClubBlackoutTheme.neonPurple;
+    final bgDark =
+        palette.darkVibrantColor?.color ?? ClubBlackoutTheme.neonBlue;
+
     // Get role colors
     final roleColors = roles.map((r) => r.color).toList();
     roleColors.sort((a, b) {
@@ -205,7 +210,8 @@ class DynamicThemeService extends ChangeNotifier {
 
     // Blend: Use role color as primary, background colors as accents
     final primary = roleColors.isNotEmpty
-        ? _blendColors(roleColors[0], bgVibrant, 0.7) // 70% role, 30% background
+        ? _blendColors(
+            roleColors[0], bgVibrant, 0.7) // 70% role, 30% background
         : bgVibrant;
 
     final secondary = roleColors.length > 1
@@ -255,7 +261,7 @@ class DynamicThemeService extends ChangeNotifier {
   /// Boost color saturation to match Club Blackout's vibrant aesthetic
   Color _boostSaturation(Color color, {required double targetSaturation}) {
     final hsl = HSLColor.fromColor(color);
-    
+
     // If already saturated enough, keep it
     if (hsl.saturation >= targetSaturation) {
       return color;
@@ -268,12 +274,20 @@ class DynamicThemeService extends ChangeNotifier {
   /// Blend two colors with a given ratio
   Color _blendColors(Color a, Color b, double ratio) {
     assert(ratio >= 0.0 && ratio <= 1.0);
-    
+
     return Color.fromARGB(
-      ((a.a * 255.0 * ratio) + (b.a * 255.0 * (1 - ratio))).round().clamp(0, 255),
-      ((a.r * 255.0 * ratio) + (b.r * 255.0 * (1 - ratio))).round().clamp(0, 255),
-      ((a.g * 255.0 * ratio) + (b.g * 255.0 * (1 - ratio))).round().clamp(0, 255),
-      ((a.b * 255.0 * ratio) + (b.b * 255.0 * (1 - ratio))).round().clamp(0, 255),
+      ((a.a * 255.0 * ratio) + (b.a * 255.0 * (1 - ratio)))
+          .round()
+          .clamp(0, 255),
+      ((a.r * 255.0 * ratio) + (b.r * 255.0 * (1 - ratio)))
+          .round()
+          .clamp(0, 255),
+      ((a.g * 255.0 * ratio) + (b.g * 255.0 * (1 - ratio)))
+          .round()
+          .clamp(0, 255),
+      ((a.b * 255.0 * ratio) + (b.b * 255.0 * (1 - ratio)))
+          .round()
+          .clamp(0, 255),
     );
   }
 
