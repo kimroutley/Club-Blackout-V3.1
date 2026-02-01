@@ -1,6 +1,5 @@
 // ignore_for_file: avoid_print
 
-import 'dart:convert';
 import 'package:club_blackout/logic/game_engine.dart';
 import 'package:club_blackout/models/game_log_entry.dart';
 import 'package:club_blackout/models/player.dart';
@@ -26,7 +25,15 @@ void main() {
     );
 
     final villagerRole = roleRepo.getRoleById('party_animal') ??
-        Role(id: 'party_animal', name: 'Party Animal', alliance: 'Party', type: 'Good', description: 'Desc', nightPriority: 0, assetPath: '', colorHex: '#FFFFFF');
+        Role(
+            id: 'party_animal',
+            name: 'Party Animal',
+            alliance: 'Party',
+            type: 'Good',
+            description: 'Desc',
+            nightPriority: 0,
+            assetPath: '',
+            colorHex: '#FFFFFF');
 
     // Add 50 players
     for (int i = 0; i < 50; i++) {
