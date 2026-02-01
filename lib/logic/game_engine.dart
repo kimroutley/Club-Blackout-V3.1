@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -81,6 +82,25 @@ class GameEngine extends ChangeNotifier {
   String _saveKey(String saveId, String field) =>
       '$_savePrefix${saveId}_$field';
   String _saveBlobKey(String saveId) => '$_savePrefix$saveId$_saveBlobSuffix';
+
+  // Optimization: cached map of active role colors
+  Map<String, Color>? _activeRoleColorsCache;
+
+  Color? getRoleColor(String roleId) {
+    if (_activeRoleColorsCache == null) {
+      _activeRoleColorsCache = {};
+      for (final p in players) {
+        _activeRoleColorsCache![p.role.id] = p.role.color;
+      }
+    }
+    return _activeRoleColorsCache![roleId];
+  }
+
+  @override
+  void notifyListeners() {
+    _activeRoleColorsCache = null;
+    super.notifyListeners();
+  }
 
   void refreshUi() {
     notifyListeners();
@@ -3959,16 +3979,20 @@ class GameEngine extends ChangeNotifier {
       await _deleteSaveKeys(prefs, saveId);
     }
 
-    final playersJson = jsonEncode(players.map((p) => p.toJson()).toList());
-    final logJson = jsonEncode(_gameLog.map((l) => l.toJson()).toList());
+    // Optimization: Avoid redundant decode by serializing lists once.
+    final playersList = players.map((p) => p.toJson()).toList();
+    final logList = _gameLog.map((l) => l.toJson()).toList();
+
+    final playersJson = jsonEncode(playersList);
+    final logJson = jsonEncode(logList);
 
     // New: single-blob save (preferred for robustness).
     final blob = <String, dynamic>{
       'schemaVersion': _saveSchemaVersion,
       'savedAt': DateTime.now().toIso8601String(),
       'hostName': hostName,
-      'players': jsonDecode(playersJson),
-      'log': jsonDecode(logJson),
+      'players': playersList,
+      'log': logList,
       'phaseIndex': _currentPhase.index,
       'dayCount': dayCount,
       'scriptIndex': _scriptIndex,
