@@ -14,6 +14,10 @@ import '../styles.dart';
 import '../utils/player_sort.dart';
 import '../widgets/bulletin_dialog_shell.dart';
 import '../widgets/game_toast_listener.dart';
+// M3: Removed neon widgets
+// import '../widgets/neon_background.dart';
+// import '../widgets/neon_page_scaffold.dart';
+// import '../widgets/neon_section_header.dart';
 import '../widgets/player_tile.dart';
 import '../widgets/role_assignment_dialog.dart';
 import 'game_screen.dart';

@@ -1,6 +1,7 @@
 import 'package:club_blackout/data/role_repository.dart';
 import 'package:club_blackout/logic/game_engine.dart';
 import 'package:club_blackout/models/role.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -54,7 +55,7 @@ void main() {
     await engine.archiveCurrentGameBlob(notify: false);
 
     final blob = engine.lastArchivedGameBlobJson;
-    print('Blob size: ${blob?.length ?? 0} chars');
+    debugPrint('Blob size: ${blob?.length ?? 0} chars');
 
     final stopwatch = Stopwatch()..start();
     const iterations = 10000;
@@ -64,7 +65,7 @@ void main() {
     }
 
     stopwatch.stop();
-    print(
+    debugPrint(
         'Time taken for $iterations accesses: ${stopwatch.elapsedMilliseconds} ms');
   });
 }

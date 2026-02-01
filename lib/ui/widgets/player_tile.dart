@@ -63,18 +63,17 @@ class PlayerTile extends StatelessWidget {
     final chips = <_EffectChip>[];
     final seen = <String>{};
 
-    // Optimization: Build a map of active role colors once to avoid O(N) scans per chip.
-    final roleColors = <String, Color>{};
-    if (engine != null) {
-      for (final p in engine.players) {
-        // If multiple players have the same role, the color is identical.
-        // We just need *any* active instance of the role to get its color.
-        roleColors[p.role.id] = p.role.color;
-      }
-    }
-
     Color? roleColor(String roleId) {
-      return roleColors[roleId];
+      if (engine == null) return null;
+      try {
+        return engine.players
+            .where((p) => p.role.id == roleId)
+            .first
+            .role
+            .color;
+      } catch (_) {
+        return null;
+      }
     }
 
     Color? byRoleOrTheme(String roleId, Color fallback) {
