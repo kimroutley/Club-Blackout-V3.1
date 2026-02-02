@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/player.dart';
+import '../styles.dart';
 import 'club_alert_dialog.dart';
 import 'player_icon.dart';
 
@@ -36,17 +37,17 @@ class MessyBitchWinDialog extends StatelessWidget {
           glowIntensity: 0.20,
           size: 56,
         ),
-        title: const Text('Messy Bitch victory'),
+        title: const Text('MESSY BITCH VICTORY'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${messyBitch.name} has successfully spread a rumour to every single guest.',
+              '${messyBitch.name.toUpperCase()} HAS SUCCESSFULLY SPREAD A RUMOUR TO EVERY SINGLE GUEST.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'She takes her win and leaves the party in absolute chaos.',
+              'SHE TAKES HER WIN AND LEAVES THE PARTY IN ABSOLUTE CHAOS.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: cs.onSurfaceVariant,
@@ -58,12 +59,13 @@ class MessyBitchWinDialog extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: onRestart,
-            child: const Text('End game & restart'),
+            child: const Text('END GAME & RESTART'),
           ),
           FilledButton.icon(
             onPressed: onContinue,
             icon: const Icon(Icons.exit_to_app_rounded),
-            label: const Text('Kick her out & continue'),
+            label: const Text('KICK HER OUT & CONTINUE'),
+            style: ClubBlackoutTheme.neonButtonStyle(accent, isPrimary: true),
           ),
         ],
       ),

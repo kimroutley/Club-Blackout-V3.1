@@ -100,59 +100,41 @@ class _AutoScrollTextState extends State<AutoScrollText> {
   Widget build(BuildContext context) {
     final effectiveStyle = widget.style ?? DefaultTextStyle.of(context).style;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final should = _computeShouldScroll(constraints, effectiveStyle);
-
-        if (_shouldScroll != should) {
-          _shouldScroll = should;
-          if (_shouldScroll) {
-            // Schedule after the frame so the scroll extent is available.
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _runMarquee();
-            });
-          } else {
-            if (_controller.hasClients) {
-              _controller.jumpTo(0);
-            }
-          }
-        }
-
-        if (!should) {
-          return Text(
+    return SingleChildScrollView(
+      controller: _controller,
+      scrollDirection: Axis.horizontal,
+      physics: const NeverScrollableScrollPhysics(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
             widget.text,
             maxLines: widget.maxLines,
-            overflow: TextOverflow.clip,
+            overflow: TextOverflow.visible,
             textAlign: widget.textAlign,
             style: effectiveStyle,
-          );
-        }
-
-        // Marquee mode: use a scroll view with a trailing gap to avoid hard looping.
-        return ClipRect(
-          child: SingleChildScrollView(
-            controller: _controller,
-            scrollDirection: Axis.horizontal,
-            physics: const NeverScrollableScrollPhysics(),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  widget.text,
-                  maxLines: widget.maxLines,
-                  overflow: TextOverflow.visible,
-                  textAlign: widget.textAlign,
-                  style: effectiveStyle,
-                ),
-                SizedBox(width: widget.gap),
-              ],
-            ),
           ),
-        );
-      },
+          // We always add a gap and a post-frame check to see if we should scroll.
+          // This avoids LayoutBuilder intrinsic dimension issues.
+          Builder(
+            builder: (context) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted || !_controller.hasClients) return;
+                final max = _controller.position.maxScrollExtent;
+                final should = max > 0;
+                if (should != _shouldScroll) {
+                  setState(() => _shouldScroll = should);
+                  if (should) _runMarquee();
+                }
+              });
+              return SizedBox(width: _shouldScroll ? widget.gap : 0.1);
+            },
+          ),
+        ],
+      ),
     );
   }
+}
 }
 
 /// A horizontally-scrollable container that can optionally auto-pan when

@@ -8,6 +8,8 @@ import '../styles.dart';
 import '../widgets/player_icon.dart';
 import '../widgets/role_card_widget.dart';
 import '../widgets/role_tile_widget.dart';
+import '../widgets/neon_glass_card.dart';
+import '../widgets/club_alert_dialog.dart';
 
 class RoleCardsScreen extends StatefulWidget {
   final List<Role> roles;
@@ -147,16 +149,9 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Card(
-      elevation: 0,
-      color: cs.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: cs.outlineVariant.withValues(alpha: 0.5),
-          width: 1,
-        ),
-      ),
+    return NeonGlassCard(
+      glowColor: color,
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -165,12 +160,15 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  color.withValues(alpha: 0.15),
-                  color.withValues(alpha: 0.08),
+                  color.withValues(alpha: 0.2),
+                  color.withValues(alpha: 0.05),
                 ],
               ),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
+              border: Border(
+                bottom: BorderSide(
+                  color: color.withValues(alpha: 0.3),
+                  width: 1,
+                ),
               ),
             ),
             child: Row(
@@ -202,7 +200,7 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
+                    color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: color.withValues(alpha: 0.3),
@@ -222,8 +220,8 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
+              spacing: 12,
+              runSpacing: 12,
               children: allianceRoles
                   .map(
                     (role) => RoleTileWidget(
@@ -249,53 +247,32 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
   void _showRoleDetail(BuildContext context, Role role) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      builder: (context) => ClubAlertDialog(
+        neonBorderColor: _getColorForAlliance(role.alliance),
         insetPadding: ClubBlackoutTheme.dialogInsetPadding,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // The Card itself
-              RoleCardWidget(role: role, compact: false),
-
-              const SizedBox(height: 20),
-
-              // Close Button with better M3 styling
-              Center(
-                child: FilledButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded, size: 20),
-                  label: const Text('Close'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withValues(alpha: 0.7),
-                    foregroundColor: Theme.of(context).colorScheme.onSurface,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outline
-                            .withValues(alpha: 0.5),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                ),
+              RoleCardWidget(
+                role: role,
+                compact: false,
+                tapToFlip: true,
               ),
             ],
           ),
         ),
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.close_rounded),
+            label: const Text('DISMISS'),
+            style: TextButton.styleFrom(
+              foregroundColor: _getColorForAlliance(role.alliance),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -304,66 +281,65 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Card(
-      elevation: 0,
-      color: cs.primaryContainer.withValues(alpha: 0.3),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.badge_rounded,
-                color: cs.primary,
-                size: 32,
-              ),
+    return NeonGlassCard(
+      glowColor: ClubBlackoutTheme.neonBlue,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'CHARACTER ROLES',
-                    style: tt.headlineSmall?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Discover alliances, abilities, and win conditions',
-                    style: tt.bodyMedium?.copyWith(
-                      color: cs.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
+            child: const Icon(
+              Icons.badge_rounded,
+              color: ClubBlackoutTheme.neonBlue,
+              size: 32,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'CHARACTER ROLES',
+                  style: tt.headlineSmall?.copyWith(
+                    color: ClubBlackoutTheme.neonBlue,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                    shadows: [
+                      Shadow(
+                        color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.5),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Discover alliances, abilities, and win conditions',
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSearchBar(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return TextField(
       onChanged: (value) => setState(() => _searchQuery = value),
-      decoration: InputDecoration(
-        hintText: 'Search roles by name or description...',
-        prefixIcon: Icon(Icons.search_rounded, color: cs.primary),
+      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+      decoration: ClubBlackoutTheme.neonInputDecoration(
+        context,
+        hint: 'Search roles by name or description...',
+        color: ClubBlackoutTheme.neonBlue,
+        icon: Icons.search_rounded,
         suffixIcon: _searchQuery.isNotEmpty
             ? IconButton(
                 icon: const Icon(Icons.clear_rounded),
@@ -373,25 +349,6 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
                 },
               )
             : null,
-        filled: true,
-        fillColor: cs.surfaceContainerHighest,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-            color: cs.outlineVariant.withValues(alpha: 0.5),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-            color: cs.primary,
-            width: 2,
-          ),
-        ),
       ),
     );
   }
@@ -499,137 +456,126 @@ class _RoleCardsScreenState extends State<RoleCardsScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Card(
-      elevation: 0,
-      color: cs.surfaceContainerHigh,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: cs.outlineVariant.withValues(alpha: 0.5),
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.account_tree_rounded,
-                    color: cs.onPrimaryContainer,
-                    size: 24,
+    return NeonGlassCard(
+      glowColor: ClubBlackoutTheme.neonBlue,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.account_tree_rounded,
+                  color: ClubBlackoutTheme.neonBlue,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  'ALLIANCE STRUCTURE',
+                  style: tt.titleLarge?.copyWith(
+                    color: ClubBlackoutTheme.neonBlue,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
                   ),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    'ALLIANCE STRUCTURE',
-                    style: tt.titleLarge?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.0,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildAllianceRow(
+            context,
+            Icons.dangerous_rounded,
+            'DEALERS',
+            'Eliminate all Party Animals',
+            ClubBlackoutTheme.neonRed,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Divider(
+                color: cs.onSurface.withValues(alpha: 0.1), height: 1),
+          ),
+          _buildAllianceRow(
+            context,
+            Icons.celebration_rounded,
+            'PARTY ANIMALS',
+            'Vote out all Dealers',
+            ClubBlackoutTheme.neonBlue,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Divider(
+                color: cs.onSurface.withValues(alpha: 0.1), height: 1),
+          ),
+          _buildAllianceRow(
+            context,
+            Icons.auto_awesome_rounded,
+            'WILD CARDS',
+            'Unique/Secret win conditions',
+            ClubBlackoutTheme.neonPurple,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: ClubBlackoutTheme.neonOrange.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: ClubBlackoutTheme.neonOrange.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(
+                      Icons.swap_horiz_rounded,
+                      color: ClubBlackoutTheme.neonOrange,
+                      size: 20,
                     ),
-                  ),
+                    SizedBox(width: 8),
+                    Text(
+                      'CONVERSION POSSIBILITIES',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: ClubBlackoutTheme.neonOrange,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildConversionRow(
+                  context,
+                  'Second Wind',
+                  'PARTY ANIMAL \u2192 DEALER',
+                  'If killed by Dealers, can join them',
+                  cs,
+                ),
+                _buildConversionRow(
+                  context,
+                  'Clinger',
+                  'ANY \u2192 ATTACK DOG',
+                  'If obsession calls them "controller"',
+                  cs,
+                ),
+                _buildConversionRow(
+                  context,
+                  'Creep',
+                  'NEUTRAL \u2192 MIMIC',
+                  'Becomes their chosen target\'s role',
+                  cs,
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            _buildAllianceRow(
-              context,
-              Icons.dangerous_rounded,
-              'DEALERS',
-              'Eliminate all Party Animals',
-              ClubBlackoutTheme.neonRed,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Divider(
-                  color: cs.onSurface.withValues(alpha: 0.1), height: 1),
-            ),
-            _buildAllianceRow(
-              context,
-              Icons.celebration_rounded,
-              'PARTY ANIMALS',
-              'Vote out all Dealers',
-              ClubBlackoutTheme.neonBlue,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Divider(
-                  color: cs.onSurface.withValues(alpha: 0.1), height: 1),
-            ),
-            _buildAllianceRow(
-              context,
-              Icons.auto_awesome_rounded,
-              'WILD CARDS',
-              'Unique/Secret win conditions',
-              ClubBlackoutTheme.neonPurple,
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: ClubBlackoutTheme.neonOrange.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: ClubBlackoutTheme.neonOrange.withValues(alpha: 0.2)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.swap_horiz_rounded,
-                        color: ClubBlackoutTheme.neonOrange,
-                        size: 20,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'CONVERSION POSSIBILITIES',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: ClubBlackoutTheme.neonOrange,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  _buildConversionRow(
-                    context,
-                    'Second Wind',
-                    'PARTY ANIMAL → DEALER',
-                    'If killed by Dealers, can join them',
-                    cs,
-                  ),
-                  _buildConversionRow(
-                    context,
-                    'Clinger',
-                    'ANY → ATTACK DOG',
-                    'If obsession calls them "controller"',
-                    cs,
-                  ),
-                  _buildConversionRow(
-                    context,
-                    'Creep',
-                    'NEUTRAL → MIMIC',
-                    'Becomes their chosen target\'s role',
-                    cs,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -3,6 +3,7 @@ import '../../models/player.dart';
 import '../../models/role.dart';
 import '../../services/sound_service.dart';
 import '../animations.dart';
+import '../styles.dart';
 import 'club_alert_dialog.dart';
 import 'role_card_widget.dart';
 import 'role_facts_context.dart';
@@ -108,7 +109,6 @@ class _DeathAnnouncementDialogState extends State<DeathAnnouncementDialog>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     return AnimatedBuilder(
       animation: Listenable.merge([_fadeAnimation, _scaleAnimation]),
       builder: (context, child) {
@@ -128,9 +128,10 @@ class _DeathAnnouncementDialogState extends State<DeathAnnouncementDialog>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Eliminated',
-                      style: (tt.titleLarge ?? const TextStyle()).copyWith(
-                        fontWeight: FontWeight.w800,
+                      'ELIMINATED',
+                      style: ClubBlackoutTheme.headingStyle.copyWith(
+                        fontSize: 20,
+                        color: cs.error,
                       ),
                     ),
                   ),
@@ -142,21 +143,22 @@ class _DeathAnnouncementDialogState extends State<DeathAnnouncementDialog>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      widget.player.name,
+                      widget.player.name.toUpperCase(),
                       textAlign: TextAlign.center,
-                      style: (tt.headlineSmall ?? const TextStyle()).copyWith(
-                        fontWeight: FontWeight.w900,
+                      style: ClubBlackoutTheme.headingStyle.copyWith(
+                        fontSize: 24,
                         color: cs.onSurface,
                       ),
                     ),
                     if (widget.causeOfDeath != null) ...[
                       const SizedBox(height: 8),
                       Text(
-                        widget.causeOfDeath!,
+                        widget.causeOfDeath!.toUpperCase(),
                         textAlign: TextAlign.center,
-                        style: (tt.bodyMedium ?? const TextStyle()).copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontStyle: FontStyle.italic,
+                        style: ClubBlackoutTheme.headingStyle.copyWith(
+                          fontSize: 12,
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                          letterSpacing: 2.0,
                         ),
                       ),
                     ],
@@ -174,11 +176,11 @@ class _DeathAnnouncementDialogState extends State<DeathAnnouncementDialog>
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Text(
-                          'They have been eliminated from the game',
+                          'THEY HAVE BEEN ELIMINATED FROM THE GAME',
                           textAlign: TextAlign.center,
-                          style: (tt.bodyMedium ?? const TextStyle()).copyWith(
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
+                            fontSize: 10,
                             color: cs.onSurface.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -189,11 +191,9 @@ class _DeathAnnouncementDialogState extends State<DeathAnnouncementDialog>
               actions: [
                 FilledButton(
                   onPressed: _close,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: cs.errorContainer,
-                    foregroundColor: cs.onErrorContainer,
-                  ),
-                  child: const Text('Continue'),
+                  style: ClubBlackoutTheme.neonButtonStyle(cs.error,
+                      isPrimary: true),
+                  child: const Text('CONTINUE'),
                 ),
               ],
             ),

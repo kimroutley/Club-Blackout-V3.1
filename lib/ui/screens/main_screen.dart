@@ -62,6 +62,8 @@ class _MainScreenState extends State<MainScreen> with LoadingStateMixin {
           gameEngine: widget.gameEngine,
           onNavigateToLobby: () => _onItemTapped(1),
           onNavigateToGuides: () => _onItemTapped(2),
+          onNavigateToGamesNight: () => _onItemTapped(3),
+          onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer(),
         );
       case 1:
         return LobbyScreen(gameEngine: widget.gameEngine);
@@ -74,6 +76,8 @@ class _MainScreenState extends State<MainScreen> with LoadingStateMixin {
           gameEngine: widget.gameEngine,
           onNavigateToLobby: () => _onItemTapped(1),
           onNavigateToGuides: () => _onItemTapped(2),
+          onNavigateToGamesNight: () => _onItemTapped(3),
+          onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer(),
         );
     }
   }

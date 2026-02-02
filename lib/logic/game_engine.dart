@@ -5120,6 +5120,29 @@ class GameEngine extends ChangeNotifier {
     notifyListeners();
     _invalidateEligibleVotesCache();
   }
+
+  /// Host-only moderation tool: revive a player regardless of normal revive rules.
+  ///
+  /// Intended for stuck games or correcting mistakes.
+  /// Returns true if a player was revived.
+  bool adminRevivePlayer(String playerId) {
+    final target = players.where((p) => p.id == playerId).firstOrNull;
+    if (target == null) return false;
+    if (target.isAlive) return false;
+
+    target.isAlive = true;
+    target.isEnabled = true;
+    target.soberSentHome = false;
+    target.deathDay = null;
+    target.deathReason = null;
+    if (target.lives <= 0) target.lives = 1;
+    deadPlayerIds.remove(target.id);
+
+    logAction('Admin', '${target.name} was revived by the host.');
+    notifyListeners();
+    _invalidateEligibleVotesCache();
+    return true;
+  }
 }
 
 extension _FirstOrNullX<E> on Iterable<E> {

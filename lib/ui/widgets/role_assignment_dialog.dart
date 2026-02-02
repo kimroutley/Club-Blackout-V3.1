@@ -18,7 +18,7 @@ enum GameMode { bloodbath, politicalNightmare, freeForAll, custom }
 class RoleAssignmentDialog extends StatefulWidget {
   final GameEngine gameEngine;
   final List<Player> players;
-  final VoidCallback onConfirm;
+  final Future<void> Function() onConfirm;
   final VoidCallback onCancel;
   final GameMode initialMode;
 
@@ -39,6 +39,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
   late Map<String, Role> _playerRoles;
   GameMode _selectedMode = GameMode.custom;
   bool _rolesAssigned = false;
+  bool _confirmBusy = false;
 
   static bool _isDealerRole(Role role) =>
       role.id.trim().toLowerCase() == 'dealer';
@@ -157,6 +158,22 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
     // Only consider roles assigned if no temp roles exist AND counts match
     _rolesAssigned = !hasTempRoles &&
         _playerRoles.length == widget.players.where((p) => p.isEnabled).length;
+  }
+
+  Future<void> _runConfirm() async {
+    if (_confirmBusy) return;
+    setState(() {
+      _confirmBusy = true;
+    });
+    try {
+      await widget.onConfirm();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _confirmBusy = false;
+        });
+      }
+    }
   }
 
   void _assignRolesByMode(GameMode mode) {
@@ -762,13 +779,11 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'REQUIREMENTS',
-                                  style: TextStyle(
+                                  style: ClubBlackoutTheme.headingStyle.copyWith(
                                     color: ClubBlackoutTheme.neonBlue,
-                                    fontWeight: FontWeight.bold,
                                     fontSize: 11,
-                                    letterSpacing: 1,
                                   ),
                                 ),
                                 ClubBlackoutTheme.gap8,
@@ -964,7 +979,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                   const Spacer(),
                   if (!_rolesAssigned) ...[
                     IconButton(
-                      onPressed: widget.onConfirm,
+                      onPressed: _confirmBusy ? null : _runConfirm,
                       tooltip: 'Skip to Gameplay',
                       icon: const Icon(Icons.skip_next_rounded),
                       style: IconButton.styleFrom(
@@ -1014,7 +1029,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                                   }
                                 }
                                 HapticFeedback.heavyImpact();
-                                widget.onConfirm();
+                                _runConfirm();
                               } on GameException catch (e) {
                                 widget.gameEngine.showToast(e.message);
                               } catch (e) {

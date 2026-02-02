@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../logic/hall_of_fame_service.dart';
 import '../styles.dart';
 import '../widgets/club_alert_dialog.dart';
+import '../widgets/neon_glass_card.dart';
 
 class HallOfFameScreen extends StatefulWidget {
   final bool isNight;
@@ -71,7 +72,11 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
     // Unified AppBar for both night and day modes
     AppBar buildAppBar() {
       return AppBar(
-        title: const Text('Hall of Fame'),
+        title: Text(
+          'HALL OF FAME',
+          style: ClubBlackoutTheme.neonGlowTitle,
+        ),
+        centerTitle: true,
         backgroundColor: widget.isNight ? null : Colors.transparent,
         elevation: 0,
         iconTheme:
@@ -246,28 +251,17 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
                                   intoName: p.name,
                                 );
                               },
-                        child: Card(
-                          elevation: 0,
-                          color: cs.surfaceContainerHighest
-                              .withValues(alpha: isNight ? 0.70 : 0.50),
-                          surfaceTintColor: Colors.transparent,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                                ClubBlackoutTheme.radiusMd),
-                            side: BorderSide(
-                              color: isMergeFrom
+                        child: NeonGlassCard(
+                          glowColor: isMergeFrom
+                              ? ClubBlackoutTheme.neonGold
+                              : (index == 0
                                   ? ClubBlackoutTheme.neonGold
-                                  : (index == 0
-                                      ? ClubBlackoutTheme.neonGold
-                                      : cs.outlineVariant
-                                          .withValues(alpha: 0.45)),
-                              width:
-                                  isMergeFrom ? 2.5 : (index == 0 ? 2.0 : 1.0),
-                            ),
-                          ),
+                                  : (index < 3
+                                      ? ClubBlackoutTheme.neonSilver
+                                      : cs.outline.withValues(alpha: 0.3))),
+                          margin: const EdgeInsets.only(bottom: 12),
                           child: Padding(
-                            padding: ClubBlackoutTheme.cardPadding,
+                            padding: const EdgeInsets.all(4),
                             child: Row(
                               children: [
                                 _RankBadge(rank: rank, highlight: index < 3),
@@ -283,6 +277,18 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
                                           fontSize: 20,
                                           fontWeight: FontWeight.w900,
                                           color: cs.onSurface,
+                                          shadows: index < 3
+                                              ? [
+                                                  Shadow(
+                                                    color: (index == 0
+                                                            ? ClubBlackoutTheme
+                                                                .neonGold
+                                                            : cs.onSurface)
+                                                        .withValues(alpha: 0.3),
+                                                    blurRadius: 8,
+                                                  )
+                                                ]
+                                              : null,
                                         ),
                                       ),
                                       if (_mergeMode)

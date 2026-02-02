@@ -24,12 +24,7 @@ Future<void> showRoleReveal(
       final tt = Theme.of(context).textTheme;
       return ClubAlertDialog(
         insetPadding: ClubBlackoutTheme.insetH16V24,
-        title: Text(
-          'Revealing for $playerName',
-          style: (tt.titleLarge ?? const TextStyle()).copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
+        title: Text('REVEALING FOR ${playerName.toUpperCase()}'),
         content: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520, maxHeight: 820),
           child: SingleChildScrollView(
@@ -76,11 +71,8 @@ Future<void> showRoleReveal(
               Navigator.of(context).pop();
               onComplete?.call();
             },
-            style: FilledButton.styleFrom(
-              backgroundColor: role.color.withValues(alpha: 0.16),
-              foregroundColor: cs.onSurface,
-            ),
-            child: const Text('I understand'),
+            style: ClubBlackoutTheme.neonButtonStyle(role.color, isPrimary: true),
+            child: const Text('I UNDERSTAND'),
           ),
         ],
       );

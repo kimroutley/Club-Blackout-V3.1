@@ -50,7 +50,13 @@ class _RolesScreenState extends State<RolesScreen> {
     if (widget.gameEngine?.currentPhase == GamePhase.night) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Roles'),
+          title: Text(
+            'ROLES',
+            style: ClubBlackoutTheme.neonGlowTitle,
+          ),
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())

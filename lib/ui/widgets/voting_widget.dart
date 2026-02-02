@@ -245,11 +245,10 @@ class _VotingWidgetState extends State<VotingWidget> {
           children: [
             Expanded(
               child: Text(
-                'Voting',
+                'VOTING',
                 style: ClubBlackoutTheme.neonGlowTextStyle(
-                  base: tt.titleLarge,
+                  base: ClubBlackoutTheme.headingStyle.copyWith(fontSize: 22),
                   color: ClubBlackoutTheme.neonBlue,
-                  fontWeight: FontWeight.w900,
                   glowIntensity: 0.8,
                 ),
               ),
@@ -335,11 +334,10 @@ class _VotingWidgetState extends State<VotingWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Silenced from Voting',
-                        style: tt.labelLarge?.copyWith(
+                        'SILENCED FROM VOTING',
+                        style: ClubBlackoutTheme.headingStyle.copyWith(
+                          fontSize: 14,
                           color: ClubBlackoutTheme.neonGreen,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -631,12 +629,13 @@ class _VotingWidgetState extends State<VotingWidget> {
                       ),
                       onPressed: _submit,
                       icon: const Icon(Icons.gavel_rounded, size: 24),
-                      label: const Text(
+                      label: Text(
                         'FINALIZE ELIMINATION',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
+                        style: ClubBlackoutTheme.headingStyle.copyWith(
                           fontSize: 16,
-                          letterSpacing: 1.2,
+                          color: ClubBlackoutTheme.contrastOn(
+                            ClubBlackoutTheme.neonRed,
+                          ),
                         ),
                       ),
                     ),

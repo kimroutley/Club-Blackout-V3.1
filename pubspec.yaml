@@ -20,6 +20,14 @@ dependencies:
   flutter_displaymode: ^0.7.0
   provider: ^6.1.5+1
   palette_generator: ^0.3.3+7
+  google_fonts: ^6.2.1
+
+dependency_overrides:
+  characters: ^1.4.1
+  matcher: ^0.12.18
+  material_color_utilities: ^0.13.0
+  meta: ^1.18.1
+  test_api: ^0.7.9
 
 dev_dependencies:
   flutter_test:

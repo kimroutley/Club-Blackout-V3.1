@@ -2,17 +2,22 @@ import 'package:flutter/material.dart';
 import '../../logic/game_engine.dart';
 import '../styles.dart';
 import '../widgets/dynamic_themed_background.dart';
+import '../widgets/neon_glass_card.dart';
 
 class HomeScreen extends StatefulWidget {
   final GameEngine gameEngine;
   final VoidCallback onNavigateToLobby;
   final VoidCallback onNavigateToGuides;
+  final VoidCallback? onNavigateToGamesNight;
+  final VoidCallback? onOpenDrawer;
 
   const HomeScreen({
     super.key,
     required this.gameEngine,
     required this.onNavigateToLobby,
     required this.onNavigateToGuides,
+    this.onNavigateToGamesNight,
+    this.onOpenDrawer,
   });
 
   @override
@@ -21,83 +26,99 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   void _showStartOptions(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     showModalBottomSheet(
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: cs.surfaceContainerHigh,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        return NeonGlassCard(
+          glowColor: ClubBlackoutTheme.neonPurple,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+          borderRadius: 28,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          ClubBlackoutTheme.neonPurple.withValues(alpha: 0.25),
-                          ClubBlackoutTheme.neonPink.withValues(alpha: 0.2),
+                          ClubBlackoutTheme.neonPurple.withValues(alpha: 0.4),
+                          ClubBlackoutTheme.neonPink.withValues(alpha: 0.3),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color:
-                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
-                      ),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Icon(
                       Icons.rocket_launch_rounded,
-                      color: ClubBlackoutTheme.neonPurple,
-                      size: 24,
+                      color: Colors.white,
+                      size: 28,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Start Playing',
-                          style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
-                              ),
+                          'START PLAYING',
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
                         ),
                         Text(
-                          'Choose your game mode',
-                          style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                                color: cs.onSurface.withValues(alpha: 0.7),
-                              ),
+                          'CHOOSE YOUR GAME MODE',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               FilledButton.icon(
                 onPressed: () {
                   Navigator.pop(ctx);
-                  widget.onNavigateToLobby();
+                  if (widget.onNavigateToGamesNight != null) {
+                    widget.onNavigateToGamesNight!();
+                  } else {
+                    widget.onNavigateToGuides();
+                  }
                 },
-                icon: const Icon(Icons.celebration_rounded, size: 20),
-                label: const Text('Games Night'),
+                icon: const Icon(Icons.celebration_rounded, size: 22),
+                label: const Text('GAMES NIGHT'),
                 style: FilledButton.styleFrom(
                   backgroundColor: ClubBlackoutTheme.neonPurple,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  textStyle: ClubBlackoutTheme.headingStyle.copyWith(
                     fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
@@ -107,21 +128,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.pop(ctx);
                   widget.onNavigateToLobby();
                 },
-                icon: const Icon(Icons.play_circle_outline_rounded, size: 20),
-                label: const Text('Normal Game'),
+                icon: const Icon(Icons.play_circle_outline_rounded, size: 22),
+                label: const Text('NORMAL GAME'),
                 style: FilledButton.styleFrom(
-                  backgroundColor:
-                      ClubBlackoutTheme.neonBlue.withValues(alpha: 0.15),
-                  foregroundColor: cs.onSurface,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(
+                  backgroundColor: Colors.white.withValues(alpha: 0.1),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  textStyle: ClubBlackoutTheme.headingStyle.copyWith(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
             ],
           ),
         );
@@ -153,8 +176,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.3),
-                  Colors.black.withValues(alpha: 0.5),
+                  const Color(0xFF1E1433).withValues(alpha: 0.8),
+                  const Color(0xFF05030A).withValues(alpha: 0.9),
                 ],
               ),
             ),
@@ -168,169 +191,140 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Stack(
         children: [
           Positioned.fill(child: background),
-          Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
+          Builder(
+            builder: (context) => Scaffold(
               backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: Builder(
-                builder: (ctx) => IconButton(
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                centerTitle: true,
+                title: Text(
+                  'CLUB BLACKOUT',
+                  style: ClubBlackoutTheme.neonGlowTitle,
+                ),
+                leading: IconButton(
                   icon: const Icon(Icons.menu),
-                  onPressed: () => Scaffold.of(ctx).openDrawer(),
+                  onPressed: () {
+                    if (widget.onOpenDrawer != null) {
+                      widget.onOpenDrawer!();
+                    } else {
+                      Scaffold.maybeOf(context)?.openDrawer();
+                    }
+                  },
                 ),
               ),
-            ),
-            body: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
-                child: Padding(
+              body: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (!isNight) ...[
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                ClubBlackoutTheme.neonPurple
-                                    .withValues(alpha: 0.15),
-                                ClubBlackoutTheme.neonBlue
-                                    .withValues(alpha: 0.12),
-                                ClubBlackoutTheme.neonPink
-                                    .withValues(alpha: 0.1),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: ClubBlackoutTheme.neonPurple
-                                  .withValues(alpha: 0.4),
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: ClubBlackoutTheme.neonPurple
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 24,
-                                spreadRadius: 4,
-                              ),
+                        const SizedBox(height: 40),
+                        // Title Simulation
+                        Text(
+                          "WELCOME TO",
+                          style: TextStyle(
+                            fontFamily: ClubBlackoutTheme.neonGlowFontFamily,
+                            color: ClubBlackoutTheme.neonPink,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2.0,
+                            shadows: [
+                              Shadow(
+                                  color: ClubBlackoutTheme.neonPink,
+                                  blurRadius: 10)
                             ],
                           ),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      ClubBlackoutTheme.neonPurple
-                                          .withValues(alpha: 0.3),
-                                      ClubBlackoutTheme.neonPink
-                                          .withValues(alpha: 0.25),
-                                    ],
-                                  ),
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: ClubBlackoutTheme.neonPurple
-                                          .withValues(alpha: 0.5),
-                                      blurRadius: 16,
-                                      spreadRadius: 2,
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.wb_twilight_rounded,
-                                  color: Colors.white,
-                                  size: 48,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              ShaderMask(
-                                shaderCallback: (bounds) =>
-                                    const LinearGradient(
-                                  colors: [
-                                    ClubBlackoutTheme.neonPurple,
-                                    ClubBlackoutTheme.neonPink,
-                                    ClubBlackoutTheme.neonBlue,
-                                  ],
-                                ).createShader(bounds),
-                                child: Text(
-                                  'Who Can You Trust?',
-                                  style: tt.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.0,
-                                    color: Colors.white,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Navigate deadly nights, uncover hidden roles, and survive the ultimate social deduction game',
-                                textAlign: TextAlign.center,
-                                style: tt.bodyLarge?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 10),
+                        // "CLUB BLACKOUT" striped text with stroke effect
+                        Stack(
+                          children: [
+                            Text(
+                              "CLUB\nBLACKOUT",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily:
+                                    ClubBlackoutTheme.neonGlowFontFamily,
+                                fontSize: 48,
+                                fontWeight: FontWeight.w900,
+                                foreground: Paint()
+                                  ..style = PaintingStyle.stroke
+                                  ..strokeWidth = 2
+                                  ..color = ClubBlackoutTheme.neonBlue,
+                                height: 0.9,
+                              ),
+                            ),
+                            Text(
+                              "CLUB\nBLACKOUT",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily:
+                                    ClubBlackoutTheme.neonGlowFontFamily,
+                                fontSize: 48,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.transparent, // Fill is transparent
+                                shadows: [
+                                  Shadow(
+                                      color: ClubBlackoutTheme.neonBlue,
+                                      blurRadius: 8)
+                                ],
+                                height: 0.9,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 60),
                       ],
 
-                      FilledButton.icon(
+                      FilledButton(
                         onPressed: () => _showStartOptions(context),
-                        icon: const Icon(Icons.play_arrow_rounded, size: 24),
-                        label: const Text("Let's Get Started"),
                         style: FilledButton.styleFrom(
-                          backgroundColor: ClubBlackoutTheme.neonPurple,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          elevation: 0,
-                          shadowColor: ClubBlackoutTheme.neonPurple
-                              .withValues(alpha: 0.5),
-                          textStyle: tt.titleMedium?.copyWith(
+                          backgroundColor: ClubBlackoutTheme.neonBlue,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          elevation: 10,
+                          shadowColor:
+                              ClubBlackoutTheme.neonBlue.withValues(alpha: 0.5),
+                          textStyle: const TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: 0.8,
+                            letterSpacing: 1.0,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
+                        child: const Text("START GAME"),
                       ),
                       const SizedBox(height: 16),
-                      FilledButton.tonalIcon(
+                      FilledButton(
                         onPressed: widget.onNavigateToGuides,
-                        icon: const Icon(Icons.menu_book_rounded, size: 22),
-                        label: const Text('Game Guides'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: isNight
-                              ? cs.secondaryContainer
-                              : ClubBlackoutTheme.neonBlue
-                                  .withValues(alpha: 0.2),
-                          foregroundColor:
-                              isNight ? cs.onSecondaryContainer : Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          textStyle: tt.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: ClubBlackoutTheme.neonPink,
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          elevation: 0,
+                          textStyle: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.0,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(
-                              color: ClubBlackoutTheme.neonBlue
-                                  .withValues(alpha: 0.4),
-                              width: 1.5,
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(
+                              color: ClubBlackoutTheme.neonPink,
+                              width: 2,
                             ),
                           ),
                         ),
+                        child: const Text('GUIDES'),
                       ),
 
                       // Stats row (if available)
@@ -379,14 +373,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ],
                   ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+                ), // Padding
+              ), // ConstrainedBox
+            ), // Center
+          ), // Scaffold
+        ), // Builder
+      ], // Stack children
+    ), // Stack
+  ); // DynamicThemedBackground
+}
 
   Widget _buildStatItem(
     BuildContext context,
@@ -401,31 +396,33 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: color.withValues(alpha: 0.3),
+              width: 1,
+            ),
           ),
           child: Icon(icon, color: color, size: 20),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Text(
           value,
-          style: TextStyle(
+          style: ClubBlackoutTheme.headingStyle.copyWith(
             fontSize: 24,
-            fontWeight: FontWeight.w900,
             color: isNight ? cs.onSurface : Colors.white,
           ),
         ),
         Text(
-          label,
+          label.toUpperCase(),
           style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isNight
-                ? cs.onSurface.withValues(alpha: 0.7)
-                : Colors.white.withValues(alpha: 0.8),
-            letterSpacing: 0.5,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            color: (isNight ? cs.onSurface : Colors.white)
+                .withValues(alpha: 0.6),
+            letterSpacing: 1.5,
           ),
         ),
       ],

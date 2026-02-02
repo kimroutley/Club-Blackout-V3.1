@@ -57,10 +57,7 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
         tween: Tween(begin: 1.0, end: 1.0),
         weight: 40,
       ),
-    ]).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    ));
+    ]).animate(_controller);
 
     _fadeAnimation = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 20),

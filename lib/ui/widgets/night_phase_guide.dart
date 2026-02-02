@@ -127,27 +127,19 @@ class NightPhaseGuide extends StatelessWidget {
                             ],
                           ).createShader(bounds),
                           child: Text(
-                            'Night Phase Guide',
-                            style: tt.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.5,
-                              color: cs.onSurface,
-                              shadows: [
-                                Shadow(
-                                  color: cs.shadow.withValues(alpha: 0.55),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                            'NIGHT PHASE GUIDE',
+                            style: ClubBlackoutTheme.headingStyle.copyWith(
+                              fontSize: 18,
+                              color: Colors.white,
                             ),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${activeRoles.length} roles active tonight',
-                          style: tt.bodyMedium?.copyWith(
-                            color: cs.onSurface.withValues(alpha: 0.7),
-                            fontWeight: FontWeight.w600,
+                          '${activeRoles.length} ROLES ACTIVE TONIGHT',
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
+                            color: cs.onSurface.withValues(alpha: 0.6),
+                            fontSize: 10,
                           ),
                         ),
                       ],

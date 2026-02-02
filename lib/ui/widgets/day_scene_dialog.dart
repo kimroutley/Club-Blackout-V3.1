@@ -180,33 +180,19 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
             ? ClubBlackoutTheme.neonGold
             : ClubBlackoutTheme.neonOrange);
 
-    return Container(
+    return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [
-            timerColor.withValues(alpha: 0.15),
-            timerColor.withValues(alpha: 0.08),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      elevation: 0,
+      color: timerColor.withValues(alpha: 0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: timerColor.withValues(alpha: 0.4),
+          width: 1.5,
         ),
-        border: Border.all(
-          color: timerColor.withValues(alpha: 0.5),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: timerColor.withValues(alpha: 0.2),
-            blurRadius: 16,
-            spreadRadius: 2,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             Row(
@@ -214,23 +200,13 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: timerColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: timerColor.withValues(alpha: 0.4),
-                      width: 1.5,
-                    ),
+                    color: timerColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
                     isDone ? Icons.alarm_off_rounded : Icons.timer_rounded,
                     color: timerColor,
                     size: 28,
-                    shadows: [
-                      Shadow(
-                        color: timerColor.withValues(alpha: 0.5),
-                        blurRadius: 8,
-                      ),
-                    ],
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -240,13 +216,15 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            isDone ? 'TIME\'S UP!' : 'Discussion Time',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.6,
+                          Flexible(
+                            child: Text(
+                              (isDone ? 'TIME\'S UP!' : 'Discussion Time')
+                                  .toUpperCase(),
+                              overflow: TextOverflow.ellipsis,
+                              style: ClubBlackoutTheme.headingStyle.copyWith(
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                           if (isLowTime && !isDone) ...[
@@ -262,72 +240,56 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                       if (!_timerStarted)
                         Text(
                           'Total: ${_formatMmSs(_discussionDuration)}',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                     ],
                   ),
                 ),
                 Text(
                   _formatMmSs(_discussionRemaining),
-                  style: TextStyle(
-                    fontFamily: 'Hyperwave',
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900,
-                    color: timerColor,
-                    letterSpacing: 2,
-                    shadows: [
-                      Shadow(
-                        color: timerColor.withValues(alpha: 0.6),
-                        blurRadius: 12,
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontFamily: 'Hyperwave',
+                        fontSize: 44,
+                        fontWeight: FontWeight.w900,
+                        color: timerColor,
+                        letterSpacing: 2,
                       ),
-                    ],
-                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
-              child: Container(
-                height: 12,
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 12,
-                  backgroundColor: Colors.transparent,
-                  valueColor: AlwaysStoppedAnimation<Color>(timerColor),
-                ),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 12,
+                backgroundColor: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+                valueColor: AlwaysStoppedAnimation<Color>(timerColor),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             if (!_timerStarted)
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: () => _startDiscussionTimer(reset: true),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: timerColor,
-                    foregroundColor: ClubBlackoutTheme.contrastOn(timerColor),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                  style: ClubBlackoutTheme.neonButtonStyle(
+                    timerColor,
+                    isPrimary: true,
+                  ).copyWith(
+                    padding: WidgetStateProperty.all(
+                      const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    elevation: 4,
                   ),
                   icon: const Icon(Icons.play_arrow_rounded, size: 24),
-                  label: const Text(
-                    'Start Discussion Timer',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      letterSpacing: 0.5,
+                  label: Text(
+                    'START DISCUSSION TIMER',
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
+                      fontSize: 14,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -339,18 +301,17 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _startDiscussionTimer(reset: true),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: timerColor,
-                        side: BorderSide(color: timerColor, width: 2),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                      style: ClubBlackoutTheme.neonButtonStyle(
+                        timerColor,
+                        isPrimary: false,
                       ),
                       icon: const Icon(Icons.refresh_rounded, size: 20),
-                      label: const Text(
-                        'Reset',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                      label: Text(
+                        'RESET',
+                        style: ClubBlackoutTheme.headingStyle.copyWith(
+                          fontSize: 12,
+                          color: timerColor,
+                        ),
                       ),
                     ),
                   ),
@@ -364,14 +325,9 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                           _startDiscussionTimer(reset: false);
                         }
                       },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: timerColor,
-                        foregroundColor:
-                            ClubBlackoutTheme.contrastOn(timerColor),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                      style: ClubBlackoutTheme.neonButtonStyle(
+                        timerColor,
+                        isPrimary: true,
                       ),
                       icon: Icon(
                         _discussionRunning
@@ -380,8 +336,11 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                         size: 20,
                       ),
                       label: Text(
-                        _discussionRunning ? 'Pause' : 'Resume',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        (_discussionRunning ? 'Pause' : 'Resume').toUpperCase(),
+                        style: ClubBlackoutTheme.headingStyle.copyWith(
+                          fontSize: 12,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -451,6 +410,7 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
+              scrolledUnderElevation: 0,
               foregroundColor: cs.onSurface,
               leading: IconButton(
                 icon: const Icon(Icons.close_rounded),
@@ -458,11 +418,12 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                 onPressed: () => Navigator.of(context).pop(),
               ),
               title: Text(
-                'Day ${engine.dayCount}',
+                'DAY ${engine.dayCount}',
                 style: ClubBlackoutTheme.neonGlowTextStyle(
-                  base: tt.titleLarge,
+                  base: ClubBlackoutTheme.headingStyle.copyWith(
+                    fontSize: 22,
+                  ),
                   color: ClubBlackoutTheme.neonOrange,
-                  fontWeight: FontWeight.w900,
                   glowIntensity: 0.8,
                 ),
               ),
@@ -515,13 +476,12 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                         padding: ClubBlackoutTheme.topInset16,
                         child: Card(
                           elevation: 0,
-                          color: cs.surfaceContainerHighest
-                              .withValues(alpha: 0.45),
+                          color: ClubBlackoutTheme.neonPink.withValues(alpha: 0.1),
                           shape: RoundedRectangleBorder(
                             borderRadius: ClubBlackoutTheme.borderRadiusMdAll,
                             side: BorderSide(
                               color: ClubBlackoutTheme.neonPink
-                                  .withValues(alpha: 0.6),
+                                  .withValues(alpha: 0.4),
                               width: 1.2,
                             ),
                           ),
@@ -538,8 +498,7 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                                   child: Text(
                                     'Second Wind: eligible for conversion next night (${engine.hostDisplayName} only). Dealers must forfeit their kill to convert.',
                                     style: tt.bodyMedium?.copyWith(
-                                      color:
-                                          cs.onSurface.withValues(alpha: 0.92),
+                                      color: Colors.white,
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
@@ -574,44 +533,44 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                         padding: ClubBlackoutTheme.topInset24,
                         child: Card(
                           elevation: 0,
-                          color: cs.surfaceContainerHighest
-                              .withValues(alpha: 0.45),
+                          color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.1),
                           shape: RoundedRectangleBorder(
                             borderRadius: ClubBlackoutTheme.borderRadiusMdAll,
                             side: BorderSide(
                               color: ClubBlackoutTheme.neonBlue
-                                  .withValues(alpha: 0.6),
+                                  .withValues(alpha: 0.4),
                               width: 1.2,
                             ),
                           ),
                           child: Padding(
-                            padding: ClubBlackoutTheme.inset16,
+                            padding: ClubBlackoutTheme.inset24,
                             child: Column(
                               children: [
                                 const Icon(
                                   Icons.nightlight_rounded,
                                   color: ClubBlackoutTheme.neonBlue,
-                                  size: 40,
+                                  size: 48,
                                 ),
-                                ClubBlackoutTheme.gap12,
+                                ClubBlackoutTheme.gap16,
                                 Text(
                                   'Voting closed',
                                   style: ClubBlackoutTheme.neonGlowTextStyle(
-                                    base: tt.headlineSmall,
+                                    base: tt.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                    ),
                                     color: ClubBlackoutTheme.neonBlue,
-                                    fontWeight: FontWeight.w800,
                                     glowIntensity: 0.85,
                                   ),
                                 ),
-                                ClubBlackoutTheme.gap8,
+                                ClubBlackoutTheme.gap12,
                                 Text(
                                   'Not enough votes were cast to reach a verdict. No one was eliminated today.',
                                   textAlign: TextAlign.center,
                                   style: tt.bodyMedium?.copyWith(
-                                    color: cs.onSurfaceVariant,
+                                    color: Colors.white.withValues(alpha: 0.8),
                                   ),
                                 ),
-                                ClubBlackoutTheme.gap16,
+                                ClubBlackoutTheme.gap24,
                                 SizedBox(
                                   width: double.infinity,
                                   child: FilledButton.icon(
@@ -696,6 +655,7 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
       barrierDismissible: false,
       builder: (ctx) {
         final cs = Theme.of(ctx).colorScheme;
+        final tt = Theme.of(ctx).textTheme;
         return BulletinDialogShell(
           accent: ClubBlackoutTheme.neonOrange,
           maxWidth: 520,
@@ -722,9 +682,8 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
               Text(
                 'Hand the screen to the Tea Spiller.\nSelect ONE target who voted for you:',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: tt.bodySmall?.copyWith(
                   color: cs.onSurface.withValues(alpha: 0.7),
-                  fontSize: 14,
                 ),
               ),
               ClubBlackoutTheme.gap24,

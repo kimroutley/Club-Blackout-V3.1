@@ -1,14 +1,10 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../logic/game_engine.dart';
 import '../styles.dart';
+import 'neon_glass_card.dart';
 
 /// Interactive setup phase widget with validations and helpful tips.
-///
-/// This is displayed during setup to guide the host through the minimum
-/// requirements before the game can begin.
 class SetupPhaseHelper extends StatelessWidget {
   final GameEngine gameEngine;
   final VoidCallback? onStartGame;
@@ -39,181 +35,150 @@ class SetupPhaseHelper extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: cs.shadow.withValues(alpha: 0.32),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.22),
-            blurRadius: 34,
-            spreadRadius: 4,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerHigh.withValues(alpha: 0.86),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.55),
-                width: 2,
-              ),
-              gradient: LinearGradient(
-                colors: [
-                  ClubBlackoutTheme.neonGreen.withValues(alpha: 0.14),
-                  ClubBlackoutTheme.neonBlue.withValues(alpha: 0.10),
-                  cs.scrim.withValues(alpha: 0.04),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
+    return NeonGlassCard(
+      glowColor: _canStartGame
+          ? ClubBlackoutTheme.neonGreen
+          : ClubBlackoutTheme.neonBlue,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.zero,
+      borderRadius: 28,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(tt, cs),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildHeader(tt, cs),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      _ChecklistItem(
-                        icon: Icons.person_rounded,
-                        label: 'Assign a Host',
-                        isComplete: _hasHost,
-                        detail: _hasHost
-                            ? 'Host: ${gameEngine.hostName}'
-                            : 'Required to manage the game',
-                      ),
-                      const SizedBox(height: 12),
-                      _ChecklistItem(
-                        icon: Icons.groups_rounded,
-                        label: 'Add Players (Min. 5)',
-                        isComplete: _hasMinimumPlayers,
-                        detail:
-                            '${gameEngine.guests.length} player${gameEngine.guests.length == 1 ? '' : 's'} added',
-                        progress: (gameEngine.guests.isEmpty)
-                            ? 0
-                            : (gameEngine.guests.length / 5.0),
-                      ),
-                      const SizedBox(height: 12),
-                      _ChecklistItem(
-                        icon: Icons.badge_rounded,
-                        label: 'Name All Players',
-                        isComplete: _allPlayersNamed,
-                        detail: gameEngine.guests.isEmpty
-                            ? 'Add players first'
-                            : (_allPlayersNamed
-                                ? 'All players named'
-                                : '$_unnamedCount unnamed'),
-                      ),
-                    ],
-                  ),
+                _ChecklistItem(
+                  icon: Icons.person_rounded,
+                  label: 'ASSIGN A HOST',
+                  isComplete: _hasHost,
+                  detail: _hasHost
+                      ? 'Host: ${gameEngine.hostName}'
+                      : 'Required to manage the session',
                 ),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.lightbulb_outline_rounded,
-                            color: ClubBlackoutTheme.neonBlue,
-                            size: 18,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Quick Tips',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: ClubBlackoutTheme.neonBlue,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      _TipItem(
-                          tip: 'Recommended: 7-12 players for best experience'),
-                      _TipItem(
-                          tip: 'The Host doesn\'t play but manages the game'),
-                      _TipItem(
-                          tip: 'Roles are assigned automatically after setup'),
-                    ],
-                  ),
+                const SizedBox(height: 14),
+                _ChecklistItem(
+                  icon: Icons.groups_rounded,
+                  label: 'ADD PLAYERS (MIN. 5)',
+                  isComplete: _hasMinimumPlayers,
+                  detail:
+                      '${gameEngine.guests.length} player${gameEngine.guests.length == 1 ? "" : "s"} added',
+                  progress: (gameEngine.guests.isEmpty)
+                      ? 0
+                      : (gameEngine.guests.length / 5.0),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                  child: FilledButton.icon(
-                    onPressed: _canStartGame ? onStartGame : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: ClubBlackoutTheme.neonGreen,
-                      foregroundColor: Colors.black,
-                      disabledBackgroundColor: cs.surfaceContainerHighest,
-                      disabledForegroundColor:
-                          cs.onSurface.withValues(alpha: 0.4),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      elevation: _canStartGame ? 4 : 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    icon: Icon(
-                      _canStartGame
-                          ? Icons.play_arrow_rounded
-                          : Icons.lock_rounded,
-                      size: 24,
-                    ),
-                    label: Text(
-                      _canStartGame ? 'Start Game!' : 'Complete Setup First',
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 14),
+                _ChecklistItem(
+                  icon: Icons.badge_rounded,
+                  label: 'NAME ALL PLAYERS',
+                  isComplete: _allPlayersNamed,
+                  detail: gameEngine.guests.isEmpty
+                      ? 'Add players first'
+                      : (_allPlayersNamed
+                          ? 'All players named'
+                          : '$_unnamedCount unnamed'),
                 ),
               ],
             ),
           ),
-        ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.15),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.tips_and_updates_rounded,
+                      color: ClubBlackoutTheme.neonBlue,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'QUICK TIPS',
+                      style: ClubBlackoutTheme.neonGlowFont.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: ClubBlackoutTheme.neonBlue,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const _TipItem(
+                    tip: 'Recommended: 7-12 players for best experience'),
+                const _TipItem(
+                    tip: 'The Host doesn\'t play but manages the game'),
+                const _TipItem(
+                    tip: 'Roles are assigned automatically after setup'),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            child: SizedBox(
+              height: 60,
+              child: FilledButton.icon(
+                onPressed: _canStartGame ? onStartGame : null,
+                style: ClubBlackoutTheme.neonButtonStyle(
+                  _canStartGame
+                      ? ClubBlackoutTheme.neonGreen
+                      : ClubBlackoutTheme.neonBlue,
+                  isPrimary: _canStartGame,
+                ).copyWith(
+                  shape: WidgetStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                ),
+                icon: Icon(
+                  _canStartGame
+                      ? Icons.play_arrow_rounded
+                      : Icons.lock_outline_rounded,
+                  size: 28,
+                ),
+                label: Text(
+                  (_canStartGame ? 'START GAME!' : 'COMPLETE SETUP')
+                      .toUpperCase(),
+                  style: ClubBlackoutTheme.neonGlowFont.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildHeader(TextTheme tt, ColorScheme cs) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            ClubBlackoutTheme.neonGreen.withValues(alpha: 0.18),
-            ClubBlackoutTheme.neonBlue.withValues(alpha: 0.12),
-          ],
-        ),
+        color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.05),
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24),
+          top: Radius.circular(28),
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.1),
+          ),
         ),
       ),
       child: Row(
@@ -222,63 +187,54 @@ class SetupPhaseHelper extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
                   ClubBlackoutTheme.neonGreen.withValues(alpha: 0.3),
                   ClubBlackoutTheme.neonBlue.withValues(alpha: 0.25),
                 ],
               ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.5),
-              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: const Icon(
-              Icons.checklist_rounded,
+              Icons.rocket_launch_rounded,
               color: ClubBlackoutTheme.neonGreen,
-              size: 28,
+              size: 32,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [
-                      ClubBlackoutTheme.neonGreen,
-                      ClubBlackoutTheme.neonBlue,
+                Text(
+                  'GAME SETUP',
+                  style: ClubBlackoutTheme.neonGlowFont.copyWith(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22,
+                    letterSpacing: 2.0,
+                    color: ClubBlackoutTheme.neonGreen,
+                    shadows: [
+                      Shadow(
+                        color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.5),
+                        blurRadius: 12,
+                      ),
                     ],
-                  ).createShader(bounds),
-                  child: Text(
-                    'Setup Checklist',
-                    style: tt.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                      color: cs.onSurface,
-                      shadows: [
-                        Shadow(
-                          offset: const Offset(0, 2),
-                          blurRadius: 8,
-                          color: cs.shadow.withValues(alpha: 0.55),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Complete these steps to start',
-                  style: tt.bodyMedium?.copyWith(
-                    color: cs.onSurface.withValues(alpha: 0.7),
-                    fontWeight: FontWeight.w600,
-                    shadows: [
-                      Shadow(
-                        offset: const Offset(0, 1),
-                        blurRadius: 4,
-                        color: cs.shadow.withValues(alpha: 0.45),
-                      ),
-                    ],
+                  'Phase 0: Initialization'.toUpperCase(),
+                  style: ClubBlackoutTheme.headingStyle.copyWith(
+                    color: cs.onSurface.withValues(alpha: 0.5),
+                    fontSize: 10,
                   ),
                 ),
               ],
@@ -312,49 +268,43 @@ class _ChecklistItem extends StatelessWidget {
         isComplete ? ClubBlackoutTheme.neonGreen : ClubBlackoutTheme.neonOrange;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: isComplete
-            ? ClubBlackoutTheme.neonGreen.withValues(alpha: 0.08)
-            : cs.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
+            ? ClubBlackoutTheme.neonGreen.withValues(alpha: 0.05)
+            : cs.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: statusColor.withValues(alpha: isComplete ? 0.35 : 0.25),
+          color: statusColor.withValues(alpha: isComplete ? 0.3 : 0.15),
           width: 1.5,
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              color: statusColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: isComplete
-                ? Icon(
-                    Icons.check_circle_rounded,
-                    color: statusColor,
-                    size: 24,
-                  )
-                : Icon(
-                    icon,
-                    color: statusColor,
-                    size: 24,
-                  ),
+            child: Icon(
+              isComplete ? Icons.verified_rounded : icon,
+              color: statusColor,
+              size: 24,
+            ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
-                    letterSpacing: 0.2,
+                  label.toUpperCase(),
+                  style: ClubBlackoutTheme.neonGlowFont.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: isComplete ? ClubBlackoutTheme.neonGreen : cs.onSurface,
+                    letterSpacing: 0.8,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -362,18 +312,18 @@ class _ChecklistItem extends StatelessWidget {
                   detail,
                   style: TextStyle(
                     fontSize: 13,
-                    color: cs.onSurface.withValues(alpha: 0.7),
+                    color: cs.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 if (progress != null && !isComplete) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(6),
                     child: LinearProgressIndicator(
                       value: progress!.clamp(0.0, 1.0),
-                      minHeight: 6,
-                      backgroundColor: cs.surfaceContainerHighest,
+                      minHeight: 8,
+                      backgroundColor: cs.onSurface.withValues(alpha: 0.05),
                       valueColor: AlwaysStoppedAnimation(statusColor),
                     ),
                   ),
@@ -397,26 +347,26 @@ class _TipItem extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: const EdgeInsets.only(top: 7),
-            width: 4,
-            height: 4,
+            margin: const EdgeInsets.only(top: 6),
+            width: 6,
+            height: 6,
             decoration: BoxDecoration(
-              color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.6),
+              color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.4),
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               tip,
               style: TextStyle(
                 fontSize: 13,
-                color: cs.onSurface.withValues(alpha: 0.75),
+                color: cs.onSurface.withValues(alpha: 0.8),
                 height: 1.4,
                 fontWeight: FontWeight.w500,
               ),

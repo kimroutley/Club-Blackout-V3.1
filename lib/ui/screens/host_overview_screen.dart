@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,6 +17,7 @@ import '../../logic/story_exporter.dart';
 import '../../logic/voting_insights.dart';
 import '../../models/game_log_entry.dart';
 import '../../models/player.dart';
+import '../../utils/death_causes.dart';
 import '../screens/game_screen.dart';
 import '../screens/games_night_screen.dart';
 import '../screens/host_privacy_screen.dart';
@@ -29,7 +31,7 @@ import '../widgets/game_drawer.dart';
 import '../widgets/game_toast_listener.dart';
 import '../widgets/host_alert_listener.dart';
 import '../widgets/neon_background.dart';
-import '../widgets/neon_page_scaffold.dart';
+import '../widgets/neon_glass_card.dart';
 import '../widgets/unified_player_tile.dart';
 
 class HostOverviewScreen extends StatefulWidget {
@@ -127,6 +129,367 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
         builder: (_) => const HostPrivacyScreen(
           hint: 'Long-press anywhere\nwhen it\'s safe to return.',
         ),
+      ),
+    );
+  }
+
+  Future<bool> _confirmHostAction({
+    required String title,
+    required String message,
+    String confirmLabel = 'Confirm',
+    String cancelLabel = 'Cancel',
+    IconData icon = Icons.warning_rounded,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return ClubAlertDialog(
+          icon: Icon(icon),
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(cancelLabel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(confirmLabel),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
+  }
+
+  void _showHostSnack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 1400),
+      ),
+    );
+  }
+
+  Future<Player?> _pickPlayer({
+    required GameEngine engine,
+    required String title,
+    bool aliveOnly = false,
+    bool deadOnly = false,
+  }) async {
+    final players = engine.players
+        .where((p) => p.isEnabled)
+        .where((p) => aliveOnly ? p.isAlive : true)
+        .where((p) => deadOnly ? !p.isAlive : true)
+        .toList(growable: false)
+      ..sort((a, b) {
+        final aliveCmp = (b.isAlive ? 1 : 0).compareTo(a.isAlive ? 1 : 0);
+        if (aliveCmp != 0) return aliveCmp;
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+
+    if (players.isEmpty) return null;
+
+    return showModalBottomSheet<Player>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      builder: (context) {
+        final cs = Theme.of(context).colorScheme;
+        final tt = Theme.of(context).textTheme;
+
+        return Container(
+          decoration: ClubBlackoutTheme.neonSheet(
+            context: context,
+            color: ClubBlackoutTheme.neonBlue,
+          ),
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 48,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: cs.onSurface.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_search_rounded,
+                        color: ClubBlackoutTheme.neonBlue),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: (tt.titleMedium ?? const TextStyle()).copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: cs.onSurface,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    IconButton.filledTonal(
+                      onPressed: () => Navigator.of(context).pop(null),
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  itemCount: players.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final p = players[index];
+                    return UnifiedPlayerTile.dashboard(
+                      player: p,
+                      gameEngine: engine,
+                      onTap: () => Navigator.of(context).pop(p),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildModeratorToolsCard(BuildContext context, GameEngine engine) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    final isReadOnly = _viewingArchived;
+    final opacity = isReadOnly ? 0.55 : 1.0;
+
+    Future<void> runOrWarn(Future<void> Function() action) async {
+      if (isReadOnly) {
+        _showHostSnack('Moderator tools are disabled in archived view.');
+        return;
+      }
+      await action();
+    }
+
+    return Opacity(
+      opacity: opacity,
+      child: NeonGlassCard(
+        glowColor: cs.onSurface.withValues(alpha: 0.15),
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.admin_panel_settings_rounded,
+                    color: cs.onSurface.withValues(alpha: 0.7)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'MODERATOR TOOLS',
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
+                      fontSize: 13,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+                if (isReadOnly)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+                    ),
+                    child: Text(
+                      'ARCHIVED',
+                      style: (tt.labelSmall ?? const TextStyle()).copyWith(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _buildNeonToolButton(
+                  context,
+                  label: 'Skip phase',
+                  icon: Icons.skip_next_rounded,
+                  color: ClubBlackoutTheme.neonBlue,
+                  onPressed: () => runOrWarn(() async {
+                    final ok = await _confirmHostAction(
+                      title: 'Skip to next phase?',
+                      message:
+                          'This advances the game immediately. Use if the table is stuck.',
+                      confirmLabel: 'Skip',
+                      icon: Icons.skip_next_rounded,
+                    );
+                    if (!ok) return;
+                    HapticFeedback.mediumImpact();
+                    engine.skipToNextPhase();
+                    _showHostSnack('Skipped to next phase.');
+                  }),
+                ),
+                _buildNeonToolButton(
+                  context,
+                  label: 'Clear votes',
+                  icon: Icons.delete_sweep_rounded,
+                  color: cs.onSurface.withValues(alpha: 0.6),
+                  onPressed: () => runOrWarn(() async {
+                    final ok = await _confirmHostAction(
+                      title: 'Clear day votes?',
+                      message:
+                          'This clears the current day vote map (useful if votes were entered incorrectly).',
+                      confirmLabel: 'Clear',
+                      icon: Icons.delete_sweep_rounded,
+                    );
+                    if (!ok) return;
+                    HapticFeedback.selectionClick();
+                    engine.clearDayVotes();
+                    _showHostSnack('Day votes cleared.');
+                  }),
+                ),
+                _buildNeonToolButton(
+                  context,
+                  label: 'Force vote-out',
+                  icon: Icons.how_to_vote_rounded,
+                  color: ClubBlackoutTheme.neonBlue,
+                  onPressed: () => runOrWarn(() async {
+                    final target = await _pickPlayer(
+                      engine: engine,
+                      title: 'Force vote-out: pick a player',
+                      aliveOnly: true,
+                    );
+                    if (target == null) return;
+
+                    final ok = await _confirmHostAction(
+                      title: 'Force vote-out?',
+                      message:
+                          'This will eliminate ${target.name} as if voted out.',
+                      confirmLabel: 'Vote out',
+                      icon: Icons.how_to_vote_rounded,
+                    );
+                    if (!ok) return;
+                    HapticFeedback.mediumImpact();
+                    final success = engine.voteOutPlayer(target.id);
+                    if (success) {
+                      _showHostSnack('${target.name} voted out.');
+                    } else {
+                      _showHostSnack('Vote-out failed (see log for details).');
+                    }
+                  }),
+                ),
+                _buildNeonToolButton(
+                  context,
+                  label: 'Admin kill',
+                  icon: Icons.dangerous_rounded,
+                  color: ClubBlackoutTheme.neonRed,
+                  onPressed: () => runOrWarn(() async {
+                    final target = await _pickPlayer(
+                      engine: engine,
+                      title: 'Admin kill: pick a player',
+                      aliveOnly: true,
+                    );
+                    if (target == null) return;
+
+                    final ok = await _confirmHostAction(
+                      title: 'Admin kill?',
+                      message:
+                          'This will immediately kill ${target.name} (ignores most protections).',
+                      confirmLabel: 'Kill',
+                      icon: Icons.dangerous_rounded,
+                    );
+                    if (!ok) return;
+                    HapticFeedback.heavyImpact();
+                    engine.processDeath(target, cause: DeathCause.adminKill);
+                    _showHostSnack('${target.name} killed.');
+                  }),
+                ),
+                _buildNeonToolButton(
+                  context,
+                  label: 'Admin revive',
+                  icon: Icons.volunteer_activism_rounded,
+                  color: ClubBlackoutTheme.neonGreen,
+                  onPressed: () => runOrWarn(() async {
+                    final target = await _pickPlayer(
+                      engine: engine,
+                      title: 'Admin revive: pick a player',
+                      deadOnly: true,
+                    );
+                    if (target == null) return;
+
+                    final ok = await _confirmHostAction(
+                        title: 'Admin revive?',
+                        message:
+                            'This will revive ${target.name} and return them to the game.',
+                        confirmLabel: 'Revive',
+                        icon: Icons.volunteer_activism_rounded);
+                    if (!ok) return;
+                    HapticFeedback.mediumImpact();
+                    final success = engine.adminRevivePlayer(target.id);
+                    if (success) {
+                      _showHostSnack('${target.name} revived.');
+                    } else {
+                      _showHostSnack(
+                          'Revive failed (player not found/already alive).');
+                    }
+                  }),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNeonToolButton(
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18, color: color),
+      label: Text(
+        label.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          color: color,
+          letterSpacing: 0.5,
+        ),
+      ),
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(color: color.withValues(alpha: 0.4), width: 1.5),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        backgroundColor: color.withValues(alpha: 0.05),
+      ).copyWith(
+        overlayColor: WidgetStateProperty.all(color.withValues(alpha: 0.1)),
       ),
     );
   }
@@ -371,6 +734,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
   void _scheduleOddsUpdate() {
     if (!mounted) return;
+    if (kIsWeb) return;
     _oddsDebounce?.cancel();
     _oddsDebounce =
         Timer(const Duration(milliseconds: 650), _maybeRunOddsSimulation);
@@ -407,6 +771,19 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
   Future<void> _maybeRunOddsSimulation() async {
     if (!mounted) return;
+    if (kIsWeb) {
+      // Web builds don't support the isolate + dart:io implementation used by
+      // the Monte Carlo simulator. Keep the dashboard stable instead.
+      setState(() {
+        _oddsSimRunning = false;
+        _simulatedOddsUpdatedAt ??= DateTime.now();
+        _simulatedOdds ??= GameOddsSnapshot(
+          odds: const {},
+          note: 'Odds simulation is disabled on web builds.',
+        );
+      });
+      return;
+    }
 
     // If the game is already over, simulated odds are trivial.
     final end = gameEngine.checkGameEnd();
@@ -578,119 +955,128 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
               color: isNightM3 ? null : accent,
               shadows: isNightM3
                   ? null
-                  : [const Shadow(color: accent, blurRadius: 8)],
+                  : [const Shadow(color: accent, blurRadius: 12)],
             ),
             actionsIconTheme: IconThemeData(
               color: isNightM3 ? null : accent,
               shadows: isNightM3
                   ? null
-                  : [const Shadow(color: accent, blurRadius: 8)],
+                  : [const Shadow(color: accent, blurRadius: 12)],
             ),
-            title: isNightM3
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              ClubBlackoutTheme.neonBlue
-                                  .withValues(alpha: 0.25),
-                              ClubBlackoutTheme.neonPurple
-                                  .withValues(alpha: 0.2),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: ClubBlackoutTheme.neonBlue
-                                .withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.dashboard_customize_rounded,
-                          color: ClubBlackoutTheme.neonBlue,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text('Host Dashboard'),
-                    ],
-                  )
-                : null,
+            title: Text(
+              'HOST DASHBOARD',
+              style: ClubBlackoutTheme.neonGlowTitle.copyWith(
+                fontSize: 18,
+                letterSpacing: 1.5,
+              ),
+            ),
             actions: [
-              // Phase Badge
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Chip(
-                  label: Text(
-                    '${viewEngine.currentPhase == GamePhase.night ? 'NIGHT' : (viewEngine.currentPhase == GamePhase.day ? 'DAY' : 'LOBBY')} ${viewEngine.dayCount}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.8,
-                      fontSize: 12,
+              // Combined Status Menu
+              PopupMenuButton<String>(
+                icon: Icon(
+                  viewEngine.currentPhase == GamePhase.night
+                      ? Icons.nightlight_round
+                      : (viewEngine.currentPhase == GamePhase.day
+                          ? Icons.wb_sunny_rounded
+                          : Icons.home_rounded),
+                  color: accent,
+                  shadows: isNightM3
+                      ? null
+                      : [const Shadow(color: accent, blurRadius: 12)],
+                ),
+                offset: const Offset(0, 48),
+                color: Colors.grey[900]?.withValues(alpha: 0.95),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: accent.withValues(alpha: 0.5)),
+                ),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    enabled: false,
+                    child: Text(
+                      '${viewEngine.currentPhase == GamePhase.night ? 'NIGHT' : (viewEngine.currentPhase == GamePhase.day ? 'DAY' : 'LOBBY')} ${viewEngine.dayCount}',
+                      style: TextStyle(
+                        color: accent,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                        letterSpacing: 1.0,
+                      ),
                     ),
                   ),
-                  avatar: Icon(
-                    viewEngine.currentPhase == GamePhase.night
-                        ? Icons.nightlight_round
-                        : (viewEngine.currentPhase == GamePhase.day
-                            ? Icons.wb_sunny_rounded
-                            : Icons.home_rounded),
-                    size: 18,
-                    color: accent,
-                  ),
-                  backgroundColor: accent.withValues(alpha: 0.15),
-                  side: BorderSide(color: accent.withValues(alpha: 0.4)),
-                  labelStyle: const TextStyle(color: accent),
-                ),
-              ),
-              ValueListenableBuilder<KeepScreenAwakeStatus>(
-                valueListenable: KeepScreenAwakeService.status,
-                builder: (context, status, _) {
-                  return IconButton(
-                    tooltip: status.enabled
-                        ? 'Keep screen awake: On'
-                        : 'Keep screen awake: Off',
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
                     onPressed: _toggleKeepScreenAwake,
-                    icon: Icon(
-                      status.enabled
-                          ? Icons.screen_lock_portrait_rounded
-                          : Icons.screen_lock_portrait_outlined,
+                    child: ListenableBuilder(
+                      listenable: KeepScreenAwakeService.status,
+                      builder: (context, _) {
+                        final status = KeepScreenAwakeService.status.value;
+                        return Row(
+                          children: [
+                            Icon(
+                              status.enabled
+                                  ? Icons.screen_lock_portrait_rounded
+                                  : Icons.screen_lock_portrait_outlined,
+                              size: 20,
+                              color: status.enabled ? accent : null,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              status.enabled ? 'Awake Active' : 'Enable Awake',
+                            ),
+                          ],
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-              IconButton(
-                tooltip: 'Privacy Mode',
-                onPressed: _openPrivacyMode,
-                icon: const Icon(Icons.visibility_off_rounded),
-              ),
-              if (gameEngine.lastArchivedGameBlobJson != null)
-                IconButton(
-                  tooltip: _viewingArchived
-                      ? 'View current game'
-                      : 'View last game snapshot',
-                  onPressed: _loadingArchived ? null : _toggleArchivedView,
-                  icon: Icon(
-                    _viewingArchived
-                        ? Icons.play_circle_fill_rounded
-                        : Icons.history_rounded,
                   ),
-                ),
-              // Refresh Odds Button
-              IconButton(
-                tooltip: 'Recalculate Win Odds',
-                onPressed: (_oddsSimRunning || _viewingArchived)
-                    ? null
-                    : () => _maybeRunOddsSimulation(),
-                icon: _oddsSimRunning
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh_rounded),
+                  PopupMenuItem(
+                    onPressed: _openPrivacyMode,
+                    child: const Row(
+                      children: [
+                        Icon(Icons.visibility_off_rounded, size: 20),
+                        const SizedBox(width: 12),
+                        const Text('Privacy Mode'),
+                      ],
+                    ),
+                  ),
+                  if (gameEngine.lastArchivedGameBlobJson != null)
+                    PopupMenuItem(
+                      onPressed: _loadingArchived ? null : _toggleArchivedView,
+                      child: Row(
+                        children: [
+                          Icon(
+                            _viewingArchived
+                                ? Icons.play_circle_fill_rounded
+                                : Icons.history_rounded,
+                            size: 20,
+                            color: _viewingArchived ? accent : null,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(_viewingArchived
+                              ? 'Return to Live'
+                              : 'View Archive'),
+                        ],
+                      ),
+                    ),
+                  PopupMenuItem(
+                    onPressed: (_oddsSimRunning || _viewingArchived)
+                        ? null
+                        : () => _maybeRunOddsSimulation(),
+                    child: Row(
+                      children: [
+                        if (_oddsSimRunning)
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        else
+                          const Icon(Icons.refresh_rounded, size: 20),
+                        const SizedBox(width: 12),
+                        const Text('Recalculate Odds'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(width: 8),
             ],
@@ -765,6 +1151,8 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                                 ClubBlackoutTheme.gap12,
                               ],
                               _buildHostTabs(context),
+                              ClubBlackoutTheme.gap12,
+                              _buildModeratorToolsCard(context, viewEngine),
                               ClubBlackoutTheme.gap12,
                               Expanded(
                                 child: TabBarView(
@@ -889,31 +1277,41 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
       appBar: appBar,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: _buildPrivacyPanicFab(),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
-            child: ListView(
-              padding: ClubBlackoutTheme.inset16,
-              children: [
-                Text(
-                  'Night mode (Material 3)',
-                  style: (tt.titleSmall ?? const TextStyle()).copyWith(
-                    color: cs.onSurface.withValues(alpha: 0.75),
-                    fontWeight: FontWeight.w700,
+      body: LayoutBuilder(
+        builder: (context, box) {
+          // Designed for Phones: Use 2 columns on phones (< 600), 3 on tablets/desktop
+          final isPhone = box.maxWidth < 600;
+          final crossAxis = isPhone ? 2 : 3;
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: ListView(
+                // Use safe area padding for content, allowing background to bleed if we had one
+                padding: ClubBlackoutTheme.inset16 +
+                    MediaQuery.paddingOf(context).copyWith(top: 0),
+                children: [
+                  Text(
+                    'Night mode (Material 3)',
+                    style: (tt.titleSmall ?? const TextStyle()).copyWith(
+                      color: cs.onSurface.withValues(alpha: 0.75),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  childAspectRatio: 1.35,
-                  children: [
-                    statTile('Players', stats.totalPlayers.toString(),
-                        ClubBlackoutTheme.neonBlue, Icons.groups_rounded),
+                  const SizedBox(height: 10),
+                  _buildModeratorToolsCard(context, engine),
+                  const SizedBox(height: 10),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: crossAxis,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    // Slightly taller tiles on phone to prevent overflow
+                    childAspectRatio: isPhone ? 1.25 : 1.35,
+                    children: [
+                      statTile('Players', stats.totalPlayers.toString(),
+                          ClubBlackoutTheme.neonBlue, Icons.groups_rounded),
                     statTile('Alive', stats.aliveCount.toString(),
                         ClubBlackoutTheme.neonGreen, Icons.favorite_rounded),
                     statTile('Dead', stats.deadCount.toString(),
@@ -1102,94 +1500,48 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
               ],
             ),
           ),
-        ),
+        );
+      },
       ),
     );
   }
 
   Widget _buildHostTabs(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Container(
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              ClubBlackoutTheme.neonBlue.withValues(alpha: 0.15),
-              ClubBlackoutTheme.neonPurple.withValues(alpha: 0.12),
-              ClubBlackoutTheme.neonPink.withValues(alpha: 0.08),
-            ],
-          ),
+    return NeonGlassCard(
+      padding: const EdgeInsets.all(4),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      borderRadius: 16,
+      opacity: 0.1,
+      glowColor: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.2),
+      child: TabBar(
+        labelColor: Colors.white,
+        unselectedLabelColor: cs.onSurface.withValues(alpha: 0.5),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.2,
+          fontSize: 11,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.0,
+          fontSize: 11,
+        ),
+        indicator: BoxDecoration(
+          color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.3),
-            width: 1.5,
+            color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.4),
+            width: 1,
           ),
         ),
-        child: TabBar(
-          labelColor: cs.onSurface,
-          unselectedLabelColor: cs.onSurface.withValues(alpha: 0.5),
-          indicatorSize: TabBarIndicatorSize.tab,
-          dividerColor: Colors.transparent,
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.1,
-            fontSize: 12,
-          ),
-          indicator: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                ClubBlackoutTheme.neonBlue.withValues(alpha: 0.35),
-                ClubBlackoutTheme.neonPurple.withValues(alpha: 0.25),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.5),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.3),
-                blurRadius: 8,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          tabs: const [
-            Tab(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.dashboard_rounded, size: 16),
-                  SizedBox(width: 6),
-                  Text('OVERVIEW'),
-                ],
-              ),
-            ),
-            Tab(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.bar_chart_rounded, size: 16),
-                  SizedBox(width: 6),
-                  Text('STATS'),
-                ],
-              ),
-            ),
-            Tab(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.people_alt_rounded, size: 16),
-                  SizedBox(width: 6),
-                  Text('PLAYERS'),
-                ],
-              ),
-            ),
-          ],
-        ),
+        tabs: const [
+          Tab(text: 'OVERVIEW'),
+          Tab(text: 'STATS'),
+          Tab(text: 'PLAYERS'),
+        ],
       ),
     );
   }
@@ -1252,50 +1604,35 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
   Widget _buildSectionHeader(String title, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
           colors: [
-            color.withValues(alpha: 0.15),
-            color.withValues(alpha: 0.08),
+            color.withValues(alpha: 0.18),
+            color.withValues(alpha: 0.05),
+            Colors.transparent,
           ],
         ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1.5,
+        border: Border(
+          left: BorderSide(color: color, width: 4),
+          bottom: BorderSide(color: color.withValues(alpha: 0.2), width: 1),
         ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 18,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(2),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.4),
-                  blurRadius: 6,
-                  spreadRadius: 1,
-                ),
-              ],
+      child: Text(
+        title.toUpperCase(),
+        style: ClubBlackoutTheme.headingStyle.copyWith(
+          color: color,
+          fontSize: 14,
+          letterSpacing: 2.0,
+          shadows: [
+            Shadow(
+              color: color.withValues(alpha: 0.6),
+              blurRadius: 10,
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: ClubBlackoutTheme.headingStyle.copyWith(
-                color: color,
-                fontSize: 13,
-                letterSpacing: 1.3,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1327,59 +1664,37 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
     Widget tile(String label, String value, Color color, IconData icon) {
       return Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              color.withValues(alpha: 0.18),
-              color.withValues(alpha: 0.1),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: color.withValues(alpha: 0.35),
-            width: 1.5,
+            color: color.withValues(alpha: 0.3),
+            width: 1.2,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.15),
-              blurRadius: 8,
-              spreadRadius: 1,
-            ),
-          ],
         ),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 18,
-              ),
+            Icon(
+              icon,
+              color: color,
+              size: 18,
             ),
             const SizedBox(height: 6),
             Text(
               label,
-              style: ClubBlackoutTheme.glowTextStyle(
-                color: color,
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.1,
+              style: ClubBlackoutTheme.headingStyle.copyWith(
+                color: color.withValues(alpha: 0.8),
+                fontSize: 9,
+                letterSpacing: 1.0,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               value,
               style: const TextStyle(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.w900,
                 height: 1,
               ),
@@ -1389,28 +1704,16 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
       );
     }
 
-    return Container(
+    return NeonGlassCard(
+      glowColor: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.3),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            ClubBlackoutTheme.neonBlue.withValues(alpha: 0.08),
-            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.06),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.25),
-          width: 1.5,
-        ),
-      ),
       child: GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 3,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.15,
+        childAspectRatio: 1.1,
         children: [
           tile('PLAYERS', s.totalPlayers.toString(), ClubBlackoutTheme.neonBlue,
               Icons.groups_rounded),
@@ -1420,8 +1723,8 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
               Icons.cancel_rounded),
           tile('DEALERS', s.dealerAliveCount.toString(),
               ClubBlackoutTheme.neonRed, Icons.dangerous_rounded),
-          tile('PARTY', s.partyAliveCount.toString(),
-              ClubBlackoutTheme.neonBlue, Icons.celebration_rounded),
+          tile('PARTY', s.partyAliveCount.toString(), ClubBlackoutTheme.neonBlue,
+              Icons.celebration_rounded),
           tile('NEUTRAL', s.neutralAliveCount.toString(),
               ClubBlackoutTheme.neonPurple, Icons.auto_awesome_rounded),
         ],
@@ -1434,53 +1737,74 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
     return NeonGlassCard(
       glowColor: ClubBlackoutTheme.neonPurple,
-      child: ExpansionTile(
-        title: Text(
-          'View Past Nights (${engine.nightHistory.length} nights)',
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.5,
+      padding: EdgeInsets.zero,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          title: Text(
+            'PAST LOGS (${engine.nightHistory.length} NIGHTS)',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              fontSize: 12,
+              letterSpacing: 1.1,
+            ),
           ),
+          iconColor: ClubBlackoutTheme.neonPurple,
+          collapsedIconColor: cs.onSurface.withValues(alpha: 0.7),
+          children: engine.nightHistory.asMap().entries.map((entry) {
+            final nightNum = entry.key + 1;
+            final nightData = entry.value;
+
+            // Extract summary from night data
+            final summary = (nightData['summary'] ??
+                    nightData['description'] ??
+                    nightData['recap'] ??
+                    'Night $nightNum records')
+                .toString();
+
+            return Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: cs.onSurface.withValues(alpha: 0.05)),
+                ),
+              ),
+              child: ListTile(
+                dense: true,
+                visualDensity: VisualDensity.compact,
+                leading: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: ClubBlackoutTheme.neonPurple
+                            .withValues(alpha: 0.3)),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$nightNum',
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
+                      fontSize: 12,
+                      color: ClubBlackoutTheme.neonPurple,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  'NIGHT $nightNum ARCHIVE',
+                  style: ClubBlackoutTheme.headingStyle.copyWith(fontSize: 10),
+                ),
+                subtitle: Text(
+                  summary.length > 80 ? '${summary.substring(0, 77)}...' : summary,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: cs.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+                onTap: () => _showNightDetails(context, nightNum, nightData),
+              ),
+            );
+          }).toList(),
         ),
-        iconColor: ClubBlackoutTheme.neonPurple,
-        collapsedIconColor: cs.onSurface.withValues(alpha: 0.7),
-        children: engine.nightHistory.asMap().entries.map((entry) {
-          final nightNum = entry.key + 1;
-          final nightData = entry.value;
-
-          // Extract summary from night data
-          final summary = (nightData['summary'] ??
-                  nightData['description'] ??
-                  nightData['recap'] ??
-                  'Night $nightNum data recorded')
-              .toString();
-
-          return ListTile(
-            dense: true,
-            leading: CircleAvatar(
-              backgroundColor:
-                  ClubBlackoutTheme.neonPurple.withValues(alpha: 0.2),
-              foregroundColor: ClubBlackoutTheme.neonPurple,
-              child: Text(
-                '$nightNum',
-                style:
-                    const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
-              ),
-            ),
-            title: Text(
-              'Night $nightNum',
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-            subtitle: Text(
-              summary.length > 100 ? '${summary.substring(0, 97)}...' : summary,
-              style: TextStyle(
-                fontSize: 12,
-                color: cs.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
-            onTap: () => _showNightDetails(context, nightNum, nightData),
-          );
-        }).toList(),
       ),
     );
   }
@@ -1542,42 +1866,82 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
     final cs = Theme.of(context).colorScheme;
     final rows = entries
         .where((e) => e.type != GameLogType.script)
-        .take(10)
+        .take(12)
         .toList(growable: false);
 
     if (rows.isEmpty) {
       return NeonGlassCard(
         glowColor: ClubBlackoutTheme.neonBlue,
         child: Text(
-          'No events yet.',
-          style: TextStyle(color: cs.onSurface.withValues(alpha: 0.75)),
+          'NO EVENTS LOGGED YET.',
+          style: ClubBlackoutTheme.headingStyle.copyWith(
+            fontSize: 11,
+            color: cs.onSurface.withValues(alpha: 0.5),
+            letterSpacing: 1.1,
+          ),
         ),
       );
     }
 
     return NeonGlassCard(
-      glowColor: ClubBlackoutTheme.neonBlue,
-      padding: ClubBlackoutTheme.cardPadding,
+      glowColor: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.25),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final e in rows) ...[
-            Text(
-              e.title,
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-            if (e.description.trim().isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  e.description,
-                  style: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.78),
-                    height: 1.25,
+          for (int i = 0; i < rows.length; i++) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 4, right: 10),
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: ClubBlackoutTheme.neonBlue,
+                    borderRadius: BorderRadius.circular(2),
+                    boxShadow: [
+                      BoxShadow(
+                          color: ClubBlackoutTheme.neonBlue, blurRadius: 4)
+                    ],
                   ),
                 ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        rows[i].title.toUpperCase(),
+                        style: ClubBlackoutTheme.headingStyle.copyWith(
+                          fontSize: 11,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      if (rows[i].description.trim().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 1),
+                          child: Text(
+                            rows[i].description,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurface.withValues(alpha: 0.7),
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (i < rows.length - 1)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Divider(
+                  height: 1,
+                  color: cs.onSurface.withValues(alpha: 0.05),
+                ),
               ),
-            ClubBlackoutTheme.gap8,
           ],
         ],
       ),
@@ -1631,12 +1995,14 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
     return NeonGlassCard(
       glowColor: ClubBlackoutTheme.neonPurple,
+      padding: EdgeInsets.zero,
       child: ExpansionTile(
-        title: const Text(
-          'Voting Analytics',
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.5,
+        title: Text(
+          'VOTING ANALYTICS',
+          style: ClubBlackoutTheme.headingStyle.copyWith(
+            color: ClubBlackoutTheme.neonPurple,
+            fontSize: 14,
+            letterSpacing: 1.5,
           ),
         ),
         subtitle: Text(
@@ -1650,37 +2016,41 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
         collapsedIconColor: cs.onSurface.withValues(alpha: 0.7),
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Divider(color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.2)),
+                const SizedBox(height: 12),
                 Text(
-                  'Day ${engine.dayCount} Breakdown',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.8,
+                  'DAY ${engine.dayCount} BREAKdown'.toUpperCase(),
+                  style: ClubBlackoutTheme.headingStyle.copyWith(
+                    fontSize: 12,
+                    color: cs.onSurface.withValues(alpha: 0.9),
+                    letterSpacing: 1.2,
                   ),
                 ),
                 const SizedBox(height: 12),
                 _buildVotingStatRow('Total Eligible', '$eligibleVoters', cs),
                 _buildVotingStatRow('Voted', '$totalVoters', cs),
                 _buildVotingStatRow('Abstained', '$abstained', cs),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 if (pendingPredator != null) ...[
                   Text(
-                    'Predator Retaliation Context',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      color: cs.onSurface.withValues(alpha: 0.9),
-                      letterSpacing: 0.6,
+                    'PREDATOR RETALIATION',
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
+                      fontSize: 12,
+                      color: ClubBlackoutTheme.neonRed,
+                      letterSpacing: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
-                    'Voted-out Predator: ${pendingPredator.name}',
+                    'Target: ${pendingPredator.name.toUpperCase()}',
                     style: TextStyle(
                       fontSize: 12,
                       color: cs.onSurface.withValues(alpha: 0.75),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -2040,50 +2410,62 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
     return NeonGlassCard(
       glowColor: ClubBlackoutTheme.neonBlue,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Current votes',
-            style: ClubBlackoutTheme.glowTextStyle(
+            'CURRENT VOTES',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
               color: ClubBlackoutTheme.neonBlue,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.1,
+              fontSize: 14,
+              letterSpacing: 1.5,
             ),
           ),
-          ClubBlackoutTheme.gap8,
+          const SizedBox(height: 12),
           for (final row in breakdown) ...[
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    row.targetName,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+                    row.targetName.toUpperCase(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
-                Text(
-                  row.voteCount.toString(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: cs.onSurface.withValues(alpha: 0.85),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    row.voteCount.toString(),
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
+                      fontSize: 14,
+                      color: ClubBlackoutTheme.neonBlue,
+                    ),
                   ),
                 ),
               ],
             ),
             if (row.voterNames.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 2, bottom: 8),
+                padding: const EdgeInsets.only(top: 4, bottom: 12),
                 child: Text(
-                  row.voterNames.join(' · '),
+                  row.voterNames.join(' • '),
                   style: TextStyle(
-                    fontSize: 12,
-                    color: cs.onSurface.withValues(alpha: 0.70),
+                    fontSize: 11,
+                    color: cs.onSurface.withValues(alpha: 0.60),
+                    letterSpacing: 0.3,
                   ),
                 ),
               )
             else
-              ClubBlackoutTheme.gap8,
+              const SizedBox(height: 12),
           ],
         ],
       ),
@@ -2106,30 +2488,46 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
     return NeonGlassCard(
       glowColor: ClubBlackoutTheme.neonPurple,
-      padding: const EdgeInsets.all(12),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final c in chips)
-            DecoratedBox(
-              decoration: ClubBlackoutTheme.neonFrame(
-                color: c.color,
-                opacity: 0.10,
-                borderRadius: 999,
-              ),
-              child: Padding(
-                padding: ClubBlackoutTheme.rowPadding,
-                child: Text(
-                  '${c.roleName} (${c.aliveCount})',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
-                    color: cs.onSurface,
+          Text(
+            'ACTIVE ROLES',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              color: ClubBlackoutTheme.neonPurple,
+              fontSize: 14,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 10,
+            children: [
+              for (final c in chips)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: c.color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: c.color.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    '${c.roleName.toUpperCase()} • ${c.aliveCount}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10,
+                      color: cs.onSurface,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
-              ),
-            ),
+            ],
+          ),
         ],
       ),
     );
@@ -2142,155 +2540,145 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
     return NeonGlassCard(
       glowColor: ClubBlackoutTheme.neonBlue,
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'AI EXPORT',
-            style: ClubBlackoutTheme.glowTextStyle(
+            'AI DATA EXPORT',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
               color: ClubBlackoutTheme.neonBlue,
-              fontWeight: FontWeight.w900,
+              fontSize: 14,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Extract structured game state for AI analysis or commentary generation.',
+            style: TextStyle(
+              color: cs.onSurface.withValues(alpha: 0.7),
+              fontSize: 12,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'RAW GAME STATS (JSON)',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              fontSize: 11,
+              color: cs.onSurface.withValues(alpha: 0.9),
               letterSpacing: 1.2,
             ),
           ),
-          ClubBlackoutTheme.gap8,
-          Text(
-            'Export structured JSON for AI analysis or generate commentary prompts.',
-            style: TextStyle(color: cs.onSurface.withValues(alpha: 0.80)),
-          ),
-          ClubBlackoutTheme.gap12,
-          // Keep only JSON AI export and Commentary Prompt
-          Text(
-            'Game Stats JSON Export',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
-            ),
-          ),
-          ClubBlackoutTheme.gap8,
+          const SizedBox(height: 10),
           Wrap(
             spacing: 12,
             runSpacing: 8,
             children: [
               Tooltip(
                 message: 'Copy Game Stats JSON',
-                child: FilledButton(
+                child: FilledButton.icon(
                   onPressed: isExportingAiStats
                       ? null
                       : () => _copyAiGameStatsJson(context, engine),
                   style: ClubBlackoutTheme.neonButtonStyle(
                     ClubBlackoutTheme.neonBlue,
                     isPrimary: true,
-                  ).copyWith(
-                    padding: WidgetStateProperty.all(const EdgeInsets.all(12)),
                   ),
-                  child: isExportingAiStats
+                  icon: isExportingAiStats
                       ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              ClubBlackoutTheme.neonBlue,
-                            ),
-                          ),
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.copy_all_rounded),
+                      : const Icon(Icons.copy_all_rounded, size: 18),
+                  label: const Text('COPY JSON'),
                 ),
               ),
               Tooltip(
                 message: 'Save Game Stats JSON',
-                child: FilledButton(
+                child: FilledButton.icon(
                   onPressed: isExportingAiStats
                       ? null
                       : () => _saveAiGameStatsJson(context, engine),
                   style: ClubBlackoutTheme.neonButtonStyle(
                     ClubBlackoutTheme.neonBlue,
                     isPrimary: false,
-                  ).copyWith(
-                    padding: WidgetStateProperty.all(const EdgeInsets.all(12)),
                   ),
-                  child: isExportingAiStats
+                  icon: isExportingAiStats
                       ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              ClubBlackoutTheme.neonBlue,
-                            ),
-                          ),
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.save_alt_rounded),
+                      : const Icon(Icons.save_alt_rounded, size: 18),
+                  label: const Text('SAVE FILE'),
                 ),
               ),
             ],
           ),
-          ClubBlackoutTheme.gap16,
-          Divider(color: cs.onSurface.withValues(alpha: 0.12)),
-          ClubBlackoutTheme.gap8,
+          const SizedBox(height: 20),
+          Divider(color: cs.onSurface.withValues(alpha: 0.1)),
+          const SizedBox(height: 12),
           Text(
-            'AI Commentary Prompt (PG / RUDE / HARD-R)',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
+            'AI COMMENTARY PROMPT',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              fontSize: 11,
+              color: ClubBlackoutTheme.neonPurple,
+              letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
+          Text(
+            'Configured for PG / RUDE / HARD-R personas.',
+            style: TextStyle(
+              fontSize: 11,
+              color: cs.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 12,
             runSpacing: 8,
             children: [
               Tooltip(
                 message: 'Copy Prompt',
-                child: FilledButton(
+                child: FilledButton.icon(
                   onPressed: isExportingCommentary
                       ? null
                       : () => _copyAiCommentaryPrompt(context, engine),
                   style: ClubBlackoutTheme.neonButtonStyle(
                     ClubBlackoutTheme.neonPurple,
                     isPrimary: true,
-                  ).copyWith(
-                    padding: WidgetStateProperty.all(const EdgeInsets.all(12)),
                   ),
-                  child: isExportingCommentary
+                  icon: isExportingCommentary
                       ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              ClubBlackoutTheme.neonPurple,
-                            ),
-                          ),
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.content_copy_rounded),
+                      : const Icon(Icons.content_copy_rounded, size: 18),
+                  label: const Text('COPY PROMPT'),
                 ),
               ),
               Tooltip(
                 message: 'Save Prompt',
-                child: FilledButton(
+                child: FilledButton.icon(
                   onPressed: isExportingCommentary
                       ? null
                       : () => _saveAiCommentaryPrompt(context, engine),
                   style: ClubBlackoutTheme.neonButtonStyle(
                     ClubBlackoutTheme.neonPurple,
                     isPrimary: false,
-                  ).copyWith(
-                    padding: WidgetStateProperty.all(const EdgeInsets.all(12)),
                   ),
-                  child: isExportingCommentary
+                  icon: isExportingCommentary
                       ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              ClubBlackoutTheme.neonPurple,
-                            ),
-                          ),
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.save_alt_rounded),
+                      : const Icon(Icons.save_alt_rounded, size: 18),
+                  label: const Text('SAVE FILE'),
                 ),
               ),
             ],
@@ -2314,65 +2702,96 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
     return NeonGlassCard(
       glowColor: ClubBlackoutTheme.neonOrange,
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Quick controls',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
+            'QUICK CONTROLS',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              color: ClubBlackoutTheme.neonOrange,
+              fontSize: 14,
+              letterSpacing: 1.5,
             ),
           ),
-          const SizedBox(height: 6),
-          Builder(
-            builder: (context) {
-              if (currentStep == null) {
-                return Text(
-                  canControlScript
-                      ? 'No active script step.'
-                      : 'Game script controls are available once the game starts.',
-                  style: TextStyle(color: cs.onSurfaceVariant),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                );
-              }
-
-              Player? stepPlayer;
-              final stepRoleId = currentStep.roleId;
-              if (stepRoleId != null && stepRoleId.isNotEmpty) {
-                try {
-                  stepPlayer = engine.players.firstWhere(
-                    (p) =>
-                        p.role.id == stepRoleId &&
-                        p.isActive &&
-                        !p.soberSentHome,
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: cs.onSurface.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
+            ),
+            child: Builder(
+              builder: (context) {
+                if (currentStep == null) {
+                  return Text(
+                    canControlScript
+                        ? 'No active script step.'
+                        : 'Game script controls are available once the game starts.',
+                    style: TextStyle(
+                      color: cs.onSurface.withValues(alpha: 0.5),
+                      fontSize: 12,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   );
-                } catch (_) {}
-              }
+                }
 
-              return Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Current: ${currentStep.title}',
-                      style: TextStyle(color: cs.onSurfaceVariant),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                Player? stepPlayer;
+                final stepRoleId = currentStep.roleId;
+                if (stepRoleId != null && stepRoleId.isNotEmpty) {
+                  try {
+                    stepPlayer = engine.players.firstWhere(
+                      (p) =>
+                          p.role.id == stepRoleId &&
+                          p.isActive &&
+                          !p.soberSentHome,
+                    );
+                  } catch (_) {}
+                }
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CURRENT STEP',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: cs.onSurface.withValues(alpha: 0.4),
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            currentStep.title,
+                            style: TextStyle(
+                              color: cs.onSurface.withValues(alpha: 0.9),
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  if (stepPlayer != null) ...[
-                    const SizedBox(width: 10),
-                    UnifiedPlayerTile.minimal(
-                      player: stepPlayer,
-                      gameEngine: engine,
-                    ),
+                    if (stepPlayer != null) ...[
+                      const SizedBox(width: 12),
+                      UnifiedPlayerTile.minimal(
+                        player: stepPlayer,
+                        gameEngine: engine,
+                      ),
+                    ],
                   ],
-                ],
-              );
-            },
+                );
+              },
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -2387,8 +2806,8 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                           engine.showToast('Went back one step.');
                         }
                       : null,
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  label: const Text('Prev'),
+                  icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                  label: const Text('PREV'),
                 ),
               ),
               const SizedBox(width: 10),
@@ -2403,8 +2822,8 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                           engine.advanceScript();
                         }
                       : null,
-                  icon: const Icon(Icons.check_rounded),
-                  label: const Text('Next'),
+                  icon: const Icon(Icons.check_rounded, size: 18),
+                  label: const Text('NEXT'),
                 ),
               ),
               const SizedBox(width: 10),
@@ -2422,8 +2841,8 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                               final cs = Theme.of(ctx).colorScheme;
                               return ClubAlertDialog(
                                 title: const Text('SKIP TO NEXT PHASE?'),
-                                icon: const Icon(Icons.fast_forward_rounded),
-                                iconColor: cs.error,
+                                icon: Icon(Icons.fast_forward_rounded,
+                                    color: cs.error),
                                 content: Text(
                                   'This fast-forwards the remaining script steps for this phase.\n\nUse when you need to recover from a mistake or keep the night moving.',
                                   style: TextStyle(
@@ -2452,54 +2871,50 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                           engine.showToast('Skipped to next phase.');
                         }
                       : null,
-                  icon: const Icon(Icons.fast_forward_rounded),
-                  label: const Text('Skip'),
+                  icon: const Icon(Icons.fast_forward_rounded, size: 18),
+                  label: const Text('SKIP'),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  style: ClubBlackoutTheme.neonButtonStyle(
-                    ClubBlackoutTheme.neonOrange,
-                    isPrimary: true,
-                  ),
-                  onPressed: _isExportingStory
-                      ? null
-                      : () => _copyStorySnapshotJson(context),
-                  icon: _isExportingStory
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              ClubBlackoutTheme.neonOrange,
-                            ),
-                          ),
-                        )
-                      : const Icon(Icons.auto_stories_rounded),
-                  label: Text(_isExportingStory ? 'Copying…' : 'Story JSON'),
-                ),
-              ),
-            ],
+          FilledButton.icon(
+            style: ClubBlackoutTheme.neonButtonStyle(
+              ClubBlackoutTheme.neonOrange,
+              isPrimary: true,
+            ),
+            onPressed: _isExportingStory
+                ? null
+                : () => _copyStorySnapshotJson(context),
+            icon: _isExportingStory
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.auto_stories_rounded, size: 18),
+            label: Text(_isExportingStory ? 'COPYING...' : 'COPY STORY JSON'),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
-            'Pending actions',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
+            'PENDING ACTIONS',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              fontSize: 12,
+              color: cs.onSurface.withValues(alpha: 0.8),
+              letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           if (!hasPending)
             Text(
               'No pending host actions.',
-              style: TextStyle(color: cs.onSurfaceVariant),
+              style: TextStyle(
+                color: cs.onSurface.withValues(alpha: 0.5),
+                fontSize: 12,
+              ),
             ),
           if (engine.dramaQueenSwapPending) ...[
             const SizedBox(height: 8),
@@ -2519,7 +2934,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
               context,
               icon: Icons.record_voice_over_rounded,
               color: ClubBlackoutTheme.neonPurple,
-              title: 'Messy Bitch victory pending',
+              title: 'MESSY BITCH VICTORY PENDING',
               subtitle:
                   'Rumours reached everyone. Declare to end the game now.',
               trailing: FilledButton(
@@ -2571,16 +2986,21 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
+                  title.toUpperCase(),
+                  style: ClubBlackoutTheme.headingStyle.copyWith(
+                    fontSize: 11,
                     color: cs.onSurface,
+                    letterSpacing: 1.0,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(color: cs.onSurfaceVariant, height: 1.3),
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.7),
+                    fontSize: 12,
+                    height: 1.3,
+                  ),
                 ),
               ],
             ),
@@ -2596,94 +3016,83 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
 
   Widget _buildDashboardIntroCard(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
+    return NeonGlassCard(
+      glowColor: ClubBlackoutTheme.neonBlue,
+      margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            ClubBlackoutTheme.neonBlue.withValues(alpha: 0.12),
-            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.08),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-      ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  ClubBlackoutTheme.neonBlue.withValues(alpha: 0.3),
-                  ClubBlackoutTheme.neonPurple.withValues(alpha: 0.25),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
+              color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
               border: Border.all(
                 color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.4),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
             child: const Icon(
-              Icons.info_outline_rounded,
+              Icons.analytics_rounded,
               color: ClubBlackoutTheme.neonBlue,
-              size: 24,
+              size: 26,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Live Dashboard',
-                  style: TextStyle(
-                    color: ClubBlackoutTheme.neonBlue,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
                 Text(
-                  'Tracking win odds, voting activity, role counts, and events.',
-                  style: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.75),
-                    fontSize: 12,
-                    height: 1.3,
+                  'LIVE DASHBOARD',
+                  style: ClubBlackoutTheme.headingStyle.copyWith(
+                    color: ClubBlackoutTheme.neonBlue,
+                    fontSize: 14,
+                    letterSpacing: 1.5,
                   ),
                 ),
                 const SizedBox(height: 6),
+                Text(
+                  'Real-time win odds, voting activity, and role metrics.',
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.8),
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.15),
+                    color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color:
-                          ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+                      color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(
-                        Icons.lightbulb_outline_rounded,
-                        size: 12,
+                        Icons.info_outline_rounded,
+                        size: 14,
                         color: ClubBlackoutTheme.neonPurple,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          'High confidence = clear winner • Low = volatile',
+                          'Confidence indicates game stability.',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 11,
                             color: cs.onSurface.withValues(alpha: 0.7),
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -2761,20 +3170,20 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                 child: Row(
                   children: [
                     Text(
-                      'Predictability: $band',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.0,
+                      'PREDICTABILITY: $band',
+                      style: ClubBlackoutTheme.headingStyle.copyWith(
+                        fontSize: 12,
                         color: bandC,
+                        letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Tooltip(
                       message:
                           'Formula: (Leader chance × 65%) + (Separation from runner-up × 35%)\n\nHIGH: ≥72% | MEDIUM: 52-72% | LOW: <52%',
                       child: Icon(
                         Icons.info_outline,
-                        size: 16,
+                        size: 14,
                         color: Theme.of(context)
                             .colorScheme
                             .onSurface
@@ -2786,34 +3195,43 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
               ),
               Text(
                 '${(confidence * 100).round()}%',
-                style: const TextStyle(fontWeight: FontWeight.w900),
+                style: ClubBlackoutTheme.headingStyle.copyWith(
+                  fontSize: 14,
+                  letterSpacing: 1.0,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
-            'Current leader: ${labelFor(top.key)} (${(top.value * 100).round()}%)',
+            'Current leader: ${labelFor(top.key).toUpperCase()} (${(top.value * 100).round()}%)',
             style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context)
                     .colorScheme
                     .onSurface
                     .withValues(alpha: 0.85)),
           ),
           if (second.key.isNotEmpty)
-            Text(
-              'Runner-up: ${labelFor(second.key)} (${(second.value * 100).round()}%)',
-              style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.70)),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                'Runner-up: ${labelFor(second.key).toUpperCase()} (${(second.value * 100).round()}%)',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.60)),
+              ),
             ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               value: confidence,
-              minHeight: 10,
+              minHeight: 12,
               backgroundColor: Theme.of(context)
                   .colorScheme
                   .onSurface
@@ -2822,15 +3240,24 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
             ),
           ),
           if (odds.note.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              odds.note,
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.72),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: bandC.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: bandC.withValues(alpha: 0.15)),
+              ),
+              child: Text(
+                odds.note,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.72),
+                ),
               ),
             ),
           ],
@@ -2893,74 +3320,81 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
               children: [
                 if (isUpdating) ...[
                   const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: ClubBlackoutTheme.neonPurple,
+                    ),
                   ),
-                  ClubBlackoutTheme.hGap8,
+                  ClubBlackoutTheme.hGap12,
                 ],
                 Expanded(
                   child: Text(
                     isUpdating
-                        ? 'Updating odds…'
+                        ? 'RUNNING CLOUD SIMULATION…'
                         : (updatedAt == null
                             ? ''
-                            : "Updated ${updatedAt.hour.toString().padLeft(2, '0')}:${updatedAt.minute.toString().padLeft(2, '0')}"),
-                    style: TextStyle(
-                      fontSize: 12,
+                            : "LAST SYNC: ${updatedAt.hour.toString().padLeft(2, '0')}:${updatedAt.minute.toString().padLeft(2, '0')}"),
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
+                      fontSize: 10,
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withValues(alpha: 0.70),
+                          .withValues(alpha: 0.6),
+                      letterSpacing: 1.0,
                     ),
                   ),
                 ),
               ],
             ),
-            ClubBlackoutTheme.gap8,
+            ClubBlackoutTheme.gap12,
           ],
           for (final e in rows) ...[
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    labelFor(e.key),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: colorFor(e.key),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      labelFor(e.key).toUpperCase(),
+                      style: ClubBlackoutTheme.headingStyle.copyWith(
+                        fontSize: 11,
+                        color: colorFor(e.key),
+                        letterSpacing: 0.8,
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: LinearProgressIndicator(
-                      value: e.value.clamp(0.0, 1.0),
-                      minHeight: 10,
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.08),
-                      color: colorFor(e.key).withValues(alpha: 0.9),
+                  Expanded(
+                    flex: 4,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: e.value.clamp(0.0, 1.0),
+                        minHeight: 8,
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.08),
+                        color: colorFor(e.key).withValues(alpha: 0.8),
+                      ),
                     ),
                   ),
-                ),
-                ClubBlackoutTheme.hGap12,
-                Text(
-                  '${(e.value * 100).round()}%',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.85),
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: 40,
+                    child: Text(
+                      '${(e.value * 100).round()}%',
+                      textAlign: TextAlign.right,
+                      style: ClubBlackoutTheme.headingStyle.copyWith(
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            ClubBlackoutTheme.gap8,
           ],
           if (odds.note.isNotEmpty) ...[
             ClubBlackoutTheme.gap4,
@@ -3651,35 +4085,50 @@ class _HostPlayersTabState extends State<_HostPlayersTab> {
     }
 
     Widget buildPlayerCard(Player p) {
-      return UnifiedPlayerTile.dashboard(
-        player: p,
-        gameEngine: engine,
-        isSelected: _selectedPlayerId == p.id,
-        onTap: () => setState(() => _selectedPlayerId = p.id),
-        trailing: (p.role.id == 'clinger' &&
-                p.isActive &&
-                !p.clingerFreedAsAttackDog &&
-                p.clingerPartnerId != null)
-            ? IconButton(
-                tooltip: 'Mark freed (called "controller")',
-                icon: const Icon(Icons.link_off_rounded),
-                onPressed: () {
-                  final partnerName = (p.clingerPartnerId == null)
-                      ? null
-                      : engine.players
-                          .where((x) => x.id == p.clingerPartnerId)
-                          .firstOrNull
-                          ?.name;
-                  final ok = engine.freeClingerFromObsession(p.id);
-                  final msg = ok
-                      ? (partnerName != null
-                          ? '${p.name} was called "controller" by $partnerName and is now unleashed.'
-                          : '${p.name} is now unleashed.')
-                      : 'Unable to mark ${p.name} as unleashed.';
-                  engine.showToast(msg);
-                },
-              )
-            : null,
+      final isSelected = _selectedPlayerId == p.id;
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          UnifiedPlayerTile.dashboard(
+            player: p,
+            gameEngine: engine,
+            isSelected: isSelected,
+            onTap: () => setState(() {
+              if (_selectedPlayerId == p.id) {
+                _selectedPlayerId = null;
+              } else {
+                _selectedPlayerId = p.id;
+              }
+            }),
+            trailing: (p.role.id == 'clinger' &&
+                    p.isActive &&
+                    !p.clingerFreedAsAttackDog &&
+                    p.clingerPartnerId != null)
+                ? IconButton(
+                    tooltip: 'Mark freed (called "controller")',
+                    icon: const Icon(Icons.link_off_rounded),
+                    onPressed: () {
+                      final partnerName = (p.clingerPartnerId == null)
+                          ? null
+                          : engine.players
+                              .where((x) => x.id == p.clingerPartnerId)
+                              .firstOrNull
+                              ?.name;
+                      final ok = engine.freeClingerFromObsession(p.id);
+                      final msg = ok
+                          ? (partnerName != null
+                              ? '${p.name} was called "controller" by $partnerName and is now unleashed.'
+                              : '${p.name} is now unleashed.')
+                          : 'Unable to mark ${p.name} as unleashed.';
+                      engine.showToast(msg);
+                    },
+                  )
+                : null,
+          ),
+          if (isSelected) _buildQuickActions(p, engine),
+        ],
       );
     }
 
@@ -3816,5 +4265,147 @@ class _HostPlayersTabState extends State<_HostPlayersTab> {
         ],
       ],
     );
+  }
+
+  Widget _buildQuickActions(Player p, GameEngine engine) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 16),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          // Kill / Revive
+          if (p.isAlive)
+            FilledButton.tonalIcon(
+              onPressed: () => _confirmAndRun(
+                'Kill ${p.name}',
+                'This will immediately eliminate this player.',
+                () => engine.processDeath(p, cause: DeathCause.adminKill),
+                isDangerous: true,
+              ),
+              icon: const Icon(Icons.dangerous_rounded, size: 18),
+              label: const Text('KILL'),
+              style: FilledButton.styleFrom(
+                foregroundColor: ClubBlackoutTheme.neonRed,
+              ),
+            )
+          else
+            FilledButton.tonalIcon(
+              onPressed: () => _confirmAndRun(
+                'Revive ${p.name}',
+                'This will bring this player back to life.',
+                () => engine.adminRevivePlayer(p.id),
+              ),
+              icon: const Icon(Icons.volunteer_activism_rounded, size: 18),
+              label: const Text('REVIVE'),
+              style: FilledButton.styleFrom(
+                foregroundColor: ClubBlackoutTheme.neonGreen,
+              ),
+            ),
+
+          // Toggle Enabled
+          FilledButton.tonalIcon(
+            onPressed: () {
+              engine.setPlayerEnabled(p.id, !p.isEnabled);
+              setState(() {});
+            },
+            icon: Icon(
+              p.isEnabled
+                  ? Icons.pause_circle_outline_rounded
+                  : Icons.play_circle_outline_rounded,
+              size: 18,
+            ),
+            label: Text(p.isEnabled ? 'DISABLE' : 'ENABLE'),
+          ),
+
+          // Rename
+          FilledButton.tonalIcon(
+            onPressed: () => _renamePlayerDialog(p, engine),
+            icon: const Icon(Icons.edit_rounded, size: 18),
+            label: const Text('RENAME'),
+          ),
+
+          // Clear Status
+          if (p.statusEffects.isNotEmpty)
+            FilledButton.tonalIcon(
+              onPressed: () {
+                p.statusEffects.clear();
+                engine.refreshUi();
+                setState(() {});
+              },
+              icon: const Icon(Icons.layers_clear_rounded, size: 18),
+              label: const Text('CLEAR STATUS'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmAndRun(
+    String title,
+    String message,
+    VoidCallback action, {
+    bool isDangerous = false,
+  }) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => ClubAlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: isDangerous
+                ? FilledButton.styleFrom(
+                    backgroundColor: ClubBlackoutTheme.neonRed,
+                    foregroundColor: Colors.white,
+                  )
+                : null,
+            child: const Text('PROCEED'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      action();
+      setState(() {});
+    }
+  }
+
+  Future<void> _renamePlayerDialog(Player p, GameEngine engine) async {
+    final controller = TextEditingController(text: p.name);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => ClubAlertDialog(
+        title: const Text('Rename Player'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: 'New Name',
+            prefixIcon: const Icon(Icons.edit_rounded),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('SAVE'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && controller.text.trim().isNotEmpty) {
+      engine.renamePlayer(p.id, controller.text.trim());
+      setState(() {});
+    }
   }
 }

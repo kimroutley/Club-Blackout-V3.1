@@ -901,30 +901,50 @@ class _BarcodeStrip extends StatelessWidget {
         borderRadius: BorderRadius.circular(ClubBlackoutTheme.radiusSm),
         border: Border.all(color: accent.withValues(alpha: 0.22), width: 1),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final barCount = math.max(14, (constraints.maxWidth / 10).floor());
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: List.generate(barCount, (i) {
-              final isWide = i % 7 == 0 || i % 11 == 0;
-              final w = isWide ? 4.0 : 2.0;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 1),
-                child: Container(
-                  width: w,
-                  decoration: BoxDecoration(
-                    color: cs.onSurface.withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(1),
-                  ),
-                ),
-              );
-            }),
-          );
-        },
+      child: CustomPaint(
+        painter: _BarcodePainter(
+          color: cs.onSurface.withValues(alpha: 0.55),
+        ),
       ),
     );
   }
+}
+
+class _BarcodePainter extends CustomPainter {
+  final Color color;
+  _BarcodePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= 0) return;
+    
+    final paint = Paint()..color = color;
+    double x = 0;
+    int i = 0;
+    const double padding = 2.0;
+    
+    while (x < size.width) {
+      final isWide = i % 7 == 0 || i % 11 == 0;
+      final w = isWide ? 4.0 : 2.0;
+      
+      if (x + w > size.width) break;
+      
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, 0, w, size.height),
+          const Radius.circular(1),
+        ),
+        paint,
+      );
+      
+      x += w + padding;
+      i++;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BarcodePainter oldDelegate) => 
+      oldDelegate.color != color;
 }
 
 class _InfoSection extends StatelessWidget {

@@ -34,10 +34,12 @@ class GameDrawer extends StatelessWidget {
     // Default accent to primary for M3 consistency
     final accent = cs.primary;
 
-    final labelStyle = Theme.of(context)
-        .textTheme
-        .labelLarge
-        ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.5);
+    // Use Audiowide for navigation labels
+    final labelStyle = ClubBlackoutTheme.headingStyle.copyWith(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 1.0,
+    );
 
     final canContinueGame = onContinueGameTap != null &&
         gameEngine != null &&
@@ -45,17 +47,17 @@ class GameDrawer extends StatelessWidget {
 
     return NavigationDrawerTheme(
       data: NavigationDrawerThemeData(
-        backgroundColor: cs.surfaceContainerLow,
-        surfaceTintColor: cs.surfaceTint,
+        backgroundColor: cs.surfaceContainerLow.withValues(alpha: 0.95),
+        surfaceTintColor: Colors.transparent,
         indicatorColor: cs.secondaryContainer.withValues(alpha: 0.75),
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        elevation: 1,
+        elevation: 0,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) {
             final selected = states.contains(WidgetState.selected);
-            return labelStyle?.copyWith(
+            return labelStyle.copyWith(
               color: selected
                   ? cs.onSecondaryContainer
                   : cs.onSurface.withValues(alpha: 0.70),
@@ -128,12 +130,10 @@ class GameDrawer extends StatelessWidget {
                   const SizedBox(width: 10),
                   Text(
                     'GAME CONTROLS',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: cs.onSurface.withValues(alpha: 0.7),
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
-                          fontSize: 11,
-                        ),
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
+                      color: cs.onSurface.withValues(alpha: 0.7),
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
@@ -243,12 +243,7 @@ class GameDrawer extends StatelessWidget {
                       final tt = Theme.of(ctx).textTheme;
                       const accent = ClubBlackoutTheme.neonPurple;
                       return ClubAlertDialog(
-                        title: Text(
-                          'Start new game?',
-                          style: (tt.titleLarge ?? const TextStyle()).copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        title: const Text('START NEW GAME?'),
                         content: Text(
                           'This resets the current game back to the lobby and clears roles, but keeps the guest list.',
                           style: (tt.bodyMedium ?? const TextStyle()).copyWith(
@@ -260,15 +255,13 @@ class GameDrawer extends StatelessWidget {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
-                            child: const Text('Cancel'),
+                            child: const Text('CANCEL'),
                           ),
                           FilledButton(
                             onPressed: () => Navigator.pop(ctx, true),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: accent.withValues(alpha: 0.18),
-                              foregroundColor: cs.onSurface,
-                            ),
-                            child: const Text('Start new'),
+                            style: ClubBlackoutTheme.neonButtonStyle(accent,
+                                isPrimary: true),
+                            child: const Text('START NEW'),
                           ),
                         ],
                       );
@@ -296,12 +289,7 @@ class GameDrawer extends StatelessWidget {
                       final tt = Theme.of(ctx).textTheme;
                       const accent = ClubBlackoutTheme.neonRed;
                       return ClubAlertDialog(
-                        title: Text(
-                          'Full reset?',
-                          style: (tt.titleLarge ?? const TextStyle()).copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        title: const Text('FULL RESET?'),
                         content: Text(
                           'This clears the entire roster and resets back to the lobby.',
                           style: (tt.bodyMedium ?? const TextStyle()).copyWith(
@@ -313,15 +301,13 @@ class GameDrawer extends StatelessWidget {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
-                            child: const Text('Cancel'),
+                            child: const Text('CANCEL'),
                           ),
                           FilledButton(
                             onPressed: () => Navigator.pop(ctx, true),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: accent.withValues(alpha: 0.18),
-                              foregroundColor: cs.onSurface,
-                            ),
-                            child: const Text('Reset'),
+                            style: ClubBlackoutTheme.neonButtonStyle(accent,
+                                isPrimary: true),
+                            child: const Text('RESET'),
                           ),
                         ],
                       );
@@ -347,7 +333,6 @@ class GameDrawer extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, Color accent) {
     final scheme = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
@@ -357,17 +342,10 @@ class GameDrawer extends StatelessWidget {
         right: 20,
       ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            scheme.surfaceContainerLow,
-            scheme.surface,
-          ],
-        ),
+        color: scheme.surfaceContainerLow.withValues(alpha: 0.5),
         border: Border(
           bottom: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.5),
+            color: accent.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -381,11 +359,18 @@ class GameDrawer extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: accent.withValues(alpha: 0.3),
-                    width: 1.5,
+                    color: accent.withValues(alpha: 0.4),
+                    width: 2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ],
                 ),
                 child: Icon(
                   Icons.local_bar_rounded,
@@ -398,30 +383,25 @@ class GameDrawer extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [
-                          ClubBlackoutTheme.neonPurple,
-                          ClubBlackoutTheme.neonPink,
-                          ClubBlackoutTheme.neonBlue,
+                    Text(
+                      'CLUB BLACKOUT',
+                      style: ClubBlackoutTheme.headingStyle.copyWith(
+                        fontSize: 18,
+                        color: scheme.onSurface,
+                        shadows: [
+                          Shadow(
+                            color: accent.withValues(alpha: 0.5),
+                            blurRadius: 8,
+                          ),
                         ],
-                      ).createShader(bounds),
-                      child: Text(
-                        'CLUB BLACKOUT',
-                        style: (tt.headlineSmall ?? const TextStyle()).copyWith(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
-                          color: Colors.white,
-                          fontSize: 20,
-                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         const SizedBox(
-                          width: 4,
-                          height: 4,
+                          width: 6,
+                          height: 6,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
                               color: ClubBlackoutTheme.neonGreen,
@@ -429,15 +409,14 @@ class GameDrawer extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Text(
-                          'Host Dashboard',
-                          style: TextStyle(
+                          'HOST ACTIVE',
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
                             color:
-                                scheme.onSurfaceVariant.withValues(alpha: 0.8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
+                                scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                            fontSize: 10,
+                            letterSpacing: 0.8,
                           ),
                         ),
                       ],
@@ -493,21 +472,25 @@ class GameDrawer extends StatelessWidget {
                             children: [
                               Text(
                                 '${gameEngine!.guests.length}',
-                                style: TextStyle(
+                                style: ClubBlackoutTheme.headingStyle.copyWith(
                                   color: scheme.onSurface,
                                   fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  height: 1,
+                                  shadows: [
+                                    Shadow(
+                                      color: ClubBlackoutTheme.neonBlue
+                                          .withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
                                 ),
                               ),
                               Text(
-                                'Guests',
-                                style: TextStyle(
+                                'GUESTS',
+                                style: ClubBlackoutTheme.headingStyle.copyWith(
                                   color: scheme.onSurfaceVariant
-                                      .withValues(alpha: 0.8),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
+                                      .withValues(alpha: 0.7),
+                                  fontSize: 9,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ],
@@ -599,11 +582,10 @@ class GameDrawer extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'A GAME BY KYRIAN CO.',
-            style: TextStyle(
+            style: ClubBlackoutTheme.headingStyle.copyWith(
               color: scheme.onSurface.withValues(alpha: 0.35),
               fontSize: 9,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
+              letterSpacing: 2.0,
             ),
           ),
         ],
@@ -715,12 +697,11 @@ class _DrawerTile extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    label,
-                    style: TextStyle(
+                    label.toUpperCase(),
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
                       color: scheme.onSurface.withValues(alpha: 0.92),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      letterSpacing: 0.3,
+                      fontSize: 11,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),

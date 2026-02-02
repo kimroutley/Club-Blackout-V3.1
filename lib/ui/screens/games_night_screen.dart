@@ -195,7 +195,11 @@ class _GamesNightScreenState extends State<GamesNightScreen> {
       if (!canPop) return null; // Handled by MainScreen
 
       return AppBar(
-        title: const Text('Games Night Stats'),
+        title: Text(
+          'GAMES NIGHT',
+          style: ClubBlackoutTheme.neonGlowTitle,
+        ),
+        centerTitle: true,
         backgroundColor: isNight ? null : Colors.transparent,
         elevation: 0,
         iconTheme: isNight ? null : const IconThemeData(color: Colors.white),

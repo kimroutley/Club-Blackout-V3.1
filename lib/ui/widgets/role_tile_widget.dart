@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/role.dart';
 import '../styles.dart';
 import 'player_icon.dart';
+import 'neon_glass_card.dart';
 
 enum RoleTileVariant { compact, card }
 
@@ -24,29 +25,27 @@ class RoleTileWidget extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final title = Text(
-      role.name,
-      textAlign: TextAlign.center,
+      role.name.toUpperCase(),
+      textAlign: variant == RoleTileVariant.card
+          ? TextAlign.center
+          : TextAlign.start,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
-      style: (tt.titleSmall ?? const TextStyle()).copyWith(
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.2,
+      style: ClubBlackoutTheme.headingStyle.copyWith(
+        fontSize: variant == RoleTileVariant.card ? 15 : 13,
+        color: role.color,
       ),
     );
 
     final subtitle = Text(
-      role.alliance,
+      role.alliance.toUpperCase(),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: (tt.labelSmall ?? const TextStyle()).copyWith(
-        color: cs.onSurfaceVariant,
-        letterSpacing: 0.2,
+      style: ClubBlackoutTheme.headingStyle.copyWith(
+        color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+        fontSize: 9,
+        letterSpacing: 0.5,
       ),
-    );
-
-    final shape = RoundedRectangleBorder(
-      borderRadius: ClubBlackoutTheme.borderRadiusSmAll,
-      side: BorderSide(color: role.color.withValues(alpha: 0.40)),
     );
 
     final content = Padding(
@@ -91,21 +90,24 @@ class RoleTileWidget extends StatelessWidget {
     return Semantics(
       button: onTap != null,
       label: '${role.name}, ${role.alliance}',
-      child: Material(
-        color: cs.surface.withValues(alpha: 0.40),
-        shape: shape,
-        clipBehavior: Clip.antiAlias,
+      child: NeonGlassCard(
+        glowColor: role.color,
+        padding: EdgeInsets.zero,
+        borderRadius: 20,
         child: InkWell(
           onTap: onTap,
-          child: DecoratedBox(
+          splashFactory: InkSparkle.splashFactory,
+          splashColor: role.color.withValues(alpha: 0.2),
+          child: Container(
             decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: role.color.withValues(alpha: 0.10),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  role.color.withValues(alpha: 0.15),
+                  Colors.transparent,
+                ],
+              ),
             ),
             child: content,
           ),

@@ -47,7 +47,10 @@ class GuidesScreen extends StatelessWidget {
                 tooltip: 'Menu',
                 onPressed: () => Scaffold.of(context).openDrawer(),
               ),
-              title: null,
+              title: Text(
+                'GUIDES',
+                style: ClubBlackoutTheme.neonGlowTitle,
+              ),
               centerTitle: true,
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(48),
@@ -75,43 +78,10 @@ class GuidesScreen extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.2,
                     ),
-                    unselectedLabelStyle: tt.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.0,
-                    ),
-                    splashFactory: InkSparkle.splashFactory,
-                    overlayColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.pressed)) {
-                        return (isNight
-                                ? cs.primary
-                                : ClubBlackoutTheme.neonOrange)
-                            .withValues(alpha: 0.12);
-                      }
-                      if (states.contains(WidgetState.hovered)) {
-                        return (isNight
-                                ? cs.primary
-                                : ClubBlackoutTheme.neonOrange)
-                            .withValues(alpha: 0.08);
-                      }
-                      return null;
-                    }),
                     tabs: const [
-                      Tab(
-                        text: 'HOST',
-                        icon:
-                            Icon(Icons.admin_panel_settings_rounded, size: 20),
-                        iconMargin: EdgeInsets.only(bottom: 4),
-                      ),
-                      Tab(
-                        text: 'PLAYER',
-                        icon: Icon(Icons.person_rounded, size: 20),
-                        iconMargin: EdgeInsets.only(bottom: 4),
-                      ),
-                      Tab(
-                        text: 'ROLES',
-                        icon: Icon(Icons.badge_rounded, size: 20),
-                        iconMargin: EdgeInsets.only(bottom: 4),
-                      ),
+                      Tab(text: 'HOST'),
+                      Tab(text: 'PLAYER'),
+                      Tab(text: 'ROLES'),
                     ],
                   ),
                 ),

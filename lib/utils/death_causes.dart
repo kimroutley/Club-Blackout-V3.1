@@ -21,6 +21,7 @@ class DeathCause {
 
   // Debug/Admin deaths
   static const String debugKillAll = 'debug_kill_all';
+  static const String adminKill = 'admin_kill';
 
   // Prefix for ability-based deaths
   static const String abilityPrefix = 'ability_';

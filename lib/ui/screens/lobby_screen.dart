@@ -15,6 +15,7 @@ import '../utils/player_sort.dart';
 import '../widgets/bulletin_dialog_shell.dart';
 import '../widgets/game_toast_listener.dart';
 import '../widgets/loading_overlay.dart';
+import '../widgets/neon_glass_card.dart';
 import '../widgets/role_assignment_dialog.dart';
 import '../widgets/setup_phase_helper.dart';
 import '../widgets/unified_player_tile.dart';
@@ -242,44 +243,21 @@ class _LobbyScreenState extends State<LobbyScreen>
           indicatorWeight: 3,
         );
 
-        return DefaultTabController(
-          length: 2,
-          child: Scaffold(
-            backgroundColor: cs.surface,
-            appBar: AppBar(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          ClubBlackoutTheme.neonPurple.withValues(alpha: 0.25),
-                          ClubBlackoutTheme.neonPink.withValues(alpha: 0.2),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color:
-                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.people_alt_rounded,
-                      color: ClubBlackoutTheme.neonPurple,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text('Lobby'),
-                ],
-              ),
+        return buildWithLoading(
+          child: DefaultTabController(
+            length: 2,
+            child: Scaffold(
               backgroundColor: cs.surface,
-              surfaceTintColor: Colors.transparent,
-              scrolledUnderElevation: 3,
-              elevation: 0,
-              centerTitle: true,
+              appBar: AppBar(
+                title: Text(
+                  'LOBBY',
+                  style: ClubBlackoutTheme.neonGlowTitle,
+                ),
+                backgroundColor: cs.surface,
+                surfaceTintColor: Colors.transparent,
+                scrolledUnderElevation: 3,
+                elevation: 0,
+                centerTitle: true,
               leading: IconButton(
                 icon: const Icon(Icons.menu),
                 onPressed: () => Scaffold.of(context).openDrawer(),
@@ -308,7 +286,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               ),
             ),
           ),
-        );
+        ));
       },
     );
   }
@@ -393,26 +371,16 @@ class _LobbyScreenState extends State<LobbyScreen>
     final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     final totalGuests = guests.length;
 
-    return Column(
+    return SingleChildScrollView(
+        child: Column(
       children: [
         if (engine.players.isNotEmpty)
-          Container(
+          NeonGlassCard(
+            glowColor: ClubBlackoutTheme.neonBlue,
+            borderRadius: 0,
+            opacity: 0.8,
             padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  ClubBlackoutTheme.neonBlue.withValues(alpha: 0.1),
-                  ClubBlackoutTheme.neonPurple.withValues(alpha: 0.08),
-                ],
-              ),
-              border: Border(
-                bottom: BorderSide(
-                  color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.25),
-                  width: 1.5,
-                ),
-              ),
-            ),
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
               children: [
                 Container(
@@ -430,8 +398,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                 const SizedBox(width: 10),
                 Text(
                   '$totalGuests Guest${totalGuests != 1 ? 's' : ''}',
-                  style: TextStyle(
-                    color: cs.onSurface,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.3,
@@ -451,180 +419,190 @@ class _LobbyScreenState extends State<LobbyScreen>
               ],
             ),
           ),
-        Expanded(
-          child: keyboardOpen
-              ? const SizedBox.shrink()
-              : (guests.isEmpty)
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              gradient: RadialGradient(
-                                colors: [
-                                  ClubBlackoutTheme.neonPurple
-                                      .withValues(alpha: 0.15),
-                                  ClubBlackoutTheme.neonPurple
-                                      .withValues(alpha: 0.05),
-                                  Colors.transparent,
-                                ],
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.person_add_outlined,
-                                size: 64,
-                                color: ClubBlackoutTheme.neonPurple
-                                    .withValues(alpha: 0.6)),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'No Guests Yet',
-                            style: TextStyle(
-                              color: cs.onSurface,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Add at least 4 guests to start the game',
-                            style: TextStyle(
-                              color: cs.onSurfaceVariant.withValues(alpha: 0.8),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+        if (keyboardOpen)
+          const SizedBox.shrink()
+        else if (guests.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+            child: NeonGlassCard(
+              glowColor: ClubBlackoutTheme.neonPurple,
+              padding: const EdgeInsets.all(32),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          colors: [
+                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.15),
+                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.05),
+                            Colors.transparent,
+                          ],
+                        ),
+                        shape: BoxShape.circle,
                       ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: guests.length,
-                      itemBuilder: (context, index) {
-                        final player = guests[index];
-
-                        return Dismissible(
-                          key: Key(player.id),
-                          direction: DismissDirection.endToStart,
-                          onDismissed: (_) =>
-                              _removeGuestWithUndo(engine, player),
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
-                            margin: const EdgeInsets.only(bottom: 10),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  cs.errorContainer.withValues(alpha: 0.3),
-                                  cs.errorContainer,
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.delete_rounded,
-                                  color: cs.onErrorContainer,
-                                  size: 24,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Remove',
-                                  style: TextStyle(
-                                    color: cs.onErrorContainer,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          child: Card(
-                            elevation: 1,
-                            color: cs.surface,
-                            margin: const EdgeInsets.only(bottom: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                  color:
-                                      cs.outlineVariant.withValues(alpha: 0.3)),
-                            ),
-                            child: UnifiedPlayerTile.compact(
-                              player: player,
-                              gameEngine: engine,
-                              isSelected: false,
-                              subtitleOverride: player.role.id == 'temp'
-                                  ? 'Awaiting assignment'
-                                  : player.role.name,
-                              showStatusChips: false,
-                              wrapInCard: false,
-                              trailing: IconButton(
-                                icon: const Icon(Icons.edit_rounded, size: 20),
-                                onPressed: () => _renameGuest(context, player),
-                                tooltip: 'Rename Guest',
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                      child: Icon(
+                        Icons.person_add_outlined,
+                        size: 64,
+                        color:
+                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.6),
+                      ),
                     ),
-        ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'NO GUESTS YET',
+                      style: TextStyle(
+                        color: ClubBlackoutTheme.neonPurple,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add at least 4 guests to start the game',
+                      style: TextStyle(
+                        color: cs.onSurfaceVariant.withValues(alpha: 0.8),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            itemCount: guests.length,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              final player = guests[index];
+
+              return Dismissible(
+                key: Key(player.id),
+                direction: DismissDirection.endToStart,
+                onDismissed: (_) => _removeGuestWithUndo(engine, player),
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        cs.errorContainer.withValues(alpha: 0.3),
+                        cs.errorContainer,
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.delete_sweep_rounded,
+                        color: cs.onErrorContainer,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Remove',
+                        style: TextStyle(
+                          color: cs.onErrorContainer,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                child: NeonGlassCard(
+                  glowColor: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.4),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.zero,
+                  child: UnifiedPlayerTile.compact(
+                    player: player,
+                    gameEngine: engine,
+                    isSelected: false,
+                    subtitleOverride: player.role.id == 'temp'
+                        ? 'Awaiting assignment'
+                        : player.role.name,
+                    showStatusChips: false,
+                    wrapInCard: false,
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit_rounded, size: 20),
+                      onPressed: () => _renameGuest(context, player),
+                      tooltip: 'Rename Guest',
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
 
         // Input Area
-        Container(
+        NeonGlassCard(
+          glowColor: cs.primary.withValues(alpha: 0.2),
+          borderRadius: 32,
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHigh,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 12,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
+          margin: EdgeInsets.zero,
           child: SafeArea(
             top: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Quick Add',
-                  style: TextStyle(
-                    color: cs.onSurfaceVariant,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'QUICK ADD',
+                      style: TextStyle(
+                        color: cs.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Divider(
+                        color: cs.primary.withValues(alpha: 0.2),
+                        thickness: 1,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 _buildHostNameRow(context),
                 const SizedBox(height: 12),
                 _buildAddPlayerRow(context),
-                const SizedBox(height: 8),
-                Text(
-                  'Tip: Press Enter to add quickly, or paste a list of names',
-                  style: TextStyle(
-                    color: cs.onSurfaceVariant.withValues(alpha: 0.7),
-                    fontSize: 11,
+                _buildRecentPlayersChips(context),
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    'TIP: PRESS ENTER TO ADD QUICKLY, OR PASTE A LIST OF NAMES',
+                    style: TextStyle(
+                      color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
         ),
       ],
-    );
+    ));
   }
 
   Widget _buildHostNameRow(BuildContext context) {
@@ -638,32 +616,12 @@ class _LobbyScreenState extends State<LobbyScreen>
             controller: _hostController,
             focusNode: _hostFocus,
             style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
-            decoration: InputDecoration(
+            decoration: ClubBlackoutTheme.neonInputDecoration(
+              context,
               labelText: 'Host Name (Optional)',
-              hintText: 'Who\'s hosting?',
-              prefixIcon: Icon(
-                hasHost ? Icons.person : Icons.person_outline,
-                color: hasHost ? cs.primary : null,
-              ),
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: cs.outline.withValues(alpha: 0.5),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: cs.primary,
-                  width: 2,
-                ),
-              ),
-              filled: true,
-              fillColor: cs.surface,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              hint: 'Who\'s hosting?',
+              color: hasHost ? cs.primary : ClubBlackoutTheme.neonBlue,
+              icon: hasHost ? Icons.person : Icons.person_outline,
             ),
             textInputAction: TextInputAction.done,
             onSubmitted: (val) => _setHostName(context, val),
@@ -730,7 +688,10 @@ class _LobbyScreenState extends State<LobbyScreen>
   ) {
     const showTestTools = kDebugMode || bool.fromEnvironment('SHOW_TEST_GAME');
 
-    return Column(
+    return ListView(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.paddingOf(context).bottom + 16,
+      ),
       children: [
         // High-level Setup Helper
         SetupPhaseHelper(
@@ -741,138 +702,128 @@ class _LobbyScreenState extends State<LobbyScreen>
         const SizedBox(height: 8),
 
         if (engine.lastArchivedGameBlobJson != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildLastGameSnapshotCard(context, cs, engine),
-          ),
+          _buildLastGameSnapshotCard(context, cs, engine),
         if (engine.lastArchivedGameBlobJson != null) const SizedBox(height: 12),
 
-        // Middle: Player List (Expanded)
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerLow.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: cs.outlineVariant.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  child: Row(
-                    children: [
-                      Icon(
+        // Middle: Player List
+        NeonGlassCard(
+          glowColor: cs.primary.withValues(alpha: 0.5),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.zero,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
                         Icons.people_outline_rounded,
                         size: 20,
                         color: cs.primary,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Guest Roster',
-                        style: TextStyle(
-                          color: cs.onSurface,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'GUEST ROSTER',
+                      style: TextStyle(
+                        color: cs.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: cs.primary.withValues(alpha: 0.3),
                         ),
                       ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: cs.primaryContainer,
-                          borderRadius: BorderRadius.circular(12),
+                      child: Text(
+                        '${players.length}',
+                        style: TextStyle(
+                          color: cs.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
                         ),
-                        child: Text(
-                          '${players.length}',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Divider(
+                  height: 1, color: cs.outlineVariant.withValues(alpha: 0.2)),
+              if (players.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.person_add_outlined,
+                          size: 56,
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No guests added yet',
                           style: TextStyle(
-                            color: cs.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
+                            color: cs.onSurfaceVariant,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Go to the Guests tab to add players',
+                          style: TextStyle(
+                            color: cs.onSurfaceVariant.withValues(alpha: 0.7),
                             fontSize: 13,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                )
+              else
+                ListView.separated(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: players.length,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final p = players[index];
+                    return NeonGlassCard(
+                      glowColor: cs.outlineVariant.withValues(alpha: 0.3),
+                      padding: EdgeInsets.zero,
+                      opacity: 0.3,
+                      borderRadius: 12,
+                      child: UnifiedPlayerTile.compact(
+                        player: p,
+                        gameEngine: engine,
+                        subtitleOverride: p.role.id == 'temp'
+                            ? 'Awaiting assignment'
+                            : p.role.name,
+                        showStatusChips: false,
+                        wrapInCard: false,
+                      ),
+                    );
+                  },
                 ),
-                Divider(
-                    height: 1, color: cs.outlineVariant.withValues(alpha: 0.2)),
-                Expanded(
-                  child: players.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.person_add_outlined,
-                                size: 56,
-                                color:
-                                    cs.onSurfaceVariant.withValues(alpha: 0.3),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No guests added yet',
-                                style: TextStyle(
-                                  color: cs.onSurfaceVariant,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Go to the Guests tab to add players',
-                                style: TextStyle(
-                                  color: cs.onSurfaceVariant
-                                      .withValues(alpha: 0.7),
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(12),
-                          itemCount: players.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final p = players[index];
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: cs.surface,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color:
-                                      cs.outlineVariant.withValues(alpha: 0.3),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 1),
-                                  ),
-                                ],
-                              ),
-                              child: UnifiedPlayerTile.compact(
-                                player: p,
-                                gameEngine: engine,
-                                subtitleOverride: p.role.id == 'temp'
-                                    ? 'Awaiting assignment'
-                                    : p.role.name,
-                                showStatusChips: false,
-                                wrapInCard: false,
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
+            ],
           ),
         ),
 
@@ -902,7 +853,7 @@ class _LobbyScreenState extends State<LobbyScreen>
           ),
         ],
 
-        SizedBox(height: MediaQuery.paddingOf(context).bottom + 16),
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -948,115 +899,123 @@ class _LobbyScreenState extends State<LobbyScreen>
     }
 
     const accent = ClubBlackoutTheme.neonBlue;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accent.withValues(alpha: 0.25), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: accent.withValues(alpha: 0.25)),
-                  ),
-                  child: const Icon(Icons.archive_rounded, color: accent),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Last Game Snapshot',
-                        style: TextStyle(
-                          color: cs.onSurface,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        savedAt == null
-                            ? 'Saved when you reset to the lobby'
-                            : 'Saved: ${savedAt.toLocal()}',
-                        style: TextStyle(
-                          color: cs.onSurfaceVariant.withValues(alpha: 0.85),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+    return NeonGlassCard(
+      glowColor: accent,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      borderRadius: 24,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      accent.withValues(alpha: 0.3),
+                      accent.withValues(alpha: 0.15),
                     ],
                   ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: accent.withValues(alpha: 0.4)),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 8,
-              children: [
-                _snapshotChip(
-                  cs,
-                  label: 'Alive',
-                  value: '$alivePlayers/$totalPlayers',
-                  color: ClubBlackoutTheme.neonGreen,
-                ),
-                _snapshotChip(
-                  cs,
-                  label: 'Day',
-                  value: '${dayCount ?? 0}',
-                  color: ClubBlackoutTheme.neonPurple,
-                ),
-                if (winner != null)
-                  _snapshotChip(
-                    cs,
-                    label: 'Winner',
-                    value: winner,
-                    color: ClubBlackoutTheme.neonPink,
-                  ),
-              ],
-            ),
-            if (winMessage != null && winMessage.trim().isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Text(
-                winMessage,
-                style: TextStyle(
-                  color: cs.onSurface.withValues(alpha: 0.9),
-                  fontSize: 13,
-                  height: 1.25,
-                  fontWeight: FontWeight.w600,
+                child: const Icon(Icons.history_edu_rounded, color: accent, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'LAST GAME SNAPSHOT',
+                      style: ClubBlackoutTheme.neonGlowFont.copyWith(
+                        color: accent,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      savedAt == null
+                          ? 'Saved when you last played'
+                          : 'ARCHIVED: ${savedAt.toLocal().toString().split('.')[0]}',
+                      style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.6),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                OutlinedButton.icon(
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _snapshotChip(
+                cs,
+                label: 'ALIVE',
+                value: '$alivePlayers/$totalPlayers',
+                color: ClubBlackoutTheme.neonGreen,
+              ),
+              _snapshotChip(
+                cs,
+                label: 'PHASE',
+                value: 'Day ${dayCount ?? 0}',
+                color: ClubBlackoutTheme.neonPurple,
+              ),
+              if (winner != null)
+                _snapshotChip(
+                  cs,
+                  label: 'WINNER',
+                  value: winner.toUpperCase(),
+                  color: ClubBlackoutTheme.neonPink,
+                ),
+            ],
+          ),
+          if (winMessage != null && winMessage.trim().isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: cs.onSurface.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
+              ),
+              child: Text(
+                winMessage,
+                style: TextStyle(
+                  color: cs.onSurface.withValues(alpha: 0.9),
+                  fontSize: 14,
+                  height: 1.4,
+                  fontWeight: FontWeight.w500,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
                   onPressed: blob == null
                       ? null
                       : () => _showArchivedGameSnapshotDialog(context, engine),
-                  icon: const Icon(Icons.visibility_rounded, size: 18),
+                  style: ClubBlackoutTheme.neonButtonStyle(accent, isPrimary: false),
+                  icon: const Icon(Icons.visibility_rounded, size: 20),
                   label: const Text('VIEW'),
                 ),
-                const SizedBox(width: 10),
-                OutlinedButton.icon(
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.icon(
                   onPressed: raw == null
                       ? null
                       : () async {
@@ -1065,25 +1024,26 @@ class _LobbyScreenState extends State<LobbyScreen>
                           engine.showToast('Snapshot copied to clipboard.',
                               title: 'Copied');
                         },
-                  icon: const Icon(Icons.copy_rounded, size: 18),
-                  label: const Text('COPY JSON'),
+                  style: ClubBlackoutTheme.neonButtonStyle(accent, isPrimary: false),
+                  icon: const Icon(Icons.copy_rounded, size: 20),
+                  label: const Text('JSON'),
                 ),
-                const Spacer(),
-                IconButton(
-                  tooltip: 'Clear snapshot',
-                  onPressed: () async {
-                    await engine.clearArchivedGameBlob();
-                    if (!context.mounted) return;
-                    engine.showToast('Last game snapshot cleared.',
-                        title: 'Snapshot');
-                  },
-                  icon: Icon(Icons.delete_outline_rounded,
-                      color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: 'Clear snapshot',
+                onPressed: () async {
+                  await engine.clearArchivedGameBlob();
+                  if (!context.mounted) return;
+                  engine.showToast('Last game snapshot cleared.',
+                      title: 'Snapshot');
+                },
+                icon: Icon(Icons.delete_outline_rounded,
+                    color: cs.onSurface.withValues(alpha: 0.4)),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -1095,20 +1055,34 @@ class _LobbyScreenState extends State<LobbyScreen>
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
       ),
-      child: Text(
-        '$label: $value',
-        style: TextStyle(
-          color: cs.onSurface,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.2,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: color.withValues(alpha: 0.8),
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            value,
+            style: TextStyle(
+              color: cs.onSurface,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1662,29 +1636,12 @@ class _LobbyScreenState extends State<LobbyScreen>
                           color: cs.onSurface,
                           fontWeight: FontWeight.w500,
                         ),
-                        decoration: InputDecoration(
+                        decoration: ClubBlackoutTheme.neonInputDecoration(
+                          context,
                           labelText: 'Guest Name',
-                          hintText: 'Add a guest...',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide(
-                              color: cs.outline.withValues(alpha: 0.5),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide(
-                              color: cs.primary,
-                              width: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: cs.surface,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 16),
-                          prefixIcon: const Icon(Icons.person_add_rounded),
+                          hint: 'Add a guest...',
+                          icon: Icons.person_add_rounded,
+                          color: ClubBlackoutTheme.neonPurple,
                         ),
                         textInputAction: TextInputAction.done,
                         onSubmitted: (val) {
@@ -1712,18 +1669,24 @@ class _LobbyScreenState extends State<LobbyScreen>
         Row(
           children: [
             Expanded(
-              child: OutlinedButton.icon(
+              child: FilledButton.icon(
                 onPressed: () => _showSavedPlayersPicker(context),
                 icon: const Icon(Icons.history_rounded, size: 18),
-                label: const Text('From History'),
-                style: OutlinedButton.styleFrom(
+                label: const Text('FROM HISTORY'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: cs.surfaceContainerHigh,
+                  foregroundColor: cs.primary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: cs.primary.withValues(alpha: 0.2)),
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: OutlinedButton.icon(
+              child: FilledButton.icon(
                 onPressed: () async {
                   final data = await Clipboard.getData(Clipboard.kTextPlain);
                   final text = data?.text ?? '';
@@ -1731,9 +1694,15 @@ class _LobbyScreenState extends State<LobbyScreen>
                   _addGuestsFromText(context, text);
                 },
                 icon: const Icon(Icons.content_paste_rounded, size: 18),
-                label: const Text('Paste List'),
-                style: OutlinedButton.styleFrom(
+                label: const Text('PASTE LIST'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: cs.surfaceContainerHigh,
+                  foregroundColor: cs.secondary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: cs.secondary.withValues(alpha: 0.2)),
+                  ),
                 ),
               ),
             ),
@@ -1787,6 +1756,77 @@ class _LobbyScreenState extends State<LobbyScreen>
         color: skipped > 0
             ? ClubBlackoutTheme.neonRed
             : ClubBlackoutTheme.neonPink);
+  }
+
+  Widget _buildRecentPlayersChips(BuildContext context) {
+    final profiles = HallOfFameService.instance.allProfiles.take(12).toList();
+    if (profiles.isEmpty) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+    final guestNames = widget.gameEngine.players
+        .map((p) => p.name.trim().toLowerCase())
+        .toSet();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.history_toggle_off_rounded,
+                  size: 14, color: cs.primary.withValues(alpha: 0.7)),
+              const SizedBox(width: 6),
+              Text(
+                'QUICK RE-ADD',
+                style: TextStyle(
+                  color: cs.primary.withValues(alpha: 0.7),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: profiles.map((p) {
+                final alreadyIn =
+                    guestNames.contains(p.name.trim().toLowerCase());
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: ActionChip(
+                    label: Text(p.name.toUpperCase()),
+                    onPressed: alreadyIn
+                        ? null
+                        : () => _addGuestsFromText(context, p.name),
+                    padding: EdgeInsets.zero,
+                    labelStyle: TextStyle(
+                      color: alreadyIn ? cs.outline : cs.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    backgroundColor: alreadyIn
+                        ? Colors.transparent
+                        : cs.primary.withValues(alpha: 0.1),
+                    side: BorderSide(
+                      color: alreadyIn
+                          ? cs.outlineVariant.withValues(alpha: 0.2)
+                          : cs.primary.withValues(alpha: 0.3),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   List<String> _parseGuestNames(String raw) {
@@ -1868,6 +1908,60 @@ class _LobbyScreenState extends State<LobbyScreen>
                   .take(50)
                   .toList(growable: false);
 
+              void selectNames(Iterable<String> names) {
+                setState(() {
+                  for (final name in names) {
+                    final normalizedName = name.trim().toLowerCase();
+                    final alreadyIn = widget.gameEngine.players.any(
+                      (x) => x.name.trim().toLowerCase() == normalizedName,
+                    );
+                    if (!alreadyIn) {
+                      selected.add(name);
+                    }
+                  }
+                });
+              }
+
+              Widget buildSectionHeader(
+                String label, {
+                VoidCallback? onSelectAll,
+              }) {
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 8,
+                    top: 8,
+                    bottom: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            color: cs.onSurface.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ),
+                      if (onSelectAll != null)
+                        TextButton(
+                          onPressed: onSelectAll,
+                          style: TextButton.styleFrom(
+                            foregroundColor: ClubBlackoutTheme.neonBlue,
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                          child: const Text('SELECT ALL'),
+                        ),
+                    ],
+                  ),
+                );
+              }
+
               return BulletinDialogShell(
                 accent: ClubBlackoutTheme.neonBlue,
                 maxWidth: 560,
@@ -1881,17 +1975,11 @@ class _LobbyScreenState extends State<LobbyScreen>
                   height: 400,
                   child: ListView(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 16, right: 16, top: 8, bottom: 8),
-                        child: Text(
-                          'HALL OF FAME',
-                          style: TextStyle(
-                            color: cs.onSurface.withValues(alpha: 0.7),
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
+                      buildSectionHeader(
+                        'HALL OF FAME',
+                        onSelectAll: profiles.isEmpty
+                            ? null
+                            : () => selectNames(profiles.map((p) => p.name)),
                       ),
                       if (profiles.isEmpty)
                         Padding(
@@ -1946,17 +2034,11 @@ class _LobbyScreenState extends State<LobbyScreen>
                         child: Divider(
                             color: cs.onSurface.withValues(alpha: 0.15)),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 16, right: 16, bottom: 8),
-                        child: Text(
-                          'RECENT NAMES',
-                          style: TextStyle(
-                            color: cs.onSurface.withValues(alpha: 0.7),
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
+                      buildSectionHeader(
+                        'RECENT NAMES',
+                        onSelectAll: recentNames.isEmpty
+                            ? null
+                            : () => selectNames(recentNames),
                       ),
                       if (recentNames.isEmpty)
                         Padding(
@@ -2016,6 +2098,27 @@ class _LobbyScreenState extends State<LobbyScreen>
                       foregroundColor: cs.onSurface.withValues(alpha: 0.7),
                     ),
                     child: const Text('CANCEL'),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        selected.clear();
+                        final allAvailableNames = [
+                          ...profiles.map((p) => p.name),
+                          ...recentNames,
+                        ];
+                        for (final name in allAvailableNames) {
+                          final normalizedName = name.trim().toLowerCase();
+                          final alreadyIn = widget.gameEngine.players.any((x) =>
+                              x.name.trim().toLowerCase() == normalizedName);
+                          if (!alreadyIn) {
+                            selected.add(name);
+                          }
+                        }
+                      });
+                    },
+                    child: const Text('SELECT ALL'),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
@@ -2110,21 +2213,46 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 
   void _showRoleAssignment(BuildContext context) {
+    var starting = false;
     showDialog(
       context: context,
-      builder: (_) => RoleAssignmentDialog(
+      barrierDismissible: false,
+      builder: (dialogCtx) => RoleAssignmentDialog(
         gameEngine: widget.gameEngine,
         players: sortedPlayersByDisplayName(widget.gameEngine.guests),
         onConfirm: () async {
-          await widget.gameEngine.startGame();
-          if (context.mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                  builder: (_) => GameScreen(gameEngine: widget.gameEngine)),
-            );
-          }
+          if (starting) return;
+          starting = true;
+          
+          // Close dialog immediately so we can show loading on the lobby screen
+          Navigator.of(dialogCtx).pop();
+
+          await withLoadingAndError(
+            loadingMessage: 'Starting game...',
+            errorTitle: 'Unable to Start',
+            operation: () async {
+              if (kDebugMode) debugPrint('[LobbyScreen] Starting game...');
+              
+              await widget.gameEngine.startGame();
+              
+              if (!context.mounted) return;
+
+              if (kDebugMode) debugPrint('[LobbyScreen] Navigating...');
+              final rootNavigator = Navigator.of(context, rootNavigator: true);
+              
+              // Replace lobby with gameplay
+              rootNavigator.pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (_) => GameScreen(gameEngine: widget.gameEngine),
+                ),
+                (route) => false,
+              );
+            },
+          );
+          
+          starting = false;
         },
-        onCancel: () => Navigator.pop(context),
+        onCancel: () => Navigator.of(dialogCtx).pop(),
       ),
     );
   }

@@ -339,45 +339,29 @@ class _TabooListDialogState extends State<_TabooListDialog> {
     final lw = _lightweight;
 
     return ClubAlertDialog(
-      title: Row(
-        children: [
-          const Icon(Icons.warning_rounded,
-              color: ClubBlackoutTheme.neonOrange),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Taboo list',
-              style: (tt.titleLarge ?? const TextStyle()).copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
+      icon: const Icon(Icons.warning_rounded,
+          color: ClubBlackoutTheme.neonOrange),
+      title: const Text('TABOO LIST'),
       content: SizedBox(
         width: 520,
         child: lw == null
-            ? Text(
+            ? const Text(
                 'No active Lightweight found.',
-                style: TextStyle(color: cs.onSurface.withValues(alpha: 0.8)),
               )
             : ListView(
                 shrinkWrap: true,
                 children: [
                   Text(
-                    'Lightweight: ${lw.name}',
-                    style: TextStyle(
-                      color: cs.onSurface.withValues(alpha: 0.9),
-                      fontWeight: FontWeight.w700,
+                    'LIGHTWEIGHT: ${lw.name.toUpperCase()}',
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
+                      fontSize: 12,
+                      color: cs.onSurface,
                     ),
                   ),
                   ClubBlackoutTheme.gap12,
                   if (lw.tabooNames.isEmpty)
-                    Text(
+                    const Text(
                       'No taboo names assigned.',
-                      style: TextStyle(
-                        color: cs.onSurfaceVariant.withValues(alpha: 0.8),
-                      ),
                     )
                   else
                     ...lw.tabooNames.map(
@@ -385,9 +369,10 @@ class _TabooListDialogState extends State<_TabooListDialog> {
                         elevation: 0,
                         color: cs.surfaceContainer,
                         child: ListTile(
-                          title: Text(name,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w700)),
+                          title: Text(name.toUpperCase(),
+                              style: ClubBlackoutTheme.headingStyle.copyWith(
+                                fontSize: 13,
+                              )),
                           subtitle: const Text('Tap to mark violation'),
                           trailing: const Icon(Icons.chevron_right_rounded),
                           onTap: () {
@@ -407,7 +392,7 @@ class _TabooListDialogState extends State<_TabooListDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).maybePop(),
-          child: const Text('Close'),
+          child: const Text('CLOSE'),
         ),
       ],
     );
@@ -429,26 +414,13 @@ class _ClingerOpsDialog extends StatelessWidget {
         .toList();
 
     return ClubAlertDialog(
-      title: Row(
-        children: [
-          const Icon(Icons.favorite_rounded, color: ClubBlackoutTheme.neonPink),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Clinger ops',
-              style: (tt.titleLarge ?? const TextStyle()).copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
+      icon: const Icon(Icons.favorite_rounded, color: ClubBlackoutTheme.neonPink),
+      title: const Text('CLINGER OPS'),
       content: SizedBox(
         width: 520,
         child: clingers.isEmpty
-            ? Text(
+            ? const Text(
                 'No active Clinger found.',
-                style: TextStyle(color: cs.onSurface.withValues(alpha: 0.8)),
               )
             : ListView.builder(
                 shrinkWrap: true,
@@ -459,8 +431,10 @@ class _ClingerOpsDialog extends StatelessWidget {
                     elevation: 0,
                     color: cs.surfaceContainer,
                     child: ListTile(
-                      title: Text(c.name,
-                          style: const TextStyle(fontWeight: FontWeight.w800)),
+                      title: Text(c.name.toUpperCase(),
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
+                            fontSize: 14,
+                          )),
                       subtitle: Text(
                         'Freed: ${c.clingerFreedAsAttackDog} • Used: ${c.clingerAttackDogUsed}',
                         style: TextStyle(
@@ -474,7 +448,7 @@ class _ClingerOpsDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).maybePop(),
-          child: const Text('Close'),
+          child: const Text('CLOSE'),
         ),
       ],
     );

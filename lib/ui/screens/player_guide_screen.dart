@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../logic/game_engine.dart';
 import '../styles.dart';
+import '../widgets/neon_glass_card.dart';
 
 class PlayerGuideScreen extends StatelessWidget {
   final GameEngine? gameEngine;
@@ -12,7 +14,11 @@ class PlayerGuideScreen extends StatelessWidget {
     if (gameEngine?.currentPhase == GamePhase.night) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Player Guide'),
+          title: Text(
+            'PLAYER GUIDE',
+            style: ClubBlackoutTheme.neonGlowTitle,
+          ),
+          centerTitle: true,
         ),
         body: const SafeArea(
           child: PlayerGuideBody(),
@@ -241,86 +247,53 @@ Widget _buildSection(
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
 
-  return Card(
-    elevation: 0,
-    color: cs.surfaceContainerLow,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: BorderSide(
-        color: accentColor.withValues(alpha: 0.3),
-        width: 1.5,
-      ),
-    ),
+  return NeonGlassCard(
+    glowColor: accentColor,
+    padding: const EdgeInsets.all(16),
     child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                accentColor.withValues(alpha: 0.15),
-                accentColor.withValues(alpha: 0.08),
-              ],
-            ),
-            border: Border(
-              bottom: BorderSide(
-                color: accentColor.withValues(alpha: 0.25),
-                width: 1.0,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: accentColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Text(
+                title.toUpperCase(),
+                style: GoogleFonts.audiowide(
+                  color: accentColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  letterSpacing: 1.1,
+                ),
               ),
             ),
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(16),
+          ],
+        ),
+        if (description != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            description,
+            style: tt.bodyMedium?.copyWith(
+              color: cs.onSurface.withValues(alpha: 0.85),
+              height: 1.5,
             ),
           ),
-          child: Row(
-            children: [
-              if (icon != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: accentColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 14),
-              ],
-              Expanded(
-                child: Text(
-                  title,
-                  style: tt.titleMedium?.copyWith(
-                    color: accentColor,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (description != null)
-                Text(
-                  description,
-                  style: tt.bodyMedium?.copyWith(
-                    color: cs.onSurface.withValues(alpha: 0.9),
-                    height: 1.6,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              if (content != null) content,
-            ],
-          ),
-        ),
+        ],
+        if (content != null) ...[
+          const SizedBox(height: 16),
+          content,
+        ],
       ],
     ),
   );
@@ -330,38 +303,21 @@ Widget _buildWelcomeCard(BuildContext context) {
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
 
-  return Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          ClubBlackoutTheme.neonPurple.withValues(alpha: 0.15),
-          ClubBlackoutTheme.neonBlue.withValues(alpha: 0.15),
-        ],
-      ),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(
-        color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
-        width: 2,
-      ),
-    ),
+  return NeonGlassCard(
+    glowColor: cs.primary,
+    padding: const EdgeInsets.all(16),
     child: Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
-            ),
+            color: cs.primary.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.info_outline_rounded,
-            color: ClubBlackoutTheme.neonPurple,
-            size: 32,
+            color: cs.primary,
+            size: 28,
           ),
         ),
         const SizedBox(width: 16),
@@ -370,18 +326,19 @@ Widget _buildWelcomeCard(BuildContext context) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Quick Reference Guide',
-                style: tt.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
+                'QUICK REFERENCE',
+                style: GoogleFonts.audiowide(
+                  fontWeight: FontWeight.bold,
                   color: cs.onSurface,
+                  fontSize: 14,
+                  letterSpacing: 1.0,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 'Everything you need to know',
                 style: tt.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant.withValues(alpha: 0.8),
-                  letterSpacing: 0.2,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ],
@@ -396,53 +353,52 @@ Widget _buildFlowStep(BuildContext context, String label, String desc) {
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
 
-  return Container(
-    margin: const EdgeInsets.only(bottom: 10),
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: cs.outline.withValues(alpha: 0.2),
-        width: 1,
-      ),
-    ),
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0),
     child: Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          margin: const EdgeInsets.only(top: 4),
+          width: 8,
+          height: 8,
           decoration: BoxDecoration(
-            color: cs.secondaryContainer.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: cs.outline.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: tt.labelSmall?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: cs.onSecondaryContainer,
-              letterSpacing: 0.8,
-            ),
+            color: cs.primary,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: cs.primary.withValues(alpha: 0.5),
+                blurRadius: 4,
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 12),
         Expanded(
-          child: Text(
-            desc,
-            style: tt.bodyMedium?.copyWith(
-              color: cs.onSurface.withValues(alpha: 0.85),
-              height: 1.4,
+          child: RichText(
+            text: TextSpan(
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurface,
+                height: 1.5,
+              ),
+              children: [
+                TextSpan(
+                  text: '$label: ',
+                  style: GoogleFonts.audiowide(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: cs.primary,
+                  ),
+                ),
+                TextSpan(
+                  text: desc,
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        Icon(
-          Icons.arrow_forward_rounded,
-          size: 18,
-          color: cs.onSurfaceVariant.withValues(alpha: 0.4),
         ),
       ],
     ),

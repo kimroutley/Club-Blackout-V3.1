@@ -5,6 +5,7 @@ import '../../models/player.dart';
 import '../styles.dart';
 import 'auto_scroll_text.dart';
 import 'player_icon.dart';
+import 'neon_glass_card.dart';
 
 /// Configuration for how a player tile should be displayed and behave
 class PlayerTileConfig {
@@ -134,6 +135,21 @@ class PlayerTileConfig {
       onLongPress: onLongPress ?? this.onLongPress,
       onDoubleTap: onDoubleTap ?? this.onDoubleTap,
       onConfirm: onConfirm ?? this.onConfirm,
+    );
+  }
+
+  /// Configuration for gameplay script cards (read-only, minimal)
+  factory PlayerTileConfig.gameplay({
+    String? subtitleOverride,
+  }) {
+    return PlayerTileConfig(
+      variant: PlayerTileVariant.standard,
+      isInteractive: false,
+      showStatusChips: false,
+      showSubtitle: true,
+      wrapInCard: false,
+      contentPadding: EdgeInsets.zero,
+      subtitleOverride: subtitleOverride,
     );
   }
 
@@ -454,12 +470,10 @@ class UnifiedPlayerTile extends StatelessWidget {
                 children: [
                   if (config.showPlayerName)
                     AutoScrollText(
-                      player.name,
+                      player.name.toUpperCase(),
                       maxLines: 1,
-                      style: TextStyle(
+                      style: ClubBlackoutTheme.headingStyle.copyWith(
                         fontSize: isCompact ? 18 : 22,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
                         color: isEnabled
                             ? Theme.of(context).colorScheme.onSurface
                             : Theme.of(context)
@@ -467,7 +481,7 @@ class UnifiedPlayerTile extends StatelessWidget {
                                 .onSurface
                                 .withValues(alpha: 0.4),
                         shadows: isEnabled && config.isSelected
-                            ? ClubBlackoutTheme.textGlow(roleColor)
+                            ? ClubBlackoutTheme.textGlow(roleColor, intensity: 1.2)
                             : null,
                       ),
                     ),
@@ -553,16 +567,12 @@ class UnifiedPlayerTile extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.only(bottom: isCompact ? 8 : 12),
-      child: Container(
-        decoration: ClubBlackoutTheme.neonFrame(
-          color:
-              config.isSelected ? baseColor : baseColor.withValues(alpha: 0.5),
-          borderRadius: 16,
-          opacity: config.isSelected ? 0.3 : (isEnabled ? 0.6 : 0.3),
-          borderWidth: config.isSelected ? 1.5 : 0.5,
-          showGlow: config.isSelected,
-        ),
-        clipBehavior: Clip.antiAlias,
+      child: NeonGlassCard(
+        glowColor: baseColor,
+        opacity: config.isSelected ? 0.35 : (isEnabled ? 0.25 : 0.15),
+        borderRadius: 16,
+        showBorder: true,
+        padding: EdgeInsets.zero,
         child: content,
       ),
     );
@@ -665,16 +675,14 @@ class UnifiedPlayerTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          player.name,
-                          style: TextStyle(
+                          player.name.toUpperCase(),
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
                             fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.0,
                             color: isEnabled
                                 ? cs.onSurface
                                 : cs.onSurface.withValues(alpha: 0.4),
                             shadows: config.isSelected && isEnabled
-                                ? ClubBlackoutTheme.textGlow(accent)
+                                ? ClubBlackoutTheme.textGlow(accent, intensity: 1.3)
                                 : null,
                           ),
                         ),
@@ -751,10 +759,9 @@ class UnifiedPlayerTile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      player.name,
-                      style: TextStyle(
+                      player.name.toUpperCase(),
+                      style: ClubBlackoutTheme.headingStyle.copyWith(
                         fontSize: 16,
-                        fontWeight: FontWeight.w800,
                         color: isEnabled
                             ? cs.onSurface
                             : cs.onSurface.withValues(alpha: 0.4),
@@ -804,10 +811,9 @@ class UnifiedPlayerTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              player.name,
-              style: TextStyle(
+              player.name.toUpperCase(),
+              style: ClubBlackoutTheme.headingStyle.copyWith(
                 fontSize: 14,
-                fontWeight: FontWeight.w700,
                 color: isEnabled
                     ? Theme.of(context).colorScheme.onSurface
                     : Theme.of(context)
@@ -941,11 +947,8 @@ class UnifiedPlayerTile extends StatelessWidget {
 
   static Widget _buildChip(BuildContext context, _EffectChip chip) {
     final c = chip.color ?? ClubBlackoutTheme.neonBlue;
-    final bg = c.withValues(alpha: 0.18);
-    final border = c.withValues(alpha: 0.45);
-
-    // Determine text color for better contrast
-    final textColor = _getContrastColor(c);
+    final bg = c.withValues(alpha: 0.12);
+    final border = c.withValues(alpha: 0.6);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -953,16 +956,27 @@ class UnifiedPlayerTile extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: c.withValues(alpha: 0.1),
+            blurRadius: 4,
+          ),
+        ],
       ),
       child: Text(
-        chip.label,
+        chip.label.toUpperCase(),
         maxLines: 1,
         overflow: TextOverflow.visible,
-        style: TextStyle(
-          fontSize: 11,
-          letterSpacing: 0.3,
-          fontWeight: FontWeight.w800,
-          color: textColor,
+        style: ClubBlackoutTheme.headingStyle.copyWith(
+          fontSize: 9,
+          letterSpacing: 0.5,
+          color: c,
+          shadows: [
+            Shadow(
+              color: c.withValues(alpha: 0.4),
+              blurRadius: 4,
+            ),
+          ],
         ),
       ),
     );

@@ -49,10 +49,10 @@ class MorningReportWidget extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Text(
                 'A QUIET NIGHT. NO INCIDENTS RECORDED.',
-                style: TextStyle(
+                style: ClubBlackoutTheme.headingStyle.copyWith(
+                  fontSize: 14,
                   color: cs.onSurface.withValues(alpha: 0.6),
                   letterSpacing: 1.2,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

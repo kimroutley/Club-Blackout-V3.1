@@ -43,7 +43,7 @@ void showVictoryAnnouncement(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Victory',
+                    'VICTORY',
                     textAlign: TextAlign.center,
                     style: ClubBlackoutTheme.neonGlowTextStyle(
                       color: teamColor,
@@ -55,25 +55,21 @@ void showVictoryAnnouncement(
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    winningTeam,
+                    winningTeam.toUpperCase(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
                       color: teamColor.withValues(alpha: 0.8),
-                      fontWeight: FontWeight.w800,
                       fontSize: 18,
-                      letterSpacing: 2.0,
                     ),
                   ),
                   const SizedBox(height: 24),
                   if (winners.isNotEmpty) ...[
                     Text(
-                      'Congratulations to:',
+                      'CONGRATULATIONS TO:',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: ClubBlackoutTheme.headingStyle.copyWith(
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
                         color: cs.onSurface.withValues(alpha: 0.5),
-                        letterSpacing: 1.5,
                       ),
                     ),
                     const SizedBox(height: 16),

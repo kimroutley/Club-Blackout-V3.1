@@ -23,7 +23,11 @@ class RumourMillScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rumour Mill'),
+        title: Text(
+          'RUMOUR MILL',
+          style: ClubBlackoutTheme.neonGlowTitle,
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -55,7 +59,7 @@ class RumourMillScreen extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: const AssetImage('assets/Backgrounds/background.jpg'),
+            image: const AssetImage('Backgrounds/Club Blackout V2 Game Background.png'),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
               Colors.black.withValues(alpha: 0.7),

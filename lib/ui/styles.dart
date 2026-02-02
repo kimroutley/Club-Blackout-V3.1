@@ -1,13 +1,19 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ClubBlackoutTheme {
   static const neonBlue = Color(0xFF00D1FF);
   static const electricBlue = Color(0xFF2E5BFF);
 
-  static const String neonGlowFontFamily = 'NeonGlow';
-  static const TextStyle neonGlowFont =
-      TextStyle(fontFamily: neonGlowFontFamily);
+  static final String neonGlowFontFamily = GoogleFonts.audiowide().fontFamily!;
+  static final TextStyle neonGlowFont = GoogleFonts.audiowide();
+
+  static final TextStyle neonGlowTitle = GoogleFonts.audiowide(
+    fontSize: 22,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 1.2,
+  );
 
   static const neonRed = Color(0xFFFF2E63);
   static const crimsonRed = neonRed;
@@ -18,6 +24,7 @@ class ClubBlackoutTheme {
   static const neonPink = Color(0xFFFF4FD8);
   static const neonOrange = Color(0xFFFFA500);
   static const neonGold = Color(0xFFFFD700);
+  static const neonSilver = Color(0xFFC0C0C0);
 
   // Role / feature accents
   static const secondWindPink = Color(0xFFDE3163);
@@ -172,7 +179,7 @@ class ClubBlackoutTheme {
 
   static TextStyle get primaryFont => const TextStyle();
 
-  static TextStyle get headingStyle => const TextStyle(
+  static TextStyle get headingStyle => GoogleFonts.audiowide(
         fontSize: 24,
         fontWeight: FontWeight.w700,
         letterSpacing: 1.5,
@@ -328,6 +335,30 @@ class ClubBlackoutTheme {
               ),
             ]
           : null,
+    );
+  }
+
+  /// Neon styling for Bottom Sheets.
+  static BoxDecoration neonSheet({
+    required BuildContext context,
+    Color? color,
+  }) {
+    final accent = color ?? ClubBlackoutTheme.neonBlue;
+    return BoxDecoration(
+      color: pureBlack.withValues(alpha: 0.90),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      border: Border.all(
+        color: accent.withValues(alpha: 0.4),
+        width: 1.5,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: accent.withValues(alpha: 0.15),
+          blurRadius: 20,
+          spreadRadius: 2,
+          offset: const Offset(0, -4),
+        ),
+      ],
     );
   }
 
@@ -1185,16 +1216,23 @@ class ClubBlackoutTheme {
 
   static InputDecoration neonInputDecoration(
     BuildContext context, {
-    required String hint,
+    String? hint,
+    String? labelText,
     required Color color,
     IconData? icon,
+    Widget? suffixIcon,
   }) {
     final cs = Theme.of(context).colorScheme;
     return InputDecoration(
       hintText: hint,
+      labelText: labelText,
       hintStyle: TextStyle(
         color: cs.onSurface.withValues(alpha: 0.3),
         letterSpacing: 1.2,
+      ),
+      labelStyle: TextStyle(
+        color: cs.onSurface.withValues(alpha: 0.7),
+        fontWeight: FontWeight.w600,
       ),
       prefixIcon: icon != null
           ? Icon(
@@ -1202,23 +1240,24 @@ class ClubBlackoutTheme {
               color: color.withValues(alpha: 0.6),
             )
           : null,
+      suffixIcon: suffixIcon,
       filled: true,
       fillColor: cs.surface.withValues(alpha: 0.4),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(
           color: color.withValues(alpha: 0.4),
         ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(
           color: color.withValues(alpha: 0.3),
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(
           color: color,
           width: 2,

@@ -104,14 +104,28 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               style: TextButton.styleFrom(
-                  foregroundColor: cs.onSurface.withValues(alpha: 0.7)),
-              child: const Text('CANCEL'),
+                foregroundColor: cs.onSurface.withValues(alpha: 0.7),
+              ),
+              child: Text(
+                'CANCEL',
+                style: ClubBlackoutTheme.headingStyle.copyWith(
+                  fontSize: 13,
+                  letterSpacing: 1.2,
+                ),
+              ),
             ),
             const SizedBox(width: 8),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: ClubBlackoutTheme.neonButtonStyle(accent, isPrimary: true),
-              child: const Text('DELETE'),
+              child: Text(
+                'DELETE',
+                style: ClubBlackoutTheme.headingStyle.copyWith(
+                  fontSize: 13,
+                  letterSpacing: 1.2,
+                  color: ClubBlackoutTheme.pureBlack,
+                ),
+              ),
             ),
           ],
         );
@@ -132,6 +146,35 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
     widget.engine.showToast('Save deleted.');
   }
 
+  Widget _buildInfoTag(ColorScheme cs, String text, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: cs.onSurface.withValues(alpha: 0.2),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: cs.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              fontSize: 9,
+              color: cs.onSurfaceVariant,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -143,7 +186,9 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
       maxHeight: 740,
       title: Text(
         'SAVE / LOAD',
-        style: ClubBlackoutTheme.bulletinHeaderStyle(accent),
+        style: ClubBlackoutTheme.bulletinHeaderStyle(accent).copyWith(
+          letterSpacing: 2.0,
+        ),
       ),
       showCloseButton: true,
       actions: [
@@ -152,7 +197,13 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
           style: TextButton.styleFrom(
             foregroundColor: cs.onSurface.withValues(alpha: 0.7),
           ),
-          child: const Text('CLOSE'),
+          child: Text(
+            'CLOSE',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              fontSize: 13,
+              letterSpacing: 1.2,
+            ),
+          ),
         ),
         const SizedBox(width: 8),
         TextButton(
@@ -161,7 +212,13 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
           style: TextButton.styleFrom(
             foregroundColor: ClubBlackoutTheme.neonRed,
           ),
-          child: const Text('DELETE'),
+          child: Text(
+            'DELETE',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              fontSize: 13,
+              letterSpacing: 1.2,
+            ),
+          ),
         ),
         const SizedBox(width: 8),
         FilledButton(
@@ -171,7 +228,14 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
             ClubBlackoutTheme.neonGreen,
             isPrimary: true,
           ),
-          child: const Text('LOAD'),
+          child: Text(
+            'LOAD',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              fontSize: 13,
+              letterSpacing: 1.2,
+              color: ClubBlackoutTheme.pureBlack,
+            ),
+          ),
         ),
       ],
       content: SizedBox(
@@ -179,7 +243,11 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
         child: _loading
             ? const Padding(
                 padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: ClubBlackoutTheme.neonGreen,
+                  ),
+                ),
               )
             : Column(
                 mainAxisSize: MainAxisSize.min,
@@ -225,7 +293,14 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
                                         foregroundColor:
                                             cs.onSurface.withValues(alpha: 0.7),
                                       ),
-                                      child: const Text('CANCEL'),
+                                      child: Text(
+                                        'CANCEL',
+                                        style: ClubBlackoutTheme.headingStyle
+                                            .copyWith(
+                                          fontSize: 13,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
                                     ),
                                     const SizedBox(width: 8),
                                     FilledButton(
@@ -233,7 +308,15 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
                                       style: ClubBlackoutTheme.neonButtonStyle(
                                           accent,
                                           isPrimary: true),
-                                      child: const Text('LOAD'),
+                                      child: Text(
+                                        'LOAD',
+                                        style: ClubBlackoutTheme.headingStyle
+                                            .copyWith(
+                                          fontSize: 13,
+                                          letterSpacing: 1.2,
+                                          color: ClubBlackoutTheme.pureBlack,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 );
@@ -253,7 +336,10 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
                                 content: SizedBox(
                                   height: 72,
                                   child: Center(
-                                      child: CircularProgressIndicator()),
+                                    child: CircularProgressIndicator(
+                                      color: ClubBlackoutTheme.neonGreen,
+                                    ),
+                                  ),
                                 ),
                               ),
                             );
@@ -320,10 +406,12 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Load Test Game (one of each role)',
+                                'LOAD TEST GAME (DEV MODE)',
                                 style: ClubBlackoutTheme.glowTextStyle(
-                                  base: ClubBlackoutTheme.bulletinBodyStyle(
-                                      cs.onSurface),
+                                  base: ClubBlackoutTheme.headingStyle.copyWith(
+                                    fontSize: 14,
+                                    color: cs.onSurface,
+                                  ),
                                   color: ClubBlackoutTheme.neonGreen,
                                   fontWeight: FontWeight.w900,
                                   glowIntensity: 0.8,
@@ -343,21 +431,25 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
                   TextField(
                     controller: _nameController,
                     textCapitalization: TextCapitalization.sentences,
-                    style: TextStyle(
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
                       color: cs.onSurface,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.6,
+                      fontSize: 16,
+                      letterSpacing: 1.0,
                     ),
                     decoration: ClubBlackoutTheme.neonInputDecoration(
                       context,
-                      hint: 'e.g., Night 2 – after vote',
+                      hint: 'ENTER SAVE IDENTIFIER...',
                       color: accent,
-                      icon: Icons.save_rounded,
+                      icon: Icons.terminal_rounded,
                     ).copyWith(
-                      labelText: 'Save name',
+                      labelText: 'COMMAND: SAVE_DATA',
+                      labelStyle: ClubBlackoutTheme.headingStyle.copyWith(
+                        color: accent.withValues(alpha: 0.8),
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -367,18 +459,31 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
                             isPrimary: true),
                         onPressed: () => _save(),
                         icon: const Icon(Icons.save_rounded),
-                        label: const Text('Save New'),
+                        label: Text(
+                          'SAVE NEW',
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
+                            fontSize: 12,
+                            letterSpacing: 1.0,
+                            color: ClubBlackoutTheme.pureBlack,
+                          ),
+                        ),
                       ),
                       FilledButton.icon(
                         style: ClubBlackoutTheme.neonButtonStyle(
-                          ClubBlackoutTheme.neonPurple,
+                          accent,
                           isPrimary: false,
                         ),
                         onPressed: _selectedSaveId == null
                             ? null
                             : () => _save(overwriteId: _selectedSaveId),
                         icon: const Icon(Icons.save_as_rounded),
-                        label: const Text('Overwrite Selected'),
+                        label: Text(
+                          'OVERWRITE SELECTED',
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
+                            fontSize: 12,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -421,72 +526,107 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
 
                           return InkWell(
                             onTap: () => setState(() => _selectedSaveId = s.id),
-                            child: DecoratedBox(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
                               decoration:
                                   ClubBlackoutTheme.bulletinItemDecoration(
-                                color: accent,
-                                opacity: selected ? 0.16 : 0.10,
+                                color: selected ? accent : cs.outline,
+                                opacity: selected ? 0.20 : 0.05,
+                              ).copyWith(
+                                border: Border(
+                                  left: BorderSide(
+                                    color:
+                                        selected ? accent : Colors.transparent,
+                                    width: 4,
+                                  ),
+                                  right: BorderSide(
+                                      color: accent.withValues(alpha: 0.1),
+                                      width: 1),
+                                  top: BorderSide(
+                                      color: accent.withValues(alpha: 0.1),
+                                      width: 1),
+                                  bottom: BorderSide(
+                                      color: accent.withValues(alpha: 0.1),
+                                      width: 1),
+                                ),
                               ),
                               child: Padding(
                                 padding: ClubBlackoutTheme.fieldPaddingLoose,
-                                child: Row(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(
-                                      selected
-                                          ? Icons.radio_button_checked_rounded
-                                          : Icons.radio_button_off_rounded,
-                                      color: selected
-                                          ? accent
-                                          : cs.onSurfaceVariant,
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'DATA SLOT #${(index + 1).toString().padLeft(2, '0')}',
+                                          style: ClubBlackoutTheme.headingStyle
+                                              .copyWith(
+                                            fontSize: 10,
+                                            color: selected
+                                                ? accent
+                                                : cs.onSurfaceVariant,
+                                            letterSpacing: 1.0,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        if (selected)
+                                          Text(
+                                            'SELECTED_ACCESS_OK',
+                                            style: ClubBlackoutTheme
+                                                .headingStyle
+                                                .copyWith(
+                                              fontSize: 10,
+                                              color: accent,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            s.name,
-                                            style: ClubBlackoutTheme
-                                                    .bulletinBodyStyle(
-                                                        cs.onSurface)
-                                                .copyWith(
-                                              fontWeight: FontWeight.w900,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            'Day ${s.dayCount} • ${s.alivePlayers}/${s.totalPlayers} alive • ${s.currentPhase}',
-                                            style: ClubBlackoutTheme
-                                                    .bulletinBodyStyle(
-                                                        cs.onSurfaceVariant)
-                                                .copyWith(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w700,
-                                              height: 1.25,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            s.savedAt.toLocal().toString(),
-                                            style: ClubBlackoutTheme
-                                                .bulletinBodyStyle(
-                                              cs.onSurfaceVariant
-                                                  .withValues(alpha: 0.9),
-                                            ).copyWith(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                              height: 1.2,
-                                            ),
-                                          ),
-                                        ],
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      s.name.toUpperCase(),
+                                      style: ClubBlackoutTheme.headingStyle
+                                          .copyWith(
+                                        fontSize: 15,
+                                        color: cs.onSurface,
+                                        letterSpacing: 0.5,
                                       ),
                                     ),
-                                    if (selected)
-                                      const Icon(
-                                        Icons.chevron_right_rounded,
-                                        color: accent,
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        _buildInfoTag(
+                                          cs,
+                                          'DAY ${s.dayCount}',
+                                          Icons.wb_sunny_rounded,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        _buildInfoTag(
+                                          cs,
+                                          '${s.alivePlayers}/${s.totalPlayers} ALIVE',
+                                          Icons.people_alt_rounded,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        _buildInfoTag(
+                                          cs,
+                                          'PHASE: ${s.currentPhase.toUpperCase()}',
+                                          Icons.access_time_rounded,
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'TIMESTAMP: ${s.savedAt.toLocal().toString().toUpperCase()}',
+                                      style:
+                                          ClubBlackoutTheme.bulletinBodyStyle(
+                                        cs.onSurfaceVariant
+                                            .withValues(alpha: 0.8),
+                                      ).copyWith(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
                                       ),
+                                    ),
                                   ],
                                 ),
                               ),

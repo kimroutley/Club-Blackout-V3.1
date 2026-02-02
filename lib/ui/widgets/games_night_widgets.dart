@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../logic/games_night_service.dart';
 import '../styles.dart';
+import 'neon_glass_card.dart';
 import 'neon_page_scaffold.dart';
 
 class GamesNightSummaryCard extends StatelessWidget {

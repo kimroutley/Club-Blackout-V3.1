@@ -129,33 +129,6 @@ class DynamicThemeService extends ChangeNotifier {
       brightness: Brightness.light,
     );
 
-    _darkScheme = ColorScheme.fromSeed(
-      seedColor: primary,
-      primary: primary,
-      secondary: secondary,
-      tertiary: tertiary,
-      brightness: Brightness.dark,
-    );
-  }
-
-  Future<PaletteGenerator> _loadPalette(String assetPath) async {
-    final cached = _paletteCache[assetPath];
-    if (cached != null) return cached;
-
-    final ByteData data = await rootBundle.load(assetPath);
-    final Uint8List bytes = data.buffer.asUint8List();
-
-    final ui.Codec codec = await ui.instantiateImageCodec(bytes);
-    final ui.FrameInfo frameInfo = await codec.getNextFrame();
-    final ui.Image image = frameInfo.image;
-
-    final palette = await PaletteGenerator.fromImage(
-      image,
-      maximumColorCount: 20,
-    );
-
-    _paletteCache[assetPath] = palette;
-    return palette;
   }
 
   /// Generate theme from role colors
