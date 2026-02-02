@@ -3209,8 +3209,7 @@ class _GameScreenState extends State<GameScreen>
             alive.where((p) => p.id != predatorId).toList(growable: false);
 
         String? selected = engine.pendingPredatorPreferredTargetId;
-        if (selected == null ||
-            !baseCandidates.any((p) => p.id == selected)) {
+        if (selected == null || !baseCandidates.any((p) => p.id == selected)) {
           selected = baseCandidates.isNotEmpty ? baseCandidates.first.id : null;
         }
 
@@ -3271,7 +3270,8 @@ class _GameScreenState extends State<GameScreen>
                   onPressed: selected == null
                       ? null
                       : () {
-                          final ok = engine.completePredatorRetaliation(selected!);
+                          final ok =
+                              engine.completePredatorRetaliation(selected!);
                           if (!ok) {
                             engine.showToast('Retaliation failed.');
                             return;
@@ -3364,8 +3364,8 @@ class _GameScreenState extends State<GameScreen>
         final alive =
             engine.players.where((p) => p.isAlive && p.isEnabled).toList();
         final candidates = alive
-            .where((p) => engine.pendingTeaSpillerEligibleVoterIds
-                .contains(p.id))
+            .where(
+                (p) => engine.pendingTeaSpillerEligibleVoterIds.contains(p.id))
             .toList(growable: false);
 
         String? selected = candidates.isNotEmpty ? candidates.first.id : null;
@@ -3428,8 +3428,7 @@ class _GameScreenState extends State<GameScreen>
                   onPressed: selected == null
                       ? null
                       : () {
-                          final ok =
-                              engine.completeTeaSpillerReveal(selected!);
+                          final ok = engine.completeTeaSpillerReveal(selected!);
                           if (!ok) {
                             engine.showToast('Unable to spill the tea.');
                             return;

@@ -266,9 +266,8 @@ class ScriptBuilder {
           .where((p) => p.isActive && !p.soberSentHome && p.role.id == 'creep')
           .firstOrNull;
       if (activeCreep != null && activeCreep.creepTargetId != null) {
-        final target = players
-            .where((p) => p.id == activeCreep.creepTargetId)
-            .firstOrNull;
+        final target =
+            players.where((p) => p.id == activeCreep.creepTargetId).firstOrNull;
         if (target != null) {
           // Special Clinger handling: only add if Creep-as-Clinger is triggered
           if (target.role.id == 'clinger') {

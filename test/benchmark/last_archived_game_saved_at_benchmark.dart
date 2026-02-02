@@ -68,6 +68,7 @@ void main() {
 
     stopwatch.stop();
     // ignore: avoid_print
-    print('Time taken for $iterations accesses: ${stopwatch.elapsedMilliseconds} ms');
+    print(
+        'Time taken for $iterations accesses: ${stopwatch.elapsedMilliseconds} ms');
   });
 }

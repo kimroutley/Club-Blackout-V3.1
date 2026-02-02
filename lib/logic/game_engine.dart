@@ -1981,9 +1981,9 @@ class GameEngine extends ChangeNotifier {
             (roofiDodgedId != null && roofiDodgedId == target.id)) {
           addLine(
             cleanLine:
-                "• Roofi tried to paralyze ${target.name}, but didn't get to them fast enough.",
+                '• Roofi tried to paralyze ${target.name}, but didn\'t get to them fast enough.',
             spicyLine:
-                "• Roofi tried to paralyze ${target.name}, but didn't get to them fast enough.",
+                '• Roofi tried to paralyze ${target.name}, but didn\'t get to them fast enough.',
           );
           quietNight = false;
         }
@@ -2472,7 +2472,7 @@ class GameEngine extends ChangeNotifier {
         : 'No marked pair. Host must choose two players.';
 
     logAction(
-      "Drama Queen's Final Act",
+      'Drama Queen\'s Final Act',
       '${reaction.sourcePlayer.name} died. Open the action menu to swap two players. $pendingLine',
     );
     notifyListeners();
@@ -2701,7 +2701,7 @@ class GameEngine extends ChangeNotifier {
       for (final clinger in clingers) {
         logAction(
           'DOUBLE DEATH',
-          "OBSESSION OVER! ${clinger.name} (The Clinger) couldn't live without ${victim.name} and has died of a broken heart!",
+          'OBSESSION OVER! ${clinger.name} (The Clinger) couldn\'t live without ${victim.name} and has died of a broken heart!',
         );
 
         processDeath(clinger, cause: 'clinger_heartbreak');
@@ -2952,9 +2952,9 @@ class GameEngine extends ChangeNotifier {
           players.where((p) => p.role.id == 'creep' && p.isActive);
       for (final creep in activeCreeps) {
         if (creep.creepTargetId != null) {
-          final target = players
-              .cast<Player?>()
-              .firstWhere((p) => p!.id == creep.creepTargetId, orElse: () => null);
+          final target = players.cast<Player?>().firstWhere(
+              (p) => p!.id == creep.creepTargetId,
+              orElse: () => null);
           if (target != null && target.role.id == targetRoleId) {
             actors.add(creep);
           }
@@ -3256,7 +3256,7 @@ class GameEngine extends ChangeNotifier {
           );
           logAction(
             step.title,
-            "Silver Fox tried to give ${silverTarget.name} an alibi, but they were sent home by The Sober.",
+            'Silver Fox tried to give ${silverTarget.name} an alibi, but they were sent home by The Sober.',
             toast: _currentPhase == GamePhase.night,
           );
           break;
@@ -3275,12 +3275,13 @@ class GameEngine extends ChangeNotifier {
       case 'medic':
         if (step.id == 'medic_setup_choice') {
           final decision = selections.first;
-          final actors = getActorsForRole('medic').where((p) => p.isActive).toList();
-          
+          final actors =
+              getActorsForRole('medic').where((p) => p.isActive).toList();
+
           if (actors.isEmpty) {
-             // Fallback if no active actors found but step was triggered
-             logAction(step.title, 'No active Medic found for setup.');
-             break;
+            // Fallback if no active actors found but step was triggered
+            logAction(step.title, 'No active Medic found for setup.');
+            break;
           }
 
           for (final p in actors) {
@@ -3288,7 +3289,7 @@ class GameEngine extends ChangeNotifier {
             p.needsSetup = false;
           }
           logAction(step.title, 'Medic(s) chose ability: $decision.',
-                toast: _currentPhase == GamePhase.night);
+              toast: _currentPhase == GamePhase.night);
           break;
         }
         final target = resolvePlayer(selections.first);
@@ -3305,11 +3306,11 @@ class GameEngine extends ChangeNotifier {
         if (target.soberSentHome) {
           // Record intent for logging/auditing
           for (final p in actors) {
-             if (p.medicChoice == 'PROTECT_DAILY') {
-                nightActions['protect'] = target.id; 
-             } else if (p.medicChoice == 'REVIVE') {
-                nightActions['medic_revive'] = target.id;
-             }
+            if (p.medicChoice == 'PROTECT_DAILY') {
+              nightActions['protect'] = target.id;
+            } else if (p.medicChoice == 'REVIVE') {
+              nightActions['medic_revive'] = target.id;
+            }
           }
           queueHostAlert(
             title: 'Sent Home Early',
@@ -3322,8 +3323,8 @@ class GameEngine extends ChangeNotifier {
         }
 
         for (final medic in actors) {
-          // Only apply if the actor is capable (e.g. alive or allowed). 
-          // Note: Dead medic protection is usually filtered out in resolver, 
+          // Only apply if the actor is capable (e.g. alive or allowed).
+          // Note: Dead medic protection is usually filtered out in resolver,
           // but Creep is alive.
           if (medic.medicChoice == 'PROTECT_DAILY') {
             medic.medicProtectedPlayerId = target.id;
@@ -3334,7 +3335,8 @@ class GameEngine extends ChangeNotifier {
           } else if (medic.medicChoice == 'REVIVE') {
             if (!medic.reviveUsed) {
               nightActions['medic_revive'] = target.id;
-              logAction(step.title, 'Medic (${medic.name}) chose to revive ${target.name}.',
+              logAction(step.title,
+                  'Medic (${medic.name}) chose to revive ${target.name}.',
                   toast: _currentPhase == GamePhase.night);
             }
           }
@@ -3342,8 +3344,9 @@ class GameEngine extends ChangeNotifier {
         break;
 
       case 'bouncer':
-        final actors = getActorsForRole('bouncer').where((p) => p.isActive).toList();
-        
+        final actors =
+            getActorsForRole('bouncer').where((p) => p.isActive).toList();
+
         // If all actors are revoked, no action.
         // Actually, individual actors might be revoked?
         // Rules: "The Bouncer might strip your ability."
@@ -3352,8 +3355,9 @@ class GameEngine extends ChangeNotifier {
         // Creep adopts "Role". Does it assume the "Revoked" state?
         // Role state usually reset on new player?
         // Use `p.bouncerAbilityRevoked` per player.
-        
-        final capableActors = actors.where((p) => !p.bouncerAbilityRevoked).toList();
+
+        final capableActors =
+            actors.where((p) => !p.bouncerAbilityRevoked).toList();
 
         if (capableActors.isEmpty) {
           logAction(step.title,
@@ -3416,12 +3420,14 @@ class GameEngine extends ChangeNotifier {
           if (isDealerSide) {
             queueHostAlert(
               title: 'Gotcha!',
-              message: 'A Dealer or a Friend of the Dealers was caught. (Show to Bouncer/Creep)',
+              message:
+                  'A Dealer or a Friend of the Dealers was caught. (Show to Bouncer/Creep)',
             );
           } else {
             queueHostAlert(
               title: 'Clear',
-              message: '${target.name} appears innocent. (Show to Bouncer/Creep)',
+              message:
+                  '${target.name} appears innocent. (Show to Bouncer/Creep)',
             );
           }
         }
@@ -3434,24 +3440,24 @@ class GameEngine extends ChangeNotifier {
       case 'roofi':
         final isStolenMode = step.id == 'bouncer_roofi_act';
 
-        Player? _findMimicSource(Player actor) {
+        Player? findMimicSource(Player actor) {
           if (actor.role.id != 'creep') return null;
           final targetId = actor.creepTargetId;
           if (targetId == null) return null;
           return players.where((p) => p.id == targetId).firstOrNull;
         }
 
-        bool _actorHasActivePower(Player actor) {
+        bool actorHasActivePower(Player actor) {
           if (isStolenMode) {
             if (actor.role.id == 'creep') {
-              final mimic = _findMimicSource(actor);
+              final mimic = findMimicSource(actor);
               return mimic?.bouncerHasRoofiAbility ?? false;
             }
             return actor.bouncerHasRoofiAbility;
           }
 
           if (actor.role.id == 'creep') {
-            final mimic = _findMimicSource(actor);
+            final mimic = findMimicSource(actor);
             return mimic?.roofiAbilityRevoked == false;
           }
           return !actor.roofiAbilityRevoked;
@@ -3461,7 +3467,7 @@ class GameEngine extends ChangeNotifier {
                 ? getActorsForRole('bouncer')
                 : getActorsForRole('roofi'))
             .where((p) => p.isActive)
-            .where(_actorHasActivePower)
+            .where(actorHasActivePower)
             .toList();
 
         if (actors.isEmpty) {
@@ -3490,7 +3496,7 @@ class GameEngine extends ChangeNotifier {
           );
           logAction(
             step.title,
-            "${isStolenMode ? 'Bouncer (stolen Roofi powers)' : 'Roofi'} tried to paralyze ${target.name}, but didn't get to them fast enough.",
+            '${isStolenMode ? 'Bouncer (stolen Roofi powers)' : 'Roofi'} tried to paralyze ${target.name}, but didn\'t get to them fast enough.',
             toast: _currentPhase == GamePhase.night,
           );
           break;
@@ -3624,7 +3630,7 @@ class GameEngine extends ChangeNotifier {
                     '${target.name} was sent home early and is immune to all night requests.',
               );
               logAction(step.title,
-                  "Clinger tried to obsess over ${target.name}, but they were sent home by The Sober.");
+                  'Clinger tried to obsess over ${target.name}, but they were sent home by The Sober.');
               break;
             }
 
@@ -3905,7 +3911,7 @@ class GameEngine extends ChangeNotifier {
                   '${target.name} was sent home early and is immune to all night requests.',
             );
             logAction(step.title,
-                "Whore tried to pick ${target.name}, but they were sent home by The Sober.");
+                'Whore tried to pick ${target.name}, but they were sent home by The Sober.');
             break;
           }
 
@@ -3913,7 +3919,7 @@ class GameEngine extends ChangeNotifier {
           whore.needsSetup = false;
           nightActions['whore_deflect'] = target.id;
           logAction(step.title,
-              "Whore chose ${target.name} as THE WHORE'S BITCH (one-time scapegoat).\nIf the Whore or a Dealer is voted out, ${target.name} will take the fall once.",
+              'Whore chose ${target.name} as THE WHORE\'S BITCH (one-time scapegoat).\nIf the Whore or a Dealer is voted out, ${target.name} will take the fall once.',
               toast: _currentPhase == GamePhase.night);
         }
         break;
@@ -3973,7 +3979,7 @@ class GameEngine extends ChangeNotifier {
         }
 
         logAction(step.title,
-            "Club Manager viewed ${target.name}'s role: ${target.role.name}",
+            'Club Manager viewed ${target.name}\'s role: ${target.role.name}',
             toast: _currentPhase == GamePhase.night);
         onClubManagerReveal?.call(target);
         break;
