@@ -143,6 +143,10 @@ class SetupPhaseHelper extends StatelessWidget {
                       borderRadius: BorderRadius.circular(18),
                     ),
                   ),
+
+
+
+
                 ),
                 icon: Icon(
                   _canStartGame
@@ -292,6 +296,7 @@ class _ChecklistItem extends StatelessWidget {
               color: statusColor,
               size: 24,
             ),
+
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -358,6 +363,12 @@ class _TipItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.4),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.4),
+                  blurRadius: 4,
+                )
+              ],
             ),
           ),
           const SizedBox(width: 12),

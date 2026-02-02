@@ -7,7 +7,6 @@ import '../../models/script_step.dart';
 import '../styles.dart';
 import 'player_icon.dart';
 import 'unified_player_tile.dart';
-import 'neon_glass_card.dart';
 
 class InteractiveScriptCard extends StatelessWidget {
   final ScriptStep step;
@@ -63,15 +62,14 @@ class InteractiveScriptCard extends StatelessWidget {
 
       return Container(
         width: double.infinity,
-        padding: pad,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: isActive ? 0.12 : 0.04),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withValues(alpha: isActive ? 0.3 : 0.1),
-            width: 1,
-          ),
+        decoration: ClubBlackoutTheme.neonFrame(
+          color: color,
+          opacity: isActive ? 0.14 : 0.08,
+          borderRadius: 14,
+          borderWidth: 1.2,
+          showGlow: isActive,
         ),
+        padding: pad,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -152,51 +150,58 @@ class InteractiveScriptCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: NeonGlassCard(
-        glowColor: accent,
-        padding: EdgeInsets.zero,
-        opacity: isActive ? 0.8 : 0.65,
-        borderRadius: ClubBlackoutTheme.radiusMd,
-        child: Padding(
-          padding: contentPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  if (showPlayerTile) ...[
-                    Expanded(
-                      child: UnifiedPlayerTile(
-                        player: player!,
-                        gameEngine: gameEngine,
-                        config: PlayerTileConfig.gameplay(
-                          subtitleOverride: player!.role.name,
+      decoration: ClubBlackoutTheme.neonFrame(
+        color: isActive ? accent : cs.surfaceContainer,
+        opacity: isActive ? 0.15 : 0.0, // surface container handles bg if inactive
+        borderRadius: bulletin ? 16 : 20,
+        borderWidth: isActive ? 2 : 1,
+        showGlow: isActive,
+      ),
+      child: Padding(
+        padding: contentPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (showPlayerTile) ...[
+                  Flexible(
+                    flex: 0,
+                    child: UnifiedPlayerTile(
+                      player: player!,
+                      gameEngine: gameEngine,
+                      config: const PlayerTileConfig(
+                        variant: PlayerTileVariant.minimal,
+                        isInteractive: false,
+                        showStatusChips: false,
+                        showSubtitle: false,
+                        wrapInCard: false,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                ] else if (isActive && role != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          spreadRadius: 1,
                         ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: 14),
-                  ] else if (isActive && role != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: accent.withValues(alpha: 0.2),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: PlayerIcon(
-                        assetPath: role!.assetPath,
-                        glowColor: accent,
-                        glowIntensity: 0.4,
-                        size: bulletin ? 30 : 36,
-                      ),
+                    child: PlayerIcon(
+                      assetPath: role!.assetPath,
+                      glowColor: accent,
+                      glowIntensity: 0.4,
+                      size: bulletin ? 30 : 36,
                     ),
-                    const SizedBox(width: 14),
-                  ] else ...[
+                  ),
+                  const SizedBox(width: 14),
+                ] else ...[
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
@@ -263,7 +268,6 @@ class InteractiveScriptCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

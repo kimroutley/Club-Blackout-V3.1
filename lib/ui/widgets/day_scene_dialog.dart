@@ -180,16 +180,14 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
             ? ClubBlackoutTheme.neonGold
             : ClubBlackoutTheme.neonOrange);
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 0,
-      color: timerColor.withValues(alpha: 0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(
-          color: timerColor.withValues(alpha: 0.4),
-          width: 1.5,
-        ),
+      decoration: ClubBlackoutTheme.neonFrame(
+        color: timerColor,
+        opacity: 0.15,
+        borderRadius: 20,
+        borderWidth: 2.0,
+        showGlow: true,
       ),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -199,9 +197,12 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: timerColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(16),
+                  decoration: ClubBlackoutTheme.neonFrame(
+                    color: timerColor,
+                    opacity: 0.2,
+                    borderRadius: 14,
+                    borderWidth: 1.5,
+                    showGlow: false,
                   ),
                   child: Icon(
                     isDone ? Icons.alarm_off_rounded : Icons.timer_rounded,
@@ -531,16 +532,13 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                         _maxVotes < _requiredVotesToReachVerdict(engine))
                       Padding(
                         padding: ClubBlackoutTheme.topInset24,
-                        child: Card(
-                          elevation: 0,
-                          color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: ClubBlackoutTheme.borderRadiusMdAll,
-                            side: BorderSide(
-                              color: ClubBlackoutTheme.neonBlue
-                                  .withValues(alpha: 0.4),
-                              width: 1.2,
-                            ),
+                        child: Container(
+                          decoration: ClubBlackoutTheme.neonFrame(
+                            color: ClubBlackoutTheme.neonBlue,
+                            opacity: 0.1,
+                            borderRadius: ClubBlackoutTheme.radiusMd,
+                            borderWidth: 1.2,
+                            showGlow: true,
                           ),
                           child: Padding(
                             padding: ClubBlackoutTheme.inset24,

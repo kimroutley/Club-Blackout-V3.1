@@ -22,7 +22,6 @@ class RoleTileWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
 
     final title = Text(
       role.name.toUpperCase(),
@@ -32,7 +31,7 @@ class RoleTileWidget extends StatelessWidget {
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
       style: ClubBlackoutTheme.headingStyle.copyWith(
-        fontSize: variant == RoleTileVariant.card ? 15 : 13,
+        fontSize: variant == RoleTileVariant.card ? 16 : 14,
         color: role.color,
       ),
     );
@@ -43,72 +42,61 @@ class RoleTileWidget extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: ClubBlackoutTheme.headingStyle.copyWith(
         color: cs.onSurfaceVariant.withValues(alpha: 0.7),
-        fontSize: 9,
+        fontSize: 10,
         letterSpacing: 0.5,
       ),
     );
 
-    final content = Padding(
-      padding: const EdgeInsets.all(12),
-      child: variant == RoleTileVariant.card
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                PlayerIcon(
-                  assetPath: role.assetPath,
-                  glowColor: role.color,
-                  size: 48,
+    final content = variant == RoleTileVariant.card
+        ? Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PlayerIcon(
+                assetPath: role.assetPath,
+                glowColor: role.color,
+                size: 48,
+              ),
+              const SizedBox(height: 12),
+              title,
+              const SizedBox(height: 6),
+              subtitle,
+            ],
+          )
+        : Row(
+            children: [
+              PlayerIcon(
+                assetPath: role.assetPath,
+                glowColor: role.color,
+                size: 40, // Standardized icon size (was 32)
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    title,
+                    const SizedBox(height: 2),
+                    subtitle,
+                  ],
                 ),
-                const SizedBox(height: 12),
-                title,
-                const SizedBox(height: 8),
-                subtitle,
-              ],
-            )
-          : Row(
-              children: [
-                PlayerIcon(
-                  assetPath: role.assetPath,
-                  glowColor: role.color,
-                  size: 32,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      title,
-                      subtitle,
-                    ],
-                  ),
-                ),
-              ],
-            ),
-    );
+              ),
+            ],
+          );
 
     return Semantics(
       button: onTap != null,
       label: '${role.name}, ${role.alliance}',
       child: NeonGlassCard(
         glowColor: role.color,
-        padding: EdgeInsets.zero,
-        borderRadius: 20,
+        opacity: 0.15,
+        borderRadius: 16, // Standardized radius
         child: InkWell(
           onTap: onTap,
-          splashFactory: InkSparkle.splashFactory,
-          splashColor: role.color.withValues(alpha: 0.2),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  role.color.withValues(alpha: 0.15),
-                  Colors.transparent,
-                ],
-              ),
-            ),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
             child: content,
           ),
         ),

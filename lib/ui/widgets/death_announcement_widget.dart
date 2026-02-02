@@ -109,6 +109,7 @@ class _DeathAnnouncementDialogState extends State<DeathAnnouncementDialog>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return AnimatedBuilder(
       animation: Listenable.merge([_fadeAnimation, _scaleAnimation]),
       builder: (context, child) {
@@ -170,18 +171,21 @@ class _DeathAnnouncementDialogState extends State<DeathAnnouncementDialog>
                       ),
                     ],
                     const SizedBox(height: 12),
-                    Card(
-                      elevation: 0,
-                      color: cs.errorContainer.withValues(alpha: 0.45),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          'THEY HAVE BEEN ELIMINATED FROM THE GAME',
-                          textAlign: TextAlign.center,
-                          style: ClubBlackoutTheme.headingStyle.copyWith(
-                            fontSize: 10,
-                            color: cs.onSurface.withValues(alpha: 0.9),
-                          ),
+                    Container(
+                      decoration: ClubBlackoutTheme.neonFrame(
+                        color: cs.errorContainer,
+                        opacity: 0.45,
+                        borderRadius: 12,
+                        borderWidth: 0,
+                        showGlow: false,
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        'They have been eliminated from the game',
+                        textAlign: TextAlign.center,
+                        style: (tt.bodyMedium ?? const TextStyle()).copyWith(
+                          color: cs.onSurface.withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -191,9 +195,11 @@ class _DeathAnnouncementDialogState extends State<DeathAnnouncementDialog>
               actions: [
                 FilledButton(
                   onPressed: _close,
-                  style: ClubBlackoutTheme.neonButtonStyle(cs.error,
-                      isPrimary: true),
-                  child: const Text('CONTINUE'),
+                  style: ClubBlackoutTheme.neonButtonStyle(
+                    cs.errorContainer,
+                    isPrimary: true,
+                  ),
+                  child: const Text('Continue'),
                 ),
               ],
             ),

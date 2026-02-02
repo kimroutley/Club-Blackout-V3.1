@@ -267,14 +267,14 @@ class _VotingWidgetState extends State<VotingWidget> {
         if (!widget.isVotingEnabled)
           Container(
             margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerHighest.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: cs.outlineVariant.withValues(alpha: 0.35),
-              ),
+            decoration: ClubBlackoutTheme.neonFrame(
+              color: cs.onSurface,
+              opacity: 0.05,
+              borderRadius: 14,
+              borderWidth: 1.0,
+              showGlow: false,
             ),
+            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 Icon(
@@ -301,26 +301,23 @@ class _VotingWidgetState extends State<VotingWidget> {
           Container(
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  ClubBlackoutTheme.neonGreen.withValues(alpha: 0.15),
-                  ClubBlackoutTheme.neonGreen.withValues(alpha: 0.08),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.4),
-                width: 1.5,
-              ),
+            decoration: ClubBlackoutTheme.neonFrame(
+              color: ClubBlackoutTheme.neonGreen,
+              opacity: 0.15,
+              borderRadius: 12,
+              borderWidth: 1.5,
+              showGlow: true,
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                  decoration: ClubBlackoutTheme.neonFrame(
+                    color: ClubBlackoutTheme.neonGreen,
+                    opacity: 0.2,
+                    borderRadius: 8,
+                    borderWidth: 0,
+                    showGlow: false,
                   ),
                   child: const Icon(
                     Icons.voice_over_off_rounded,
@@ -382,48 +379,12 @@ class _VotingWidgetState extends State<VotingWidget> {
             return AnimatedContainer(
               duration: ClubMotion.short,
               margin: EdgeInsets.zero,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: voteCount > 0
-                    ? LinearGradient(
-                        colors: [
-                          accentColor.withValues(alpha: 0.15),
-                          accentColor.withValues(alpha: 0.08),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                color: voteCount == 0
-                    ? cs.surfaceContainerHigh.withValues(alpha: 0.5)
-                    : null,
-                border: Border.all(
-                  color: accentColor.withValues(
-                    alpha: voteCount >= requiredVotes ? 0.6 : 0.35,
-                  ),
-                  width: voteCount >= requiredVotes ? 2.5 : 1.5,
-                ),
-                boxShadow: voteCount >= requiredVotes
-                    ? [
-                        BoxShadow(
-                          color: accentColor.withValues(alpha: 0.25),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                          offset: const Offset(0, 4),
-                        ),
-                        BoxShadow(
-                          color: accentColor.withValues(alpha: 0.15),
-                          blurRadius: 24,
-                          spreadRadius: 4,
-                        ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+              decoration: ClubBlackoutTheme.neonFrame(
+                color: accentColor,
+                opacity: voteCount > 0 ? 0.15 : 0.05,
+                borderRadius: 16,
+                borderWidth: voteCount >= requiredVotes ? 2.5 : 1.5,
+                showGlow: voteCount >= requiredVotes,
               ),
               child: Column(
                 children: [
@@ -603,29 +564,21 @@ class _VotingWidgetState extends State<VotingWidget> {
               : Container(
                   key: const ValueKey('finalize'),
                   margin: const EdgeInsets.only(top: 20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ClubBlackoutTheme.neonRed.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
                   child: SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: ClubBlackoutTheme.neonRed,
-                        foregroundColor: ClubBlackoutTheme.contrastOn(
-                          ClubBlackoutTheme.neonRed,
+                      style: ClubBlackoutTheme.neonButtonStyle(
+                        ClubBlackoutTheme.neonRed,
+                        isPrimary: true,
+                      ).copyWith(
+                        padding: WidgetStateProperty.all(
+                          const EdgeInsets.symmetric(vertical: 20),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                        shape: WidgetStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
-                        elevation: 6,
                       ),
                       onPressed: _submit,
                       icon: const Icon(Icons.gavel_rounded, size: 24),

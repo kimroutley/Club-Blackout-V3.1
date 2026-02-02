@@ -2971,33 +2971,30 @@ class _GameScreenState extends State<GameScreen>
     final color = player.role.color;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Tooltip(
-        message: player.role.name,
-        child: InkWell(
-          onTap: () {
-            setState(() => _abilityFabExpanded = false);
-            onPressed();
-          },
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: color, width: 2),
-              boxShadow: [
-                BoxShadow(
-                    color: color.withValues(alpha: 0.4),
-                    blurRadius: 10,
-                    spreadRadius: 1),
-              ],
-            ),
-            child: ClipOval(
-              child: player.role.assetPath.isNotEmpty
-                  ? Image.asset(player.role.assetPath, fit: BoxFit.cover)
-                  : Icon(Icons.bolt, color: color, size: 28),
-            ),
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: GestureDetector(
+        onTap: () {
+          setState(() => _abilityFabExpanded = false);
+          onPressed();
+        },
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.6),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+            ],
+            border: Border.all(color: color, width: 2),
+          ),
+          child: ClipOval(
+            child: player.role.assetPath.isNotEmpty
+                ? Image.asset(player.role.assetPath, fit: BoxFit.cover)
+                : Icon(Icons.help, color: color),
           ),
         ),
       ),
@@ -3018,8 +3015,24 @@ class _GameScreenState extends State<GameScreen>
     final totalTargets = alivePlayers.length;
 
     return Container(
-      color: cs.surfaceContainerHighest.withValues(alpha: 0.92),
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.95),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(
+          top: BorderSide(
+            color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.5),
+            width: 2,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 30,
+            spreadRadius: 5,
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       child: Column(
         children: [
           Text(
@@ -3114,10 +3127,11 @@ class _GameScreenState extends State<GameScreen>
           ),
           const SizedBox(height: 20),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: ClubBlackoutTheme.neonGreen,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            style: ClubBlackoutTheme.neonButtonStyle(
+              ClubBlackoutTheme.neonGreen,
+              isPrimary: true,
+            ).copyWith(
+              padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
             ),
             onPressed: () => setState(() => _rumourMillExpanded = false),
             child: Text(
@@ -3755,16 +3769,15 @@ class _GameScreenState extends State<GameScreen>
     final isActive = widget.gameEngine.currentScriptStep?.id == step.id;
 
     if (!isActive) {
-      return const Card(
-        color: Colors.white10,
-        margin: EdgeInsets.all(16),
-        child: Padding(
-          padding: EdgeInsets.all(16),
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: NeonGlassCard(
+          glowColor: Colors.white,
           child: Row(
             children: [
-              Icon(Icons.wb_sunny, color: Colors.white30),
-              SizedBox(width: 16),
-              Text(
+              const Icon(Icons.wb_sunny, color: Colors.white30),
+              const SizedBox(width: 16),
+              const Text(
                 'Day Phase Completed',
                 style: TextStyle(color: Colors.white30, fontSize: 18),
               ),
@@ -3822,13 +3835,14 @@ class _GameScreenState extends State<GameScreen>
             padding: EdgeInsets.symmetric(vertical: 16.0),
             child: Text('BEGIN DAY PHASE', style: TextStyle(fontSize: 20)),
           ),
-          style: FilledButton.styleFrom(
-            backgroundColor: ClubBlackoutTheme.neonOrange,
-            foregroundColor: Colors.black,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+          style: ClubBlackoutTheme.neonButtonStyle(
+            ClubBlackoutTheme.neonOrange,
+            isPrimary: true,
+          ).copyWith(
+            padding: WidgetStateProperty.all(const EdgeInsets.all(20)),
+            shape: WidgetStateProperty.all(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
-            padding: const EdgeInsets.all(20),
           ),
         ),
       ),
@@ -4231,17 +4245,12 @@ class _GameLogDialogState extends State<_GameLogDialog> {
           Container(
             margin: const EdgeInsets.only(bottom: 12, top: 8),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  ClubBlackoutTheme.neonPurple.withValues(alpha: 0.15),
-                  ClubBlackoutTheme.neonBlue.withValues(alpha: 0.1),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
-              ),
+            decoration: ClubBlackoutTheme.neonFrame(
+              color: ClubBlackoutTheme.neonPurple,
+              opacity: 0.15,
+              borderRadius: 12,
+              borderWidth: 1.0,
+              showGlow: false,
             ),
             child: Row(
               children: [
@@ -4300,20 +4309,12 @@ class _GameLogDialogState extends State<_GameLogDialog> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: typeColor.withValues(alpha: 0.35),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: cs.shadow.withValues(alpha: 0.25),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      decoration: ClubBlackoutTheme.neonFrame(
+        color: typeColor,
+        opacity: 0.15,
+        borderRadius: 16,
+        borderWidth: 1.2,
+        showGlow: false,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -4327,12 +4328,12 @@ class _GameLogDialogState extends State<_GameLogDialog> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: typeColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: typeColor.withValues(alpha: 0.45),
-                    ),
+                  decoration: ClubBlackoutTheme.neonFrame(
+                    color: typeColor,
+                    opacity: 0.15,
+                    borderRadius: 12,
+                    borderWidth: 1.0,
+                    showGlow: false,
                   ),
                   child: Icon(
                     typeIcon,
