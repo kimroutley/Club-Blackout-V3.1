@@ -3175,12 +3175,7 @@ class _GameScreenState extends State<GameScreen>
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('CANCEL'),
-            ),
-          ],
+          actions: [],
         );
       },
     );
@@ -3253,19 +3248,124 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  void _showTeaSpillerRevealDialog() {
+  void _showPredatorRetaliationDialog() {
     showDialog(
       context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        final cs = Theme.of(context).colorScheme;
+
+        final alive = engine.players
+            .where((p) => p.isAlive && p.isEnabled)
+            .toList(growable: false);
+        final baseCandidates =
+            alive.where((p) => p.id != predatorId).toList(growable: false);
+
+        String? selected = engine.pendingPredatorPreferredTargetId;
+        if (selected == null || !baseCandidates.any((p) => p.id == selected)) {
+          selected = baseCandidates.isNotEmpty ? baseCandidates.first.id : null;
+        }
+
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return BulletinDialogShell(
+              accent: ClubBlackoutTheme.neonRed,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.82,
+              title: Text(
+                'PREDATOR RETALIATION',
+                style: ClubBlackoutTheme.headingStyle.copyWith(
+                  color: ClubBlackoutTheme.neonRed,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'The Predator is dying! Choose who dies with them.',
+                    style: TextStyle(color: cs.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    key: ValueKey<String?>(selected),
+                    initialValue: selected,
+                    decoration: InputDecoration(
+                      labelText: 'Select target',
+                      filled: true,
+                      fillColor: cs.surface.withValues(alpha: 0.12),
+                      border: OutlineInputBorder(
+                        borderRadius: ClubBlackoutTheme.borderRadiusControl,
+                        borderSide: BorderSide(
+                          color:
+                              ClubBlackoutTheme.neonRed.withValues(alpha: 0.30),
+                        ),
+                      ),
+                    ),
+                    items: baseCandidates
+                        .map(
+                          (p) => DropdownMenuItem<String>(
+                            value: p.id,
+                            child: Text(p.name),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (v) => setStateDialog(() => selected = v),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('CANCEL'),
+                ),
+                FilledButton(
+                  onPressed: selected == null
+                      ? null
+                      : () {
+                          final ok =
+                              engine.completePredatorRetaliation(selected!);
+                          if (!ok) {
+                            engine.showToast('Retaliation failed.');
+                            return;
+                          }
+                          Navigator.pop(context);
+                          engine.showToast('Retaliation applied.');
+                        },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: ClubBlackoutTheme.neonRed,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: const Text('RETALIATE'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showMessyBitchVictoryDialog() {
+    final engine = widget.gameEngine;
+    if (!engine.messyBitchVictoryPending) {
+      engine.showToast('No Messy Bitch victory pending.');
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
       builder: (context) {
         final cs = Theme.of(context).colorScheme;
 
         return BulletinDialogShell(
-          accent: ClubBlackoutTheme.neonOrange,
-          maxHeight: MediaQuery.sizeOf(context).height * 0.82,
+          accent: ClubBlackoutTheme.neonPink,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.4,
           title: Text(
-            'TEA SPILLER REVEAL',
+            'MESSY BITCH VICTORY',
             style: ClubBlackoutTheme.headingStyle.copyWith(
-              color: ClubBlackoutTheme.neonOrange,
+              color: ClubBlackoutTheme.neonPink,
             ),
           ),
           content: Column(
@@ -3273,50 +3373,14 @@ class _GameScreenState extends State<GameScreen>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'The Tea Spiller has died. Select a player to reveal their role.',
+                'The Messy Bitch has won!',
                 style: TextStyle(color: cs.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                height: 320,
-                child: ListView(
-                  children: widget.gameEngine.players
-                      .map(
-                        (p) => ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: p.role.color,
-                            child: Text(
-                              p.name[0],
-                              style: const TextStyle(color: Colors.black),
-                            ),
-                          ),
-                          title: Text(p.name),
-                          subtitle: Text(
-                            p.role.name,
-                            style: TextStyle(
-                              color: cs.onSurfaceVariant,
-                              fontSize: 11,
-                            ),
-                          ),
-                          /* Host sees roles */
-                          onTap: () {
-                            Navigator.pop(context);
-                            widget.gameEngine.logAction(
-                              'Tea Spiller Reveal',
-                              'Tea Spiller revealed ${p.name} as ${p.role.name}.',
-                            );
-                            showRoleReveal(
-                              context,
-                              p.role,
-                              p.name,
-                              subtitle: 'Tea Spilled by the Dead!',
-                            );
-                          },
-                        ),
-                      )
-                      .toList(),
-                ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('CLOSE'),
               ),
             ],
           ),
@@ -3330,6 +3394,125 @@ class _GameScreenState extends State<GameScreen>
       },
     );
   }
+
+
+  void _showTeaSpillerRevealDialog() {
+    final engine = widget.gameEngine;
+    if (!engine.hasPendingTeaSpillerReveal) {
+      engine.showToast('No Tea Spiller reveal pending.');
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        final cs = Theme.of(context).colorScheme;
+
+        final teaId = engine.pendingTeaSpillerId;
+        if (teaId == null) return const SizedBox.shrink();
+
+        final tea = engine.players.where((p) => p.id == teaId).firstOrNull;
+        final teaName = tea?.name ?? 'Tea Spiller';
+
+        final alive =
+            engine.players.where((p) => p.isAlive && p.isEnabled).toList();
+        final candidates = alive
+            .where(
+                (p) => engine.pendingTeaSpillerEligibleVoterIds.contains(p.id))
+            .toList(growable: false);
+
+        String? selected = candidates.isNotEmpty ? candidates.first.id : null;
+
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return BulletinDialogShell(
+              accent: ClubBlackoutTheme.neonOrange,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.82,
+              title: Text(
+                'TEA SPILLER REVEAL',
+                style: ClubBlackoutTheme.headingStyle.copyWith(
+                  color: ClubBlackoutTheme.neonOrange,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '$teaName was eliminated by vote. Choose one of their voters to expose.',
+                    style: TextStyle(color: cs.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    key: ValueKey<String?>(selected),
+                    initialValue: selected,
+                    decoration: InputDecoration(
+                      labelText: 'Select voter to reveal',
+                      filled: true,
+                      fillColor: cs.surface.withValues(alpha: 0.12),
+                      border: OutlineInputBorder(
+                        borderRadius: ClubBlackoutTheme.borderRadiusControl,
+                        borderSide: BorderSide(
+                          color: ClubBlackoutTheme.neonOrange.withValues(
+                            alpha: 0.30,
+                          ),
+                        ),
+                      ),
+                    ),
+                    items: candidates
+                        .map(
+                          (p) => DropdownMenuItem<String>(
+                            value: p.id,
+                            child: Text(p.name),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (v) => setStateDialog(() => selected = v),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('CANCEL'),
+                ),
+                FilledButton(
+                  onPressed: selected == null
+                      ? null
+                      : () {
+                          final ok = engine.completeTeaSpillerReveal(selected!);
+                          if (!ok) {
+                            engine.showToast('Unable to spill the tea.');
+                            return;
+                          }
+                          Navigator.pop(context);
+                          final target = engine.players
+                              .where((p) => p.id == selected)
+                              .firstOrNull;
+                          if (target != null) {
+                            showRoleReveal(
+                              context,
+                              target.role,
+                              target.name,
+                              subtitle: 'Tea Spilled by the Dead!',
+                            );
+                          }
+                        },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: ClubBlackoutTheme.neonOrange,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: const Text('REVEAL'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
 
   void _showDramaQueenSwapDialog() {
     final alivePlayers = sortedPlayersByDisplayName(

@@ -129,6 +129,13 @@ class DynamicThemeService extends ChangeNotifier {
       brightness: Brightness.light,
     );
 
+    _darkScheme = ColorScheme.fromSeed(
+      seedColor: primary,
+      primary: primary,
+      secondary: secondary,
+      tertiary: tertiary,
+      brightness: Brightness.dark,
+    );
   }
 
   /// Generate theme from role colors

@@ -1890,16 +1890,37 @@ class GameEngine extends ChangeNotifier {
     // Sober
     for (final res in results.where((r) => r.abilityId == 'sober_send_home')) {
         for (final t in res.targets) {
-             final name = players.firstWhere((p)=>p.id==t).name;
-             sb.writeln('â€¢ $name was sent home early.');
+             final target = players.firstWhere((p)=>p.id==t);
+             sb.writeln('• ${target.name} was sent home early.');
              quiet = false;
+
+            // If Roofi targeted someone who was sent home by The Sober this night,
+            // the target dodges the paralysis.
+            final roofiTargetId = nightActions['roofi'] as String?;
+            final roofiDodgedId = nightActions['roofi_sent_home_dodge'] as String?;
+            if ((roofiTargetId != null && roofiTargetId == target.id) ||
+                (roofiDodgedId != null && roofiDodgedId == target.id)) {
+              sb.writeln('• Roofi tried to paralyze ${target.name}, but didn\'t get to them fast enough.');
+              quiet = false;
+            }
+
+            // If Bouncer attempted to ID-check someone who was sent home by The Sober,
+            // show that it had no effect.
+            final bouncerTargetId = nightActions['bouncer_check'] as String?;
+            final bouncerDodgedId =
+                nightActions['bouncer_sent_home_dodge'] as String?;
+            if ((bouncerTargetId != null && bouncerTargetId == target.id) ||
+                (bouncerDodgedId != null && bouncerDodgedId == target.id)) {
+              sb.writeln('• The Bouncer tried to ID ${target.name}, but they were sent home by The Sober.');
+              quiet = false;
+            }
         }
     }
     
     // Silenced
     if (silencedIds.isNotEmpty) {
         final names = silencedIds.map((id) => players.firstWhere((p)=>p.id==id).name).join(', ');
-        sb.writeln('â€¢ Silenced today: $names.');
+        sb.writeln('• Silenced today: $names.');
         quiet = false;
     }
 
@@ -2056,7 +2077,7 @@ class GameEngine extends ChangeNotifier {
         : 'No marked pair. Host must choose two players.';
 
     logAction(
-      "Drama Queen's Final Act",
+      'Drama Queen\'s Final Act',
       '${reaction.sourcePlayer.name} died. Open the action menu to swap two players. $pendingLine',
     );
     notifyListeners();
@@ -2285,7 +2306,7 @@ class GameEngine extends ChangeNotifier {
       for (final clinger in clingers) {
         logAction(
           'DOUBLE DEATH',
-          "OBSESSION OVER! ${clinger.name} (The Clinger) couldn't live without ${victim.name} and has died of a broken heart!",
+          'OBSESSION OVER! ${clinger.name} (The Clinger) couldn\'t live without ${victim.name} and has died of a broken heart!',
         );
 
         processDeath(clinger, cause: 'clinger_heartbreak');
@@ -2520,8 +2541,30 @@ class GameEngine extends ChangeNotifier {
             isEnabled: false),
       );
     }
-    
-    // Find source player
+
+
+    /// Finds all players who are effectively "acting" as this role tonight.
+    /// Includes the original role holders AND any Creeps mimicking them.
+    List<Player> getActorsForRole(String targetRoleId) {
+      final actors = <Player>[];
+      // 1. Original holders
+      actors.addAll(players.where((p) => p.role.id == targetRoleId));
+
+      // 2. Creep mimics
+      final activeCreeps =
+          players.where((p) => p.role.id == 'creep' && p.isActive);
+      for (final creep in activeCreeps) {
+        if (creep.creepTargetId != null) {
+          final target = players.cast<Player?>().firstWhere(
+              (p) => p!.id == creep.creepTargetId,
+              orElse: () => null);
+          if (target != null && target.role.id == targetRoleId) {
+            actors.add(creep);
+          }
+        }
+      }
+      return actors;
+    }
     Player? sourcePlayer;
     try {
       sourcePlayer = players.firstWhere((p) => p.role.id == roleId && p.isActive);
@@ -2676,19 +2719,78 @@ class GameEngine extends ChangeNotifier {
         nightActions['sober_sent_home'] = target.id;
         logAction(step.title, 'Sober selected ${target.name} to be sent home (action queued).', toast: _currentPhase == GamePhase.night);
         rebuildNightScript();
+
+        _invalidateEligibleVotesCache();
+        break;
+
+      case 'silver_fox':
+        final silverFox = players
+            .where((p) => p.role.id == 'silver_fox' && p.isActive)
+            .firstOrNull;
+        if (silverFox == null) {
+          logAction(step.title, 'No active Silver Fox in game.');
+          break;
+        }
+
+        final silverTarget = resolvePlayer(selections.first);
+        if (silverTarget.id == '?') {
+          logAction(step.title, 'Invalid target selection.');
+          break;
+        }
+
+        // Prevent self-targeting
+        if (sourcePlayer != null && silverTarget.id == sourcePlayer.id) {
+          logAction(step.title,
+              'Invalid target: Silver Fox cannot give themselves an alibi.');
+          break;
+        }
+
+        // Check if target was sent home by Sober
+        if (silverTarget.soberSentHome) {
+          nightActions['silver_fox_alibi'] = silverTarget.id;
+          queueHostAlert(
+            title: 'Sent Home Early',
+            message:
+                '${silverTarget.name} was sent home early and is immune to all night requests.',
+          );
+          logAction(
+            step.title,
+            'Silver Fox tried to give ${silverTarget.name} an alibi, but they were sent home by The Sober.',
+            toast: _currentPhase == GamePhase.night,
+          );
+          break;
+        }
+
+        // Alibi applies to the FOLLOWING day. Day count is incremented at the
+        // end of the night->day transition, so use (dayCount + 1).
+        silverTarget.alibiDay = dayCount + 1;
+        nightActions['silver_fox_alibi'] = silverTarget.id;
+        logAction(step.title,
+            'Silver Fox gave ${silverTarget.name} an alibi (cannot be voted out tomorrow).',
+            toast: _currentPhase == GamePhase.night);
+        _invalidateEligibleVotesCache();
         break;
 
       case 'medic':
         if (step.id == 'medic_setup_choice') {
-           final decision = selections.first;
-           final actors = players.where((p) => p.role.id == 'medic' && p.isActive).toList();
-           for (final p in actors) {
-             p.medicChoice = decision;
-             p.needsSetup = false;
-           }
-           logAction(step.title, 'Medic(s) chose ability: $decision.',
-                 toast: _currentPhase == GamePhase.night);
-           break;
+
+          final decision = selections.first;
+          final actors =
+              getActorsForRole('medic').where((p) => p.isActive).toList();
+
+          if (actors.isEmpty) {
+            // Fallback if no active actors found but step was triggered
+            logAction(step.title, 'No active Medic found for setup.');
+            break;
+          }
+
+          for (final p in actors) {
+            p.medicChoice = decision;
+            p.needsSetup = false;
+          }
+          logAction(step.title, 'Medic(s) chose ability: $decision.',
+              toast: _currentPhase == GamePhase.night);
+          break;
         }
         
         final target = resolvePlayer(selections.first);
@@ -2699,43 +2801,261 @@ class GameEngine extends ChangeNotifier {
            // break; // Let them through if reviving logic handles it, or block here for Protect.
            // Assuming strict block for Protect.
         }
-        if (_isSoberSentHome(target.id)) {
-           queueHostAlert(title: 'Sent Home Early', message: '${target.name} was sent home early and is immune.');
-           logAction(step.title, 'Medic targeted ${target.name} but they were sent home.');
-           break;
+
+
+        // Check if target was sent home by Sober
+        if (target.soberSentHome) {
+          // Record intent for logging/auditing
+          for (final p in actors) {
+            if (p.medicChoice == 'PROTECT_DAILY') {
+              nightActions['protect'] = target.id;
+            } else if (p.medicChoice == 'REVIVE') {
+              nightActions['medic_revive'] = target.id;
+            }
+          }
+          queueHostAlert(
+            title: 'Sent Home Early',
+            message:
+                '${target.name} was sent home early and is immune to all night requests.',
+          );
+          logAction(step.title,
+              'Medic tried to target ${target.name}, but they were sent home by The Sober.');
+          break;
         }
 
         for (final medic in actors) {
-           if (medic.medicChoice == 'PROTECT_DAILY') {
-               abilityResolver.removeAbilitiesForSource(medic.id); 
-               abilityResolver.queueAbility(ActiveAbility(
-                   abilityId: 'medic_protect',
-                   sourcePlayerId: medic.id,
-                   targetPlayerIds: [target.id],
-                   trigger: AbilityTrigger.nightAction,
-                   effect: AbilityEffect.protect,
-                   priority: 20
-               ));
-               nightActions['protect'] = target.id;
-               logAction(step.title, 'Medic (${medic.name}) protecting ${target.name} (queued).', toast: _currentPhase == GamePhase.night);
-           } else if (medic.medicChoice == 'REVIVE') {
-               if (!medic.reviveUsed) {
-                   abilityResolver.removeAbilitiesForSource(medic.id);
-                   abilityResolver.queueAbility(ActiveAbility(
-                       abilityId: 'medic_revive',
-                       sourcePlayerId: medic.id,
-                       targetPlayerIds: [target.id],
-                       trigger: AbilityTrigger.nightAction,
-                       effect: AbilityEffect.other,
-                       priority: 55
-                   ));
-                   nightActions['medic_revive'] = target.id;
-                   logAction(step.title, 'Medic (${medic.name}) reviving ${target.name} (queued).', toast: _currentPhase == GamePhase.night);
-               }
-           }
+          // Only apply if the actor is capable (e.g. alive or allowed).
+          // Note: Dead medic protection is usually filtered out in resolver,
+          // but Creep is alive.
+          if (medic.medicChoice == 'PROTECT_DAILY') {
+            medic.medicProtectedPlayerId = target.id;
+            nightActions['protect'] = target.id;
+            logAction(step.title,
+                'Medic (${medic.name}) is now protecting ${target.name}.',
+                toast: _currentPhase == GamePhase.night);
+          } else if (medic.medicChoice == 'REVIVE') {
+            if (!medic.reviveUsed) {
+              nightActions['medic_revive'] = target.id;
+              logAction(step.title,
+                  'Medic (${medic.name}) chose to revive ${target.name}.',
+                  toast: _currentPhase == GamePhase.night);
+            }
+          }
         }
         break;
 
+      case 'bouncer':
+        final actors =
+            getActorsForRole('bouncer').where((p) => p.isActive).toList();
+
+        // If all actors are revoked, no action.
+        // Actually, individual actors might be revoked?
+        // Rules: "The Bouncer might strip your ability."
+        // Bouncer ability revoked: "Bouncer lost ID ability."
+        // If Real Bouncer is revoked, but Creep-Bouncer is new?
+        // Creep adopts "Role". Does it assume the "Revoked" state?
+        // Role state usually reset on new player?
+        // Use `p.bouncerAbilityRevoked` per player.
+
+        final capableActors =
+            actors.where((p) => !p.bouncerAbilityRevoked).toList();
+
+        if (capableActors.isEmpty) {
+          logAction(step.title,
+              'All Bouncer actors have their ability revoked; action ignored.');
+          break;
+        }
+
+        final target = resolvePlayer(selections.first);
+
+        // Prevent self-targeting
+        if (actors.any((p) => p.id == target.id)) {
+          logAction(
+              step.title, 'Invalid target: Bouncer cannot check themselves.');
+          break;
+        }
+
+        // Check if target was sent home by Sober
+        if (target.soberSentHome) {
+          nightActions['bouncer_check'] = target.id;
+          queueHostAlert(
+            title: 'Sent Home Early',
+            message:
+                '${target.name} was sent home early and is immune to all night requests.',
+          );
+          logAction(step.title,
+              'Bouncer tried to ID ${target.name}, but they were sent home by The Sober.',
+              toast: _currentPhase == GamePhase.night);
+          break;
+        }
+
+        final wasMinorImmune =
+            target.role.id == 'minor' && target.minorHasBeenIDd == false;
+        nightActions['bouncer_check'] = target.id;
+        target.idCheckedByBouncer = true;
+        var queuedSpecialAlert = false;
+        if (target.role.id == 'minor') {
+          // Store the prior Minor vulnerability state so it can be rolled back
+          // if the target is later sent home by The Sober.
+          nightActions['bouncer_minor_checked_id'] = target.id;
+          nightActions['bouncer_minor_prev_has_been_idd'] =
+              target.minorHasBeenIDd;
+          target.minorHasBeenIDd = true;
+          if (wasMinorImmune) {
+            // Track that this check changed Minor's immunity so it can be
+            // rolled back if the target is later sent home by The Sober.
+            nightActions['bouncer_minor_became_vulnerable'] = target.id;
+            queueHostAlert(
+              title: 'Minor is now vulnerable',
+              message:
+                  "${target.name} was I.D.'d by the Bouncer and is no longer immune to Dealer kills.",
+            );
+            queuedSpecialAlert = true;
+          }
+        }
+
+        // Host Feedback for ID Check (avoid overwriting a special alert, e.g. Minor vulnerability)
+        if (!queuedSpecialAlert) {
+          final isDealerSide = target.alliance == 'The Dealers' ||
+              target.role.alliance == 'The Dealers';
+          if (isDealerSide) {
+            queueHostAlert(
+              title: 'Gotcha!',
+              message:
+                  'A Dealer or a Friend of the Dealers was caught. (Show to Bouncer/Creep)',
+            );
+          } else {
+            queueHostAlert(
+              title: 'Clear',
+              message:
+                  '${target.name} appears innocent. (Show to Bouncer/Creep)',
+            );
+          }
+        }
+
+        logAction(
+            step.title, "Bouncer I.D.'d ${target.name} → ${target.alliance}.",
+            toast: _currentPhase == GamePhase.night);
+        break;
+
+      case 'roofi':
+        final isStolenMode = step.id == 'bouncer_roofi_act';
+
+        Player? findMimicSource(Player actor) {
+          if (actor.role.id != 'creep') return null;
+          final targetId = actor.creepTargetId;
+          if (targetId == null) return null;
+          return players.where((p) => p.id == targetId).firstOrNull;
+        }
+
+        bool actorHasActivePower(Player actor) {
+          if (isStolenMode) {
+            if (actor.role.id == 'creep') {
+              final mimic = findMimicSource(actor);
+              return mimic?.bouncerHasRoofiAbility ?? false;
+            }
+            return actor.bouncerHasRoofiAbility;
+          }
+
+          if (actor.role.id == 'creep') {
+            final mimic = findMimicSource(actor);
+            return mimic?.roofiAbilityRevoked == false;
+          }
+          return !actor.roofiAbilityRevoked;
+        }
+
+        final actors = (isStolenMode
+                ? getActorsForRole('bouncer')
+                : getActorsForRole('roofi'))
+            .where((p) => p.isActive)
+            .where(actorHasActivePower)
+            .toList();
+
+        if (actors.isEmpty) {
+          logAction(step.title,
+              'No active Roofi power available (revoked or missing).');
+          break;
+        }
+
+        final target = resolvePlayer(selections.first);
+
+        // Prevent self-targeting
+        if (actors.any((p) => p.id == target.id)) {
+          final selfTargetLabel =
+              isStolenMode ? 'Bouncer (stolen Roofi powers)' : 'Roofi';
+          logAction(step.title, '$selfTargetLabel cannot silence themselves.');
+          break;
+        }
+
+        // Check if target was sent home by Sober
+        if (target.soberSentHome) {
+          nightActions['roofi'] = target.id;
+          queueHostAlert(
+            title: 'Sent Home Early',
+            message:
+                '${target.name} was sent home early and is immune to all night requests.',
+          );
+          logAction(
+            step.title,
+            '${isStolenMode ? 'Bouncer (stolen Roofi powers)' : 'Roofi'} tried to paralyze ${target.name}, but didn\'t get to them fast enough.',
+            toast: _currentPhase == GamePhase.night,
+          );
+          break;
+        }
+
+        nightActions['roofi'] = target.id;
+        target.silencedDay = dayCount + 1;
+        if (target.role.id == 'dealer') {
+          target.blockedKillNight = dayCount + 1;
+        }
+
+        final actorLabel =
+            isStolenMode ? 'Bouncer (stolen Roofi powers)' : 'Roofi';
+        final actorNames = actors.map((p) => p.name).join(', ');
+        logAction(
+          step.title,
+          '$actorLabel silenced ${target.name} for Day ${dayCount + 1} (actors: $actorNames).',
+          toast: _currentPhase == GamePhase.night,
+        );
+        _invalidateEligibleVotesCache();
+        break;
+
+      case 'creep':
+        final target = resolvePlayer(selections.first);
+
+        if (target.role.id == hostRoleId) {
+          logAction(step.title, 'Creep cannot follow the host.');
+          break;
+        }
+
+        // Check if target was sent home by Sober
+        if (target.soberSentHome) {
+          nightActions['creep_target'] = target.id;
+          queueHostAlert(
+            title: 'Sent Home Early',
+            message:
+                '${target.name} was sent home early and is immune to all night requests.',
+          );
+          logAction(step.title,
+              'Creep tried to follow ${target.name}, but they were sent home by The Sober.');
+          break;
+        }
+
+        nightActions['creep_target'] = target.id;
+        final creep = players
+                .where(
+                    (p) => p.role.id == 'creep' && p.isActive && p.needsSetup)
+                .firstOrNull ??
+            players
+                .where((p) => p.role.id == 'creep' && p.isActive)
+                .firstOrNull;
+        if (creep != null) {
+          creep.creepTargetId = target.id;
+          creep.needsSetup = false;
+        }
+        logAction(step.title, 'Creep chose to mimic ${target.name}.',
+            toast: _currentPhase == GamePhase.night);
+        break;
       case 'clinger':
         final target = resolvePlayer(selections.first);
         if (step.id == 'clinger_act') {
@@ -2779,41 +3099,41 @@ class GameEngine extends ChangeNotifier {
            if (_isSoberSentHome(target.id)) {
               logAction(step.title, 'Target sent home. Cannot obsess.');
               break;
-           }
-           if (sourcePlayer != null) {
-              abilityResolver.queueAbility(ActiveAbility(
-                 abilityId: 'clinger_obsession',
-                 sourcePlayerId: sourcePlayer.id,
-                 targetPlayerIds: [target.id],
-                 trigger: AbilityTrigger.startup,
-                 priority: 0
-              ));
-              sourcePlayer.clingerPartnerId = target.id;
-              sourcePlayer.needsSetup = false;
-              nightActions['clinger_obsession'] = target.id;
-              logAction(step.title, 'Clinger obsession: ${target.name} (queued).', toast: _currentPhase == GamePhase.night);
-              queueHostAlert(title: 'Reveal', message: 'Show ${target.name}\'s role: ${target.role.name}.');
-           }
+
+            }
+
+            // Block targeting sent-home players for setup
+            if (target.soberSentHome) {
+              queueHostAlert(
+                title: 'Sent Home Early',
+                message:
+                    '${target.name} was sent home early and is immune to all night requests.',
+              );
+              logAction(step.title,
+                  'Clinger tried to obsess over ${target.name}, but they were sent home by The Sober.');
+              break;
+            }
+
+            clinger.clingerPartnerId = target.id;
+            clinger.needsSetup = false;
+            nightActions['clinger_obsession'] = target.id;
+            // Force immediate UI update so chips appear instantly
+            notifyListeners();
+            logAction(
+                step.title, 'Clinger chose ${target.name} as their obsession.',
+                toast: _currentPhase == GamePhase.night);
+
+            // Reveal the obsession's role to the Clinger and require an acknowledgment
+            queueHostAlert(
+              title: 'Reveal to Clinger',
+              message:
+                  'Show ${target.name}\'s role card: ${target.role.name}. Tap OK after the Clinger acknowledges.',
+            );
+          }
         }
         break;
 
-      case 'messy_bitch':
-         final target = resolvePlayer(selections.first);
-         if (_isSoberSentHome(target.id)) {
-            logAction(step.title, 'Target sent home. Immune.');
-            break;
-         }
-         abilityResolver.queueAbility(ActiveAbility(
-            abilityId: 'messy_bitch_rumour',
-            sourcePlayerId: sourcePlayer?.id ?? 'messy_bitch',
-            targetPlayerIds: [target.id],
-            trigger: AbilityTrigger.nightAction,
-            effect: AbilityEffect.rumour,
-            priority: 60
-         ));
-         nightActions['messy_bitch_rumour'] = target.id;
-         logAction(step.title, 'Rumour targeting ${target.name} (queued).', toast: _currentPhase == GamePhase.night);
-         break;
+
 
       case 'roofi':
          final target = resolvePlayer(selections.first);
@@ -2902,7 +3222,306 @@ class GameEngine extends ChangeNotifier {
         }
         logAction(step.title, 'Taboo added: ${target.name}.');
         break;
-        
+
+
+      case 'messy_bitch':
+        // Defensive: only accept rumours from the expected step id.
+        if (step.id != 'messy_bitch_act') {
+          logAction(step.title,
+              'Ignored Messy Bitch action from unexpected step id.');
+          break;
+        }
+
+        final messyBitch = players
+            .where((p) => p.role.id == 'messy_bitch' && p.isActive)
+            .firstOrNull;
+        if (messyBitch == null) {
+          logAction(step.title, 'No active Messy Bitch in game.');
+          break;
+        }
+        if (!messyBitch.isAlive) {
+          logAction(
+              step.title, 'Messy Bitch is dead and cannot spread rumours.');
+          break;
+        }
+        if (messyBitch.soberSentHome) {
+          logAction(
+              step.title, 'Messy Bitch was sent home and cannot act tonight.');
+          break;
+        }
+
+        final rumourTarget = resolvePlayer(selections.first);
+        if (rumourTarget.id == '?') {
+          logAction(step.title, 'Invalid target selection.');
+          break;
+        }
+        if (rumourTarget.role.id == hostRoleId) {
+          logAction(step.title, 'Cannot spread rumours about the host.');
+          break;
+        }
+        if (!rumourTarget.isEnabled || !rumourTarget.isAlive) {
+          logAction(step.title, 'Rumour target must be a living player.');
+          break;
+        }
+        if (rumourTarget.id == messyBitch.id) {
+          logAction(
+              step.title, 'Messy Bitch must choose another living player.');
+          break;
+        }
+
+        // Block targeting sent-home players
+        if (rumourTarget.soberSentHome) {
+          nightActions['messy_bitch_rumour'] = rumourTarget.id;
+          queueHostAlert(
+            title: 'Sent Home Early',
+            message:
+                '${rumourTarget.name} was sent home early and is immune to all night requests.',
+          );
+          logAction(step.title,
+              'Invalid target: ${rumourTarget.name} was sent home by The Sober — cannot be targeted tonight.');
+          break;
+        }
+
+        rumourTarget.hasRumour = true;
+        nightActions['messy_bitch_rumour'] = rumourTarget.id;
+        logAction(
+            step.title, 'Messy Bitch spread a rumour to ${rumourTarget.name}.',
+            toast: _currentPhase == GamePhase.night);
+        break;
+
+      case 'drama_queen':
+        if (selections.length >= 2) {
+          final a = resolvePlayer(selections[0]);
+          final b = resolvePlayer(selections[1]);
+
+          // Prevent self-targeting in Drama Queen swap
+          if (sourcePlayer != null &&
+              (a.id == sourcePlayer.id || b.id == sourcePlayer.id)) {
+            logAction(step.title,
+                'Invalid selection: Drama Queen cannot include themselves in the swap.');
+            break;
+          }
+
+          // Check if any target was sent home by Sober
+          if (a.soberSentHome || b.soberSentHome) {
+            final sentHomeName = a.soberSentHome ? a.name : b.name;
+            queueHostAlert(
+              title: 'Sent Home Early',
+              message:
+                  '$sentHomeName was sent home early and is immune to all night requests.',
+            );
+            logAction(step.title,
+                'Drama Queen tried to mark $sentHomeName, but they were sent home by The Sober.');
+            break;
+          }
+
+          nightActions['drama_swap_a'] = a.id;
+          nightActions['drama_swap_b'] = b.id;
+          dramaQueenMarkedAId = a.id;
+          dramaQueenMarkedBId = b.id;
+          logAction(step.title,
+              'Drama Queen marked ${a.name} and ${b.name} for swap on death.',
+              toast: _currentPhase == GamePhase.night);
+        }
+        break;
+
+      case 'bartender':
+        if (selections.length >= 2) {
+          final a = resolvePlayer(selections[0]);
+          final b = resolvePlayer(selections[1]);
+
+          // Check if any target was sent home by Sober
+          if (a.soberSentHome || b.soberSentHome) {
+            final sentHomeName = a.soberSentHome ? a.name : b.name;
+            nightActions['bartender_a'] = a.id;
+            nightActions['bartender_b'] = b.id;
+            queueHostAlert(
+              title: 'Sent Home Early',
+              message:
+                  '$sentHomeName was sent home early and is immune to all night requests.',
+            );
+            logAction(step.title,
+                'Bartender tried to check, but $sentHomeName was sent home by The Sober.',
+                toast: _currentPhase == GamePhase.night);
+            break;
+          }
+
+          final sameTeam = a.alliance == b.alliance;
+          nightActions['bartender_a'] = a.id;
+          nightActions['bartender_b'] = b.id;
+          logAction(
+            step.title,
+            "Bartender checked ${a.name} + ${b.name} → ${sameTeam ? 'SAME team' : 'DIFFERENT teams'}.",
+            toast: _currentPhase == GamePhase.night,
+          );
+        } else {
+          logAction(step.title, 'Bartender needs two selections.');
+        }
+        break;
+
+      case 'tea_spiller':
+        logAction(
+          step.title,
+          'Tea Spiller has no night action. Reveal triggers on death.',
+        );
+        break;
+
+      case 'predator':
+        final target = resolvePlayer(selections.first);
+
+        if (target.role.id == hostRoleId) {
+          logAction(step.title, 'Predator cannot mark the host.');
+          break;
+        }
+
+        // Check if target was sent home by Sober
+        if (target.soberSentHome) {
+          nightActions['predator_mark'] = target.id;
+          queueHostAlert(
+            title: 'Sent Home Early',
+            message:
+                '${target.name} was sent home early and is immune to all night requests.',
+          );
+          logAction(step.title,
+              'Predator tried to mark ${target.name}, but they were sent home by The Sober.');
+          break;
+        }
+
+        if (sourcePlayer != null && target.id == sourcePlayer.id) {
+          logAction(step.title, 'Predator cannot mark themselves.');
+          break;
+        }
+
+        if (sourcePlayer != null) {
+          sourcePlayer.predatorTargetId = target.id;
+        }
+        // Legacy mirror for older UI chips / saves; cleared each night->day.
+        nightActions['predator_mark'] = target.id;
+        logAction(step.title,
+            'Predator will retaliate against ${target.name} if voted out.');
+        break;
+
+      case 'whore':
+      case 'whore_deflect':
+        final target = resolvePlayer(selections.first);
+        final whore = players
+            .where((p) => p.role.id == 'whore' && p.isActive)
+            .firstOrNull;
+        if (whore != null) {
+          if (whore.whoreDeflectionUsed) {
+            logAction(step.title,
+                'Whore deflection already USED. Scapegoat selection ignored.');
+            break;
+          }
+          if (whore.whoreDeflectionTargetId != null) {
+            final lockedTarget = players
+                .where((p) => p.id == whore.whoreDeflectionTargetId)
+                .firstOrNull;
+            logAction(
+              step.title,
+              'Whore scapegoat already locked${lockedTarget != null ? ': ${lockedTarget.name}' : ''} (ignored: ${target.name}).',
+            );
+            break;
+          }
+          if (target.role.id == hostRoleId) {
+            logAction(step.title, 'Whore cannot select the host.');
+            break;
+          }
+          if (target.id == '?' || !target.isEnabled || !target.isAlive) {
+            logAction(step.title, 'Invalid scapegoat target selection.');
+            break;
+          }
+          if (target.id == whore.id) {
+            logAction(step.title, 'Whore must choose another player.');
+            break;
+          }
+          // Scapegoat must be a non-Dealer so it actually "takes the fall".
+          if (target.alliance.toLowerCase().contains('dealer') ||
+              target.role.id == 'dealer') {
+            logAction(step.title, 'Scapegoat must be a non-Dealer player.');
+            break;
+          }
+
+          // Block targeting sent-home players
+          if (target.soberSentHome) {
+            queueHostAlert(
+              title: 'Sent Home Early',
+              message:
+                  '${target.name} was sent home early and is immune to all night requests.',
+            );
+            logAction(step.title,
+                'Whore tried to pick ${target.name}, but they were sent home by The Sober.');
+            break;
+          }
+
+          whore.whoreDeflectionTargetId = target.id;
+          whore.needsSetup = false;
+          nightActions['whore_deflect'] = target.id;
+          logAction(step.title,
+              'Whore chose ${target.name} as THE WHORE\'S BITCH (one-time scapegoat).\nIf the Whore or a Dealer is voted out, ${target.name} will take the fall once.',
+              toast: _currentPhase == GamePhase.night);
+        }
+        break;
+
+      case 'wallflower':
+        // Legacy path: older scripts/tests may call handleScriptAction with a
+        // binary choice. Map yes/no -> peek/skip, and store via handleScriptOption.
+        final wantsWitness = parseBinaryChoice(selections.first);
+        if (wantsWitness == null) {
+          logAction(step.title, 'Invalid choice. Expected yes/no.');
+          break;
+        }
+        handleScriptOption(step, wantsWitness ? 'PEEK' : 'SKIP');
+        break;
+
+      case 'club_manager':
+      case 'club_manager_act':
+        final clubManager = sourcePlayer;
+        if (clubManager == null) {
+          logAction(step.title, 'No active Club Manager in game.');
+          break;
+        }
+
+        // The host is not a real in-game player. If the host id is passed in,
+        // handle it explicitly so we can return the correct rule message.
+        final targetId = selections.first;
+        if (targetId == hostPlayerId) {
+          logAction(step.title, 'Club Manager cannot view the host.');
+          break;
+        }
+
+        final target = resolvePlayer(targetId);
+        if (target.role.id == hostRoleId) {
+          logAction(step.title, 'Club Manager cannot view the host.');
+          break;
+        }
+        if (target.id == '?' || !target.isEnabled || !target.isAlive) {
+          logAction(step.title, 'Invalid Club Manager target selection.');
+          break;
+        }
+        if (target.id == clubManager.id) {
+          logAction(step.title, 'Club Manager must choose a fellow player.');
+          break;
+        }
+
+        // Check if target was sent home by Sober
+        if (target.soberSentHome) {
+          queueHostAlert(
+            title: 'Sent Home Early',
+            message:
+                '${target.name} was sent home early and is immune to all night requests.',
+          );
+          logAction(step.title,
+              'Club Manager tried to view ${target.name}, but they were sent home by The Sober.',
+              toast: _currentPhase == GamePhase.night);
+          break;
+        }
+
+        logAction(step.title,
+            'Club Manager viewed ${target.name}\'s role: ${target.role.name}',
+            toast: _currentPhase == GamePhase.night);
+        onClubManagerReveal?.call(target);
+        break;
       default:
         // Generic fallback
         final names = selections.map((id) => resolvePlayer(id).name).join(', ');

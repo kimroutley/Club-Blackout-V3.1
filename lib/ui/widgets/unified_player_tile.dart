@@ -612,24 +612,25 @@ class UnifiedPlayerTile extends StatelessWidget {
                 glowIntensity: config.isSelected && isEnabled ? 1.5 : 1.0,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 18),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+
+                children: [
                   Text(
-                    player.name.toUpperCase(),
-                    style: ClubBlackoutTheme.headingStyle.copyWith(
-                      fontSize: 18, // Standardized to closer match Day Phase (was 20)
+                    player.name,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.0,
                       color: isEnabled
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.4),
+                          ? cs.onSurface
+                          : cs.onSurface.withValues(alpha: 0.4),
                       shadows: config.isSelected && isEnabled
-                          ? ClubBlackoutTheme.textGlow(accent, intensity: 1.3)
+                          ? ClubBlackoutTheme.textGlow(accent)
                           : null,
                     ),
                   ),
@@ -637,7 +638,7 @@ class UnifiedPlayerTile extends StatelessWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12, // Standardized (was 13)
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: accent.withValues(alpha: isEnabled ? 0.85 : 0.3),
                     ),
@@ -657,7 +658,7 @@ class UnifiedPlayerTile extends StatelessWidget {
                           ],
                         ],
                       ),
-                    ),
+
                   ],
                 ],
               ),

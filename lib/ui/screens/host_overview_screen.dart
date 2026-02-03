@@ -2709,9 +2709,9 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
   Widget _buildHostToolsCard(BuildContext context, GameEngine engine) {
     final cs = Theme.of(context).colorScheme;
     final hasPending = engine.dramaQueenSwapPending ||
-      engine.hasPendingPredatorRetaliation ||
-      engine.hasPendingTeaSpillerReveal ||
-      engine.messyBitchVictoryPending;
+        engine.hasPendingPredatorRetaliation ||
+        engine.hasPendingTeaSpillerReveal ||
+        engine.messyBitchVictoryPending;
 
     final canControlScript =
         engine.currentPhase != GamePhase.lobby && engine.scriptQueue.isNotEmpty;
