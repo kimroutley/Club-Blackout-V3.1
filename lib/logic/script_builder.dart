@@ -149,8 +149,29 @@ class ScriptBuilder {
       );
     }
 
-    // Medic setup is strictly handled in Night 0 (Setup Phase).
-    // Startups/late-joins default to PROTECT_DAILY if they miss the setup.
+    // Medic setup catch-up.
+    // Startups/late-joins/role swaps need to choose their ability.
+    final medicNeedsSetup = players.any(
+      (p) =>
+          p.isActive &&
+          !p.soberSentHome &&
+          p.role.id == 'medic' &&
+          p.needsSetup,
+    );
+
+    if (medicNeedsSetup) {
+      steps.add(
+        const ScriptStep(
+          id: 'medic_setup_choice',
+          title: 'The Medic - Setup',
+          readAloudText:
+              'Medic, open your eyes. Choose your ability for the rest of the game.\n\nNow close your eyes.',
+          instructionText: 'Select Protect (daily) or Revive (once per game).',
+          actionType: ScriptActionType.toggleOption,
+          roleId: 'medic',
+        ),
+      );
+    }
 
 
     final creepNeedsSetup = players.any(
