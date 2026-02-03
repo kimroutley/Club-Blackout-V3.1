@@ -637,6 +637,7 @@ class UnifiedPlayerTile extends StatelessWidget {
     final isEnabled = config.enabledOverride ?? player.isEnabled;
     final isInteractive = config.isInteractive && isEnabled;
 
+<<<<<<< Updated upstream
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: AnimatedContainer(
@@ -709,6 +710,50 @@ class UnifiedPlayerTile extends StatelessWidget {
                                 spreadRadius: 2,
                               ),
                             ]
+=======
+    // Collect status chips for Night Phase too
+    final effectChips = config.showStatusChips
+        ? _collectEffectChips(player: player, engine: gameEngine)
+        : const <_EffectChip>[];
+
+    Widget content = InkWell(
+      onTap: isInteractive ? config.onTap : null,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            // Standardized Icon container (matches Standard variant but slightly larger for emphasis)
+            Hero(
+              tag: 'player_icon_${player.id}',
+              child: PlayerIcon(
+                assetPath: player.role.assetPath,
+                glowColor: accent,
+                size: 48, // Standardized size (Standard is 48)
+                isAlive: player.isAlive,
+                isEnabled: isEnabled,
+                glowIntensity: config.isSelected && isEnabled ? 1.5 : 1.0,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    player.name.toUpperCase(),
+                    style: ClubBlackoutTheme.headingStyle.copyWith(
+                      fontSize: 18, // Standardized to closer match Day Phase (was 20)
+                      color: isEnabled
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.4),
+                      shadows: config.isSelected && isEnabled
+                          ? ClubBlackoutTheme.textGlow(accent, intensity: 1.3)
+>>>>>>> Stashed changes
                           : null,
                     ),
                   ),
@@ -721,6 +766,7 @@ class UnifiedPlayerTile extends StatelessWidget {
                       color: accent.withValues(alpha: isEnabled ? 0.85 : 0.3),
                     ),
                   ),
+<<<<<<< Updated upstream
                   const SizedBox(width: 18),
                   Expanded(
                     child: Column(
@@ -760,11 +806,55 @@ class UnifiedPlayerTile extends StatelessWidget {
                   ],
               ),
             ),
+=======
+                  // Add Chips for Night Phase
+                  if (effectChips.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    AutoScrollHStack(
+                      autoScroll: true,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (var i = 0; i < effectChips.length; i++) ...[
+                            _buildChip(context, effectChips[i]),
+                            if (i != effectChips.length - 1)
+                              const SizedBox(width: 8),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (config.isSelected && config.onConfirm != null && isEnabled)
+              IconButton(
+                icon: Icon(Icons.check_circle_rounded, color: accent),
+                iconSize: 32,
+                onPressed: config.onConfirm,
+              ),
+          ],
+>>>>>>> Stashed changes
         ),
       ),
     );
 
+<<<<<<< Updated upstream
 
+=======
+    // Use NeonGlassCard for consistent aesthetics
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: NeonGlassCard(
+        glowColor: accent,
+        opacity: config.isSelected ? 0.35 : (isEnabled ? 0.15 : 0.05),
+        borderRadius: 16, // Unified borderRadius
+        // borderOpacity removed as it is not a property of NeonGlassCard
+        padding: EdgeInsets.zero,
+        child: content,
+      ),
+    );
+>>>>>>> Stashed changes
   }
 
   /// Build banner variant for live updates
