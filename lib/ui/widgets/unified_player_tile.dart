@@ -453,16 +453,13 @@ class UnifiedPlayerTile extends StatelessWidget {
             // Leading (role icon by default)
             if (config.showRoleIcon)
               config.leading ??
-                  Hero(
-                    tag: 'player_icon_${player.id}',
-                    child: PlayerIcon(
-                      assetPath: player.role.assetPath,
-                      glowColor: roleColor,
-                      size: isCompact ? 38 : 48,
-                      isAlive: player.isAlive,
-                      isEnabled: isEnabled,
-                      glowIntensity: config.isSelected ? 1.2 : 0.8,
-                    ),
+                  PlayerIcon(
+                    assetPath: player.role.assetPath,
+                    glowColor: roleColor,
+                    size: isCompact ? 38 : 48,
+                    isAlive: player.isAlive,
+                    isEnabled: isEnabled,
+                    glowIntensity: config.isSelected ? 1.2 : 0.8,
                   ),
             const SizedBox(width: 16),
             // Text Info
@@ -572,7 +569,7 @@ class UnifiedPlayerTile extends StatelessWidget {
       padding: EdgeInsets.only(bottom: isCompact ? 8 : 12),
       child: NeonGlassCard(
         glowColor: baseColor,
-        opacity: config.isSelected ? 0.85 : (isEnabled ? 0.75 : 0.65),
+        opacity: config.isSelected ? 0.35 : (isEnabled ? 0.25 : 0.15),
         borderRadius: 16,
         showBorder: true,
         padding: EdgeInsets.zero,
@@ -585,105 +582,134 @@ class UnifiedPlayerTile extends StatelessWidget {
   Widget _buildNightPhaseVariant(BuildContext context) {
     final subtitle = config.statsText ?? player.role.name;
     final accent = player.role.color;
+    final cs = Theme.of(context).colorScheme;
     final isEnabled = config.enabledOverride ?? player.isEnabled;
     final isInteractive = config.isInteractive && isEnabled;
 
-    // Collect status chips for Night Phase too
-    final effectChips = config.showStatusChips
-        ? _collectEffectChips(player: player, engine: gameEngine)
-        : const <_EffectChip>[];
-
-    Widget content = InkWell(
-      onTap: isInteractive ? config.onTap : null,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            // Standardized Icon container (matches Standard variant but slightly larger for emphasis)
-            Hero(
-              tag: 'player_icon_${player.id}',
-              child: PlayerIcon(
-                assetPath: player.role.assetPath,
-                glowColor: accent,
-                size: 48, // Standardized size (Standard is 48)
-                isAlive: player.isAlive,
-                isEnabled: isEnabled,
-                glowIntensity: config.isSelected && isEnabled ? 1.5 : 1.0,
-              ),
-            ),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: config.isSelected
+              ? LinearGradient(
+                  colors: [
+                    accent.withValues(alpha: isEnabled ? 0.35 : 0.15),
+                    accent.withValues(alpha: isEnabled ? 0.15 : 0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : LinearGradient(
+                  colors: [
+                    cs.surfaceContainerHigh.withValues(alpha: isEnabled ? 0.9 : 0.4),
+                    cs.surfaceContainerHigh.withValues(alpha: isEnabled ? 0.7 : 0.3),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          border: Border.all(
+            color: config.isSelected
+                ? accent.withValues(alpha: isEnabled ? 1.0 : 0.4)
+                : cs.outlineVariant.withValues(alpha: isEnabled ? 0.3 : 0.1),
+            width: config.isSelected ? 2.5 : 1.5,
+          ),
+          boxShadow: config.isSelected && isEnabled
+              ? [
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.3),
+                    blurRadius: 16,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.2),
+                    blurRadius: 24,
+                    spreadRadius: 4,
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isInteractive ? config.onTap : null,
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
                 children: [
-
-                children: [
-                  Text(
-                    player.name,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.0,
-                      color: isEnabled
-                          ? cs.onSurface
-                          : cs.onSurface.withValues(alpha: 0.4),
-                      shadows: config.isSelected && isEnabled
-                          ? ClubBlackoutTheme.textGlow(accent)
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: config.isSelected && isEnabled
+                          ? [
+                              BoxShadow(
+                                color: accent.withValues(alpha: 0.5),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                            ]
                           : null,
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: accent.withValues(alpha: isEnabled ? 0.85 : 0.3),
+                    child: PlayerIcon(
+                      assetPath: player.role.assetPath,
+                      glowColor: accent,
+                      size: 56,
+                      isAlive: player.isAlive,
+                      isEnabled: isEnabled,
+                      glowIntensity: config.isSelected && isEnabled ? 1.5 : 1.0,
                     ),
                   ),
-                  // Add Chips for Night Phase
-                  if (effectChips.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    AutoScrollHStack(
-                      autoScroll: true,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (var i = 0; i < effectChips.length; i++) ...[
-                            _buildChip(context, effectChips[i]),
-                            if (i != effectChips.length - 1)
-                              const SizedBox(width: 8),
-                          ],
-                        ],
-                      ),
-
-                  ],
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          player.name.toUpperCase(),
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
+                            fontSize: 20,
+                            color: isEnabled
+                                ? cs.onSurface
+                                : cs.onSurface.withValues(alpha: 0.4),
+                            shadows: config.isSelected && isEnabled
+                                ? ClubBlackoutTheme.textGlow(accent, intensity: 1.3)
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: accent.withValues(
+                                alpha: isEnabled ? 0.85 : 0.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (config.isSelected && config.onConfirm != null && isEnabled)
+                    IconButton(
+                      icon: Icon(Icons.check_circle_rounded, color: accent),
+                      iconSize: 32,
+                      onPressed: config.onConfirm,
+                    ),
                 ],
               ),
             ),
-            if (config.isSelected && config.onConfirm != null && isEnabled)
-              IconButton(
-                icon: Icon(Icons.check_circle_rounded, color: accent),
-                iconSize: 32,
-                onPressed: config.onConfirm,
-              ),
-          ],
+          ),
         ),
-      ),
-    );
-
-    // Use NeonGlassCard for consistent aesthetics
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: NeonGlassCard(
-        glowColor: accent,
-        opacity: config.isSelected ? 0.85 : (isEnabled ? 0.70 : 0.60),
-        borderRadius: 16, // Unified borderRadius
-        // borderOpacity removed as it is not a property of NeonGlassCard
-        padding: EdgeInsets.zero,
-        child: content,
       ),
     );
   }
@@ -706,7 +732,7 @@ class UnifiedPlayerTile extends StatelessWidget {
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
-        borderRadius: BorderRadius.circular(16), // Unified borderRadius (was 12)
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: roleColor.withValues(alpha: isEnabled ? 0.4 : 0.1),
           width: 1.5,
@@ -714,20 +740,17 @@ class UnifiedPlayerTile extends StatelessWidget {
       ),
       child: InkWell(
         onTap: isInteractive ? config.onTap : null,
-        borderRadius: BorderRadius.circular(16), // Unified borderRadius
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              Hero(
-                tag: 'player_icon_${player.id}',
-                child: PlayerIcon(
-                  assetPath: player.role.assetPath,
-                  glowColor: roleColor,
-                  size: 40,
-                  isAlive: player.isAlive,
-                  isEnabled: isEnabled,
-                ),
+              PlayerIcon(
+                assetPath: player.role.assetPath,
+                glowColor: roleColor,
+                size: 40,
+                isAlive: player.isAlive,
+                isEnabled: isEnabled,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -779,15 +802,12 @@ class UnifiedPlayerTile extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Hero(
-              tag: 'player_icon_${player.id}',
-              child: PlayerIcon(
-                assetPath: player.role.assetPath,
-                glowColor: roleColor,
-                size: 32,
-                isAlive: player.isAlive,
-                isEnabled: isEnabled,
-              ),
+            PlayerIcon(
+              assetPath: player.role.assetPath,
+              glowColor: roleColor,
+              size: 32,
+              isAlive: player.isAlive,
+              isEnabled: isEnabled,
             ),
             const SizedBox(width: 8),
             Text(
@@ -962,12 +982,10 @@ class UnifiedPlayerTile extends StatelessWidget {
     );
   }
 
-/*
   static Color _getContrastColor(Color backgroundColor) {
-    // ... logic ...
-    return Colors.black;
+    final luminance = backgroundColor.computeLuminance();
+    return luminance < 0.4 ? Colors.white : Colors.black;
   }
-*/
 }
 
 class _EffectChip {

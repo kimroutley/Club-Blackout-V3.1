@@ -187,7 +187,7 @@
       "night_priority": 0,
       "ability": "VANTAGE POINT: Can open eyes when The Bouncer checks I.D.s. Must communicate findings using 'Meow'.\nNINE LIVES: You have 9 lives. Each time you would be eliminated (vote or night kill), you lose a life instead.",
       "asset_path": "Icons/Icon-No text-Ally Cat-Lemon.webp",
-      "color_hex": "#FFFACD"
+      "color_hex": "#FFF700"
     },
     {
       "id": "silver_fox",
@@ -243,7 +243,7 @@
       "night_priority": 4,
       "ability": "MIXOLOGY: Each night, choose two players. Learn if they are ALIGNED (same side) or NOT ALIGNED (different sides). You do NOT learn which side either player is on.",
       "asset_path": "Icons/Icon-No text-Bartender-Indigo.webp",
-      "color_hex": "#964B00"
+      "color_hex": "#4B0082"
     }
   ]
 }

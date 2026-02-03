@@ -6,6 +6,7 @@ import '../styles.dart';
 import '../widgets/club_alert_dialog.dart';
 import 'bulletin_dialog_shell.dart';
 import 'swap_setup_flow.dart';
+import 'unified_player_tile.dart';
 
 class DramaQueenSwapDialog extends StatefulWidget {
   final GameEngine gameEngine;
@@ -60,47 +61,24 @@ class _DramaQueenSwapDialogState extends State<DramaQueenSwapDialog> {
 
     final canConfirm = _selectedIds.length == 2;
 
-    Widget buildGrid() {
-      return GridView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 2.5,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
+    Widget buildList() {
+      return ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         itemCount: candidates.length,
         itemBuilder: (context, index) {
           final p = candidates[index];
           final selected = _selectedIds.contains(p.id);
 
-          return InkWell(
-            onTap: () => _toggle(p.id),
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: selected
-                    ? (isNight
-                        ? cs.secondaryContainer
-                        : ClubBlackoutTheme.neonPurple.withValues(alpha: 0.25))
-                    : (isNight ? cs.surfaceContainerHighest : Colors.white10),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: selected
-                      ? (isNight ? cs.secondary : ClubBlackoutTheme.neonPurple)
-                      : Colors.transparent,
-                  width: 2,
-                ),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                p.name,
-                style: TextStyle(
-                  color: selected
-                      ? (isNight ? cs.onSecondaryContainer : Colors.white)
-                      : (isNight ? cs.onSurface : Colors.white70),
-                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                ),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: UnifiedPlayerTile(
+              player: p,
+              gameEngine: widget.gameEngine,
+              config: PlayerTileConfig.standard(
+                isSelected: selected,
+                onTap: () => _toggle(p.id),
+                isAnonymous: true,
+                showStatusChips: false, // Hide chips to further obscure info if needed, though prompt only said hide role name. But status chips might reveal role (e.g. "Bouncer Checked"). Let's hide them to be safe/anonymous.
               ),
             ),
           );
@@ -113,7 +91,7 @@ class _DramaQueenSwapDialogState extends State<DramaQueenSwapDialog> {
         title: const Text('Drama Queen Retaliation'),
         content: SizedBox(
           width: 640,
-          height: 400,
+          height: 500, // Increased height for list
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -125,7 +103,7 @@ class _DramaQueenSwapDialogState extends State<DramaQueenSwapDialog> {
                 ),
               ),
               const SizedBox(height: 16),
-              Expanded(child: buildGrid()),
+              Expanded(child: buildList()),
             ],
           ),
         ),
@@ -185,7 +163,7 @@ class _DramaQueenSwapDialogState extends State<DramaQueenSwapDialog> {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: buildGrid(),
+            child: buildList(),
           ),
         ],
       ),

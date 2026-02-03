@@ -167,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'Backgrounds/Club Blackout V2 Home Menu.png',
+            'Backgrounds/Club Blackout Home Menu Screen V3.png',
             fit: BoxFit.cover,
           ),
           Container(
@@ -187,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return DynamicThemedBackground(
-      backgroundAsset: 'Backgrounds/Club Blackout V2 Home Menu.png',
+      backgroundAsset: 'Backgrounds/Club Blackout Home Menu Screen V3.png',
       child: Stack(
         children: [
           Positioned.fill(child: background),

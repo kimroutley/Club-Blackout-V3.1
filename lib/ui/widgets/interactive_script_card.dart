@@ -236,7 +236,7 @@ class InteractiveScriptCard extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
+                    color: ClubBlackoutTheme.kNeonCyan.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: ClubBlackoutTheme.kNeonCyan.withValues(alpha: 0.3),
