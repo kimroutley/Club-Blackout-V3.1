@@ -3,14 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ClubBlackoutTheme {
-  // --- CYBER-CLUB THEME FOUNDATION ---
+  // --- CYBER-CLUB NEW PALETTE ---
+  // The 'Deep Purple' void background
   static const Color kBackground = Color(0xFF151026);
+  // Elevated surfaces/cards
+  static const Color kCardBg = Color(0xFF1F1A30);
+  // The primary neon accent (Cyan/Electric Blue)
   static const Color kNeonCyan = Color(0xFF00E5FF);
-  static const Color kNeonPink = Color(0xFFFF4FD8);
-  static const Color kCardBg = Color(0xFF1C1632);
+  // The secondary neon accent (Pink/Magenta)
+  static const Color kNeonPink = Color(0xFFFF00FF);
+  
+  // Standard Fonts (Roboto)
+  static String get mainFontFamily => GoogleFonts.roboto().fontFamily!;
+  static TextStyle get mainFont => GoogleFonts.roboto();
 
-  // Legacy colors (maintained for compatibility)
-  static const neonBlue = Color(0xFF00D1FF);
+  // Legacy / Existing Colors (Refactored or Alias)
+  static const neonBlue = kNeonCyan; // Alias old blue to new cyan where appropriate or keep separate
   static const electricBlue = Color(0xFF2E5BFF);
 
   static final String neonGlowFontFamily = GoogleFonts.roboto().fontFamily!;
@@ -220,7 +228,7 @@ class ClubBlackoutTheme {
       color: color,
       opacity: opacity,
       borderRadius: 16,
-      borderWidth: 1.2,
+      borderWidth: 0.0, // No border
       showGlow: true,
     );
   }
@@ -315,31 +323,38 @@ class ClubBlackoutTheme {
         ),
       ];
 
-  /// The standard "Neon Frame" decoration for the Club Blackout design language.
-  /// Combines a dark surface, a neon border, and an outer glow.
+  /// The standard "Neon Card" decoration for the Club Blackout design language.
+  /// Uses a solid card surface with a strong outer neon glow, avoiding heavy borders.
   static BoxDecoration neonFrame({
     required Color color,
-    double opacity = 0.85,
+    double opacity = 0.95, // Increased opacity for "solid" look
     double borderRadius = 16,
-    double borderWidth = 1.2,
+    double borderWidth = 0.0, // Removed border by default
     bool showGlow = true,
   }) {
     return BoxDecoration(
-      color: pureBlack.withValues(alpha: opacity),
+      color: kCardBg.withValues(alpha: opacity), // Use kCardBg instead of pureBlack
       borderRadius: BorderRadius.circular(borderRadius),
       border: borderWidth > 0
           ? Border.all(
-              color: color.withValues(alpha: 0.8),
+              color: color.withValues(alpha: 0.5), // Softer border if used
               width: borderWidth,
             )
           : null,
-      boxShadow: showGlow && borderWidth > 0
+      boxShadow: showGlow
           ? [
               BoxShadow(
-                color: color.withValues(alpha: 0.3),
-                blurRadius: 12,
-                spreadRadius: 1,
+                color: color.withValues(alpha: 0.25),
+                blurRadius: 16,
+                spreadRadius: 0, // Softer spread
+                offset: const Offset(0, 4),
               ),
+              if (borderWidth > 0)
+                BoxShadow(
+                  color: color.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                ),
             ]
           : null,
     );
@@ -375,16 +390,17 @@ class ClubBlackoutTheme {
     double borderRadius = 16,
     Color? surfaceColor,
   }) {
-    final baseSurface = surfaceColor ?? pureBlack;
+    final baseSurface = surfaceColor ?? kCardBg; // Default to kCardBg
     return BoxDecoration(
-      color: baseSurface.withValues(alpha: 0.75),
+      color: baseSurface.withValues(alpha: 0.95), // More solid
       borderRadius: BorderRadius.circular(borderRadius),
-      border: Border.all(color: glowColor.withValues(alpha: 0.8), width: 1.5),
+      // Removed default border
       boxShadow: [
         BoxShadow(
-          color: glowColor.withValues(alpha: 0.3 * glowIntensity),
-          blurRadius: 15 * glowIntensity,
-          spreadRadius: 1 * glowIntensity,
+          color: glowColor.withValues(alpha: 0.25 * glowIntensity),
+          blurRadius: 20 * glowIntensity,
+          spreadRadius: 0,
+          offset: const Offset(0, 4),
         ),
       ],
     );

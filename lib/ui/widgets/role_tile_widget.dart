@@ -41,8 +41,8 @@ class RoleTileWidget extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: ClubBlackoutTheme.headingStyle.copyWith(
-        color: cs.onSurfaceVariant.withOpacity(0.7),
-        fontSize: 9,
+        color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+        fontSize: 10,
         letterSpacing: 0.5,
       ),
     );
@@ -94,19 +94,9 @@ class RoleTileWidget extends StatelessWidget {
         borderRadius: 16, // Standardized radius
         child: InkWell(
           onTap: onTap,
-          splashFactory: InkSparkle.splashFactory,
-          splashColor: role.color.withOpacity(0.2),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  role.color.withOpacity(0.15),
-                  Colors.transparent,
-                ],
-              ),
-            ),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
             child: content,
           ),
         ),

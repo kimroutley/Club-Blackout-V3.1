@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../services/sound_service.dart';
-import '../styles.dart';
 
 class PhaseTransitionOverlay extends StatefulWidget {
   final String phaseName;
@@ -83,6 +82,7 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -185,8 +185,7 @@ class _PhaseTransitionOverlayState extends State<PhaseTransitionOverlay>
                                 child: Text(
                                   widget.phaseName,
                                   textAlign: TextAlign.center,
-                                  // Phase 5: Ensure Heading uses Orbitron via ClubBlackoutTheme
-                                  style: ClubBlackoutTheme.headingStyle.copyWith(
+                                  style: textTheme.headlineLarge?.copyWith(
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 1.5,
                                     color: Colors.white,

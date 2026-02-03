@@ -235,20 +235,29 @@ class AbilityLibrary {
 /// Manages ability resolution and interactions
 class AbilityResolver {
   final List<ActiveAbility> _queue = [];
+  final List<ActiveAbility> _deadLetterQueue = []; // Actions that failed/were invalid
 
   /// Add an ability to the queue
-  void queueAbility(ActiveAbility ability) => _queue.add(ability);
+  void queueAbility(ActiveAbility ability) {
+    _queue.add(ability);
+  }
 
   /// Clear all queued abilities and effects
-  void clear() => _queue.clear();
+  void clear() {
+    _queue.clear();
+    _deadLetterQueue.clear();
+  }
 
   // Persistence support
   Map<String, dynamic> toJson() => {
         'queue': _queue.map((a) => a.toJson()).toList(),
+        'deadLetterQueue': _deadLetterQueue.map((a) => a.toJson()).toList(),
       };
 
   void loadFromJson(Map<String, dynamic> json) {
     _queue.clear();
+    _deadLetterQueue.clear();
+    
     final q = json['queue'];
     if (q is List) {
       for (final entry in q) {
@@ -259,23 +268,43 @@ class AbilityResolver {
         }
       }
     }
+    
+    final dlq = json['deadLetterQueue'];
+    if (dlq is List) {
+      for (final entry in dlq) {
+        if (entry is Map<String, dynamic>) {
+          _deadLetterQueue.add(ActiveAbility.fromJson(entry));
+        } else if (entry is Map) {
+          _deadLetterQueue.add(ActiveAbility.fromJson(entry.cast<String, dynamic>()));
+        }
+      }
+    }
   }
 
   AbilityResolver copy() {
     final copy = AbilityResolver();
     copy._queue.addAll(_queue.map((a) => a.copy()));
+    copy._deadLetterQueue.addAll(_deadLetterQueue.map((a) => a.copy()));
     return copy;
   }
 
   void copyFrom(AbilityResolver other) {
     _queue.clear();
     _queue.addAll(other._queue.map((a) => a.copy()));
+    _deadLetterQueue.clear();
+    _deadLetterQueue.addAll(other._deadLetterQueue.map((a) => a.copy()));
   }
 
   /// Checks if a player is targeted by a specific ability
   bool isTargetedBy(String abilityId, String targetId) {
     return _queue.any((a) =>
         a.abilityId == abilityId && a.targetPlayerIds.contains(targetId));
+  }
+  
+  /// Gets the first target ID for a specific ability (convenience method)
+  String? getActionTarget(String abilityId) {
+    final ability = _queue.where((a) => a.abilityId == abilityId).firstOrNull;
+    return ability?.targetPlayerIds.firstOrNull;
   }
 
   /// Removes all abilities queued by a specific source player
@@ -289,8 +318,7 @@ class AbilityResolver {
     _queue.sort((a, b) => a.priority.compareTo(b.priority));
 
     final List<AbilityResult> results = [];
-    final protectedPlayerIds =
-        <String>{}; // Tracks all protected players (for reporting/logic)
+    final protectedPlayerIds = <String>{}; // Tracks all protected players (for reporting/logic)
     final immuneToAll = <String>{}; // Sober targets (blocks everything)
     final immuneToKill = <String>{}; // Medic targets (blocks kill only)
     final killedPlayerIds = <String>{}; // Tracks players killed this turn

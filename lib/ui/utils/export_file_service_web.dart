@@ -24,6 +24,10 @@ class ExportFileService {
     throw UnsupportedError('Sharing exports is not supported on web.');
   }
 
+  static Future<String?> pickAndReadFile() {
+    throw UnsupportedError('File picking is not supported on web.');
+  }
+
   static Future<void> openExportsFolder({
     String subdirName = 'exports',
     bool useDownloads = false,

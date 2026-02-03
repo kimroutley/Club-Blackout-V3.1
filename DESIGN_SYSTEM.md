@@ -28,14 +28,15 @@ If you need a *new* spacing/radius, add a token to `ClubBlackoutTheme` and reuse
 ### 2) Use style helpers
 
 - Text glows: `ClubBlackoutTheme.glowTextStyle(...)` and `neonGlowTextStyle(...)`
-- Frames/containers: `ClubBlackoutTheme.neonFrame(...)`, `bulletinItemDecoration(...)`
+- Solid Cards: `ClubBlackoutTheme.neonFrame(...)` or `NeonGlassCard` (defaults to solid background, no border, strong glow)
+- Bulletin Items: `bulletinItemDecoration(...)`
 
 ### 3) Standard screen structure
 
 Most screens should follow:
 
 1. `Scaffold` with consistent padding (`pagePadding`)
-2. A small number of section containers (prefer NeonGlassCard / bulletin item patterns)
+2. A small number of section containers (prefer **Solid Neon Cards** over outlined frames)
 3. Standardized vertical rhythm (prefer `ClubBlackoutTheme.gap8/gap12/gap16/gap24`)
 
 ### 4) Prefer components over copy/paste

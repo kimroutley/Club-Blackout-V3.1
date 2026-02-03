@@ -2326,6 +2326,92 @@ class GameEngine extends ChangeNotifier {
       } catch (_) {}
     }
 
+    // Bartender
+    final bartenderA = nightActions['bartender_a'] as String?;
+    final bartenderB = nightActions['bartender_b'] as String?;
+    if (bartenderA != null && bartenderB != null) {
+      final pA = players.where((p) => p.id == bartenderA).firstOrNull;
+      final pB = players.where((p) => p.id == bartenderB).firstOrNull;
+      if (pA != null && pB != null) {
+        final sameTeam = pA.role.allegiance == pB.role.allegiance;
+        addLine(
+          cleanLine: null, // Private/Host info
+          spicyLine:
+              '• Bartender checked ${pA.name} & ${pB.name}: they are on ${sameTeam ? "the SAME" : "DIFFERENT"} teams.',
+        );
+        quietNight = false;
+      }
+    }
+
+    // Predator
+    final predatorMarkId = nightActions['predator_mark'] as String?;
+    if (predatorMarkId != null) {
+      final target = players.where((p) => p.id == predatorMarkId).firstOrNull;
+      if (target != null) {
+        addLine(
+          cleanLine: null,
+          spicyLine: '• The Predator marked ${target.name} for future retaliation.',
+        );
+        quietNight = false;
+      }
+    }
+
+    // Whore
+    final whoreDeflectId = nightActions['whore_deflect'] as String?;
+    if (whoreDeflectId != null) {
+      final target = players.where((p) => p.id == whoreDeflectId).firstOrNull;
+      if (target != null) {
+        addLine(
+          cleanLine: null,
+          spicyLine: '• The Whore chose ${target.name} as their scapegoat.',
+        );
+        quietNight = false;
+      }
+    }
+
+    // Lightweight
+    final lightweightTaboo = nightActions['lightweight_taboo'] as String?;
+    if (lightweightTaboo != null && lightweightTaboo.isNotEmpty) {
+      addLine(
+        cleanLine: null,
+        spicyLine: '• Lightweight taboo word set to: "$lightweightTaboo".',
+      );
+      quietNight = false;
+    }
+
+    // Clinger Obsession (Setup/Change)
+    final clingerObsessionId = nightActions['clinger_obsession'] as String?;
+    if (clingerObsessionId != null) {
+      final target =
+          players.where((p) => p.id == clingerObsessionId).firstOrNull;
+      if (target != null) {
+        addLine(
+          cleanLine: null,
+          spicyLine: '• The Clinger is now obsessed with ${target.name}.',
+        );
+        quietNight = false;
+      }
+    }
+
+    // Bouncer Check
+    final bouncerCheckId = nightActions['bouncer_check'] as String?;
+    if (bouncerCheckId != null) {
+      final target = players.where((p) => p.id == bouncerCheckId).firstOrNull;
+      // Avoid double reporting if Sober dodge already printed
+      final bouncerDodgedId =
+          nightActions['bouncer_sent_home_dodge'] as String?;
+      final wasDodged = bouncerDodgedId == bouncerCheckId;
+
+      if (target != null && !wasDodged) {
+        addLine(
+          cleanLine: null,
+          spicyLine:
+              '• The Bouncer checked ${target.name} (${target.role.allegiance}).',
+        );
+        quietNight = false;
+      }
+    }
+
     // Drama Queen Swap Results
     final lastSwap = lastDramaQueenSwap;
     if (lastSwap != null && lastSwap.day == dayCount) {

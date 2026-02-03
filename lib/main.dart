@@ -55,6 +55,15 @@ void main() async {
         context: 'Main', error: e);
   }
 
+  // Enforce Portrait Mode
+  try {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+  } catch (e) {
+    debugPrint('Failed to set orientation: $e');
+  }
+
   runApp(
     MultiProvider(
       providers: [

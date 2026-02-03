@@ -7,6 +7,7 @@ import '../../models/script_step.dart';
 import '../styles.dart';
 import 'player_icon.dart';
 import 'unified_player_tile.dart';
+import 'neon_glass_card.dart';
 
 class InteractiveScriptCard extends StatelessWidget {
   final ScriptStep step;
@@ -44,7 +45,20 @@ class InteractiveScriptCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final showPlayerTile = player != null;
+    // Prefer the provided player object; fall back to a lookup by name so tiles render
+    // even when only the name is passed down.
+    Player? tilePlayer = player;
+    if (tilePlayer == null && gameEngine != null && (playerName ?? '').isNotEmpty) {
+      try {
+        tilePlayer = gameEngine!.players.firstWhere(
+          (p) => p.name.trim().toLowerCase() ==
+              (playerName ?? '').trim().toLowerCase(),
+        );
+      } catch (_) {
+        tilePlayer = null;
+      }
+    }
+    final showPlayerTile = tilePlayer != null;
     final accent =
         isActive ? (stepColor ?? role?.color ?? cs.primary) : cs.outline;
     final tt = Theme.of(context).textTheme;
@@ -62,15 +76,18 @@ class InteractiveScriptCard extends StatelessWidget {
 
       return Container(
         width: double.infinity,
-        padding: pad,
         decoration: BoxDecoration(
-          color: color.withOpacity(isActive ? 0.12 : 0.04),
+          color: color.withValues(alpha: isActive ? 0.12 : 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withOpacity(isActive ? 0.3 : 0.1),
-            width: 1,
+          // No border, just a subtle left indicator
+          border: Border(
+            left: BorderSide(
+              color: color.withValues(alpha: 0.6),
+              width: 3,
+            ),
           ),
         ),
+        padding: pad,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -80,14 +97,14 @@ class InteractiveScriptCard extends StatelessWidget {
                   Icon(
                     icon,
                     size: 16,
-                    color: color.withOpacity(0.95),
+                    color: color.withValues(alpha: 0.95),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       label.toUpperCase(),
                       style: ClubBlackoutTheme.headingStyle.copyWith(
-                        color: color.withOpacity(0.95),
+                        color: color.withValues(alpha: 0.95),
                         fontSize: 12,
                         letterSpacing: 1.2,
                         shadows: isActive
@@ -106,7 +123,7 @@ class InteractiveScriptCard extends StatelessWidget {
       );
     }
 
-    final byline = (playerName ?? player?.name)?.trim();
+    final byline = (playerName ?? tilePlayer?.name)?.trim();
 
     final contentPadding = bulletin
         ? ClubBlackoutTheme.scriptCardPaddingBulletin
@@ -114,30 +131,23 @@ class InteractiveScriptCard extends StatelessWidget {
             ? ClubBlackoutTheme.scriptCardPaddingDense
             : ClubBlackoutTheme.scriptCardPadding);
 
-    final readAloudText = step.readAloudText.trim();
-    final rawInstructionText = step.instructionText.trim();
+    var readAloudText = step.readAloudText.trim();
+    var instructionText = step.instructionText.trim();
 
-    var instructionText = rawInstructionText;
-    if (hostLabel.trim().isNotEmpty &&
-        hostLabel.trim().toLowerCase() != 'host') {
-      instructionText = instructionText
-          .replaceFirst(
-            RegExp(r'^host\s*:', caseSensitive: false),
-            '${hostLabel.trim()}:',
-          )
-          .replaceFirst(
-            RegExp(r'^host(\s+only\b)', caseSensitive: false),
-            '${hostLabel.trim()}${r'$1'}',
-          );
+    // Strip "Read aloud:" prefix to prevent double-labeling
+    final readAloudPrefix = RegExp(r'^read\s*aloud\s*:', caseSensitive: false);
+    if (readAloudPrefix.hasMatch(readAloudText)) {
+      readAloudText = readAloudText.replaceFirst(readAloudPrefix, '').trim();
     }
 
-    final readAloudHasPrefix =
-        RegExp(r'^read\s*aloud\s*:', caseSensitive: false)
-            .hasMatch(readAloudText);
-    final instructionHasPrefix = RegExp(
-      '^(${RegExp.escape(hostLabel.trim())}|host)\\s*:',
+    // Strip "Host:" or "Host Only:" prefixes
+    final hostPrefix = RegExp(
+      '^(${RegExp.escape(hostLabel.trim())}|host)(\\s+only)?\\s*:',
       caseSensitive: false,
-    ).hasMatch(instructionText);
+    );
+    if (hostPrefix.hasMatch(instructionText)) {
+      instructionText = instructionText.replaceFirst(hostPrefix, '').trim();
+    }
 
     final headerStyle = (dense ? tt.titleMedium : tt.titleLarge)?.copyWith(
       fontWeight: FontWeight.w700,
@@ -145,12 +155,15 @@ class InteractiveScriptCard extends StatelessWidget {
     );
 
     final bodyStyle = tt.bodyLarge?.copyWith(
-      color: cs.onSurface.withOpacity(isActive ? 0.90 : 0.75),
+      color: cs.onSurface.withValues(alpha: isActive ? 0.90 : 0.75),
       height: 1.35,
     );
 
-    return Container(
+    return NeonGlassCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       decoration: ClubBlackoutTheme.neonFrame(
         color: isActive ? accent : cs.surfaceContainer,
         opacity: isActive ? 0.15 : 0.0, // surface container handles bg if inactive
@@ -159,51 +172,73 @@ class InteractiveScriptCard extends StatelessWidget {
         showGlow: isActive,
       ),
       child: Padding(
-        padding: contentPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (showPlayerTile)
-              UnifiedPlayerTile(
-                player: player!,
-                gameEngine: gameEngine,
-                config: const PlayerTileConfig(
-                  variant: PlayerTileVariant.standard,
-                  isInteractive: false,
-                  wrapInCard: true,
-                  tileColor: Colors.black12,
-                ),
-              )
-            else
-              Row(
-                children: [
-                   if (isActive && role != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: accent.withOpacity(0.2),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: PlayerIcon(
-                        assetPath: role!.assetPath,
-                        glowColor: accent,
-                        glowIntensity: 0.4,
-                        size: bulletin ? 30 : 36,
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+      glowColor: isActive ? accent : cs.surfaceContainer,
+      opacity: isActive ? 0.95 : 0.5,
+      borderRadius: bulletin ? 16 : 20,
+      showBorder: false, // Explicitly no border
+      padding: contentPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+            children: [ isInteractive: false,
+=======
+=======
+>>>>>>> Stashed changes
+            children: [
+                if (showPlayerTile) ...[
+                  Flexible(
+                    flex: 0,
+                    child: UnifiedPlayerTile(
+                      player: tilePlayer!,
+                      gameEngine: gameEngine,
+                      config: const PlayerTileConfig(
+                        variant: PlayerTileVariant.minimal,
+                        isInteractive: false,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+                        showStatusChips: false,
+                        showSubtitle: false,
+                        wrapInCard: false,
                       ),
                     ),
-                    const SizedBox(width: 14),
-                  ] else ...[
+                  ),
+                  const SizedBox(width: 14),
+                ] else if (isActive && role != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: PlayerIcon(
+                      assetPath: role!.assetPath,
+                      glowColor: accent,
+                      glowIntensity: 0.4,
+                      size: bulletin ? 30 : 36,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                ] else ...[
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: isActive
-                            ? accent.withOpacity(0.2)
+                            ? accent.withValues(alpha: 0.2)
                             : cs.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -211,20 +246,21 @@ class InteractiveScriptCard extends StatelessWidget {
                         isActive ? Icons.play_circle_filled : Icons.check_circle,
                         color: isActive
                             ? accent
-                            : cs.onSurfaceVariant.withOpacity(0.5),
+                            : cs.onSurfaceVariant.withValues(alpha: 0.5),
                         size: bulletin ? 18 : 20,
                       ),
                     ),
                     const SizedBox(width: 10),
                   ],
-                  Expanded(
-                    child: Text(
-                      (byline == null || byline.isEmpty)
-                          ? step.title
-                          : '${step.title} · $byline',
-                      style: headerStyle,
+                  if (!showPlayerTile)
+                    Expanded(
+                      child: Text(
+                        (byline == null || byline.isEmpty)
+                            ? step.title
+                            : '${step.title} · $byline',
+                        style: headerStyle,
+                      ),
                     ),
-                  ),
                 ],
               ),
               if (roleContext != null) ...[
@@ -233,51 +269,14 @@ class InteractiveScriptCard extends StatelessWidget {
               ],
               if (readAloudText.isNotEmpty) ...[
                 ClubBlackoutTheme.gap12,
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: ClubBlackoutTheme.kNeonCyan.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: ClubBlackoutTheme.kNeonCyan.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.record_voice_over_rounded,
-                              color: ClubBlackoutTheme.kNeonCyan, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'READ ALOUD',
-                            style: ClubBlackoutTheme.headingStyle.copyWith(
-                              color: ClubBlackoutTheme.kNeonCyan,
-                              fontSize: 12,
-                              letterSpacing: 1.5,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        readAloudHasPrefix
-                            ? readAloudText.replaceFirst(
-                                RegExp(r'^read\s*aloud\s*:\s*',
-                                    caseSensitive: false),
-                                '')
-                            : readAloudText,
-                        style: tt.titleMedium?.copyWith(
-                          color: Colors.white,
-                          height: 1.4,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                buildScriptSection(
+                  label: 'Read aloud',
+                  icon: Icons.record_voice_over_rounded,
+                  color: ClubBlackoutTheme.neonBlue,
+                  showHeader: true,
+                  child: Text(
+                    readAloudText,
+                    style: bodyStyle?.copyWith(fontStyle: FontStyle.italic),
                   ),
                 ),
               ],
@@ -287,7 +286,7 @@ class InteractiveScriptCard extends StatelessWidget {
                   label: hostLabel.trim().isEmpty ? 'Host' : hostLabel.trim(),
                   icon: Icons.support_agent_rounded,
                   color: isActive ? accent : cs.onSurfaceVariant,
-                  showHeader: !instructionHasPrefix,
+                  showHeader: true,
                   child: Text(
                     instructionText,
                     style: bodyStyle,

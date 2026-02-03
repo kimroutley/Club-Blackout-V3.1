@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../logic/game_engine.dart';
-import '../screens/about_screen.dart';
 import '../screens/host_privacy_screen.dart';
 import '../screens/lobby_screen.dart';
 import '../styles.dart';
@@ -547,60 +546,49 @@ class GameDrawer extends StatelessWidget {
 
   Widget _buildFooter(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.pop(context);
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AboutScreen()),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.3),
+            width: 1,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.info_outline_rounded,
-                    size: 12,
-                    color: scheme.onSurface.withValues(alpha: 0.3),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'v1.0.0+1',
-                    style: TextStyle(
-                      color: scheme.onSurface.withValues(alpha: 0.4),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
+              Icon(
+                Icons.code_rounded,
+                size: 12,
+                color: scheme.onSurface.withValues(alpha: 0.3),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(width: 6),
               Text(
-                'A GAME BY KYRIAN CO.',
-                style: ClubBlackoutTheme.headingStyle.copyWith(
-                  color: scheme.onSurface.withValues(alpha: 0.35),
-                  fontSize: 9,
-                  letterSpacing: 2.0,
+                'v1.0.0',
+                style: TextStyle(
+                  color: scheme.onSurface.withValues(alpha: 0.4),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 8),
+          Text(
+            'A GAME BY KYRIAN CO.',
+            style: ClubBlackoutTheme.headingStyle.copyWith(
+              color: scheme.onSurface.withValues(alpha: 0.35),
+              fontSize: 9,
+              letterSpacing: 2.0,
+            ),
+          ),
+        ],
       ),
     );
   }

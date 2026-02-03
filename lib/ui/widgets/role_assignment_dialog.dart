@@ -423,10 +423,9 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
 
     // Final checks
     if (selected.length < playerCount) {
-      // Fallback: Fill remaining slots with Party Animals instead of crashing
-      while (selected.length < playerCount) {
-        selected.add(partyAnimalRole);
-      }
+      throw StateError(
+        'Not enough unique roles to fill $playerCount players. Add more roles or reduce players.',
+      );
     }
 
     // Ensure Dealer Majority rule doesn't break game
@@ -486,7 +485,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                 padding:
                     const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                 decoration: BoxDecoration(
-                  color: ClubBlackoutTheme.neonPink.withOpacity(0.1),
+                  color: ClubBlackoutTheme.neonPink.withValues(alpha: 0.1),
                 ),
                 child: Text(
                   player.name,
@@ -500,7 +499,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
               ),
               Divider(
                 height: 1,
-                color: scheme.onSurface.withOpacity(0.12),
+                color: scheme.onSurface.withValues(alpha: 0.12),
               ),
               Expanded(
                 child: ListView.separated(
@@ -527,7 +526,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                           decoration: ClubBlackoutTheme.neonFrame(
                             color: isSelected
                                 ? role.color
-                                : scheme.onSurface.withOpacity(0.24),
+                                : scheme.onSurface.withValues(alpha: 0.24),
                             opacity: isSelected ? 0.2 : 0.05,
                             borderWidth: isSelected ? 2 : 1,
                             showGlow: isSelected,
@@ -550,7 +549,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                                         color: isSelected
                                             ? scheme.onSurface
                                             : scheme.onSurface
-                                                .withOpacity(0.7),
+                                                .withValues(alpha: 0.7),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
                                         letterSpacing: 0.8,
@@ -560,7 +559,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                                       role.type,
                                       style: TextStyle(
                                         color:
-                                            role.color.withOpacity(0.7),
+                                            role.color.withValues(alpha: 0.7),
                                         fontSize: 10,
                                         fontWeight: FontWeight.w900,
                                         letterSpacing: 0.5,
@@ -651,7 +650,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                   IconButton(
                     icon: Icon(
                       Icons.close_rounded,
-                      color: cs.onSurface.withOpacity(0.7),
+                      color: cs.onSurface.withValues(alpha: 0.7),
                     ),
                     onPressed: widget.onCancel,
                   ),
@@ -770,11 +769,11 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                             ),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: cs.surface.withOpacity(0.35),
+                              color: cs.surface.withValues(alpha: 0.35),
                               borderRadius: ClubBlackoutTheme.borderRadiusSmAll,
                               border: Border.all(
                                 color:
-                                    cs.outlineVariant.withOpacity(0.45),
+                                    cs.outlineVariant.withValues(alpha: 0.45),
                               ),
                             ),
                             child: Column(
@@ -834,11 +833,11 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: ClubBlackoutTheme.neonBlue
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: ClubBlackoutTheme.neonBlue
-                                        .withOpacity(0.3),
+                                        .withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: Text(
@@ -893,7 +892,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                                           : PlayerIcon(
                                               assetPath: '',
                                               glowColor: cs.onSurface
-                                                  .withOpacity(0.2),
+                                                  .withValues(alpha: 0.2),
                                               size: 48,
                                             ),
                                       title: Text(
@@ -919,7 +918,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                                               'No role assigned',
                                               style: TextStyle(
                                                 color: cs.onSurface
-                                                    .withOpacity(0.38),
+                                                    .withValues(alpha: 0.38),
                                                 fontSize: 11,
                                                 letterSpacing: 0.8,
                                               ),
@@ -927,8 +926,8 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                                       trailing: Icon(
                                         Icons.chevron_right_rounded,
                                         color: role?.color
-                                                .withOpacity(0.5) ??
-                                            cs.onSurface.withOpacity(0.2),
+                                                .withValues(alpha: 0.5) ??
+                                            cs.onSurface.withValues(alpha: 0.2),
                                       ),
                                     ),
                                   ),
@@ -961,7 +960,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                       tooltip: 'Close',
                       icon: const Icon(Icons.close_rounded),
                       style: IconButton.styleFrom(
-                        foregroundColor: cs.onSurface.withOpacity(0.7),
+                        foregroundColor: cs.onSurface.withValues(alpha: 0.7),
                       ),
                     )
                   else
@@ -984,25 +983,14 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                       tooltip: 'Skip to Gameplay',
                       icon: const Icon(Icons.skip_next_rounded),
                       style: IconButton.styleFrom(
-                        foregroundColor: cs.onSurface.withOpacity(0.6),
+                        foregroundColor: cs.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     ClubBlackoutTheme.hGap12,
                     FilledButton(
                       onPressed: () {
-                        try {
-                          _assignRolesByMode(_selectedMode);
-                          HapticFeedback.mediumImpact();
-                        } catch (e, st) {
-                           debugPrint('Assign Roles Error: $e\n$st');
-                           // Try to show toast if engine available, or just log
-                           // widget.gameEngine.showToast('Assignment failed: $e'); 
-                           // Safest is to just print for now as we might not have scaffold access depending on dialog state
-                           // But wait, showToast usually uses Fluttertoast or ScaffoldMessenger
-                           ScaffoldMessenger.of(context).showSnackBar(
-                             SnackBar(content: Text('Assignment failed: $e')),
-                           );
-                        }
+                        _assignRolesByMode(_selectedMode);
+                        HapticFeedback.mediumImpact();
                       },
                       style: ClubBlackoutTheme.neonButtonStyle(
                         ClubBlackoutTheme.neonPink,
@@ -1105,16 +1093,16 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.15),
+                      color: color.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: color.withOpacity(isSelected ? 1.0 : 0.3),
+                        color: color.withValues(alpha: isSelected ? 1.0 : 0.3),
                         width: 2,
                       ),
                     ),
                     child: Icon(
                       icon,
-                      color: isSelected ? color : color.withOpacity(0.5),
+                      color: isSelected ? color : color.withValues(alpha: 0.5),
                       size: 28,
                     ),
                   ),
@@ -1130,7 +1118,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                             letterSpacing: 1.2,
                             color: isSelected
                                 ? cs.onSurface
-                                : cs.onSurface.withOpacity(0.7),
+                                : cs.onSurface.withValues(alpha: 0.7),
                             shadows: isSelected
                                 ? ClubBlackoutTheme.textGlow(color)
                                 : null,
@@ -1141,7 +1129,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                           description,
                           style: TextStyle(
                             color: cs.onSurface
-                                .withOpacity(isSelected ? 0.8 : 0.5),
+                                .withValues(alpha: isSelected ? 0.8 : 0.5),
                             fontSize: 12,
                           ),
                         ),
@@ -1176,10 +1164,10 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: ClubBlackoutTheme.controlPadding,
       decoration: BoxDecoration(
-        color: cs.surface.withOpacity(0.3),
+        color: cs.surface.withValues(alpha: 0.3),
         borderRadius: ClubBlackoutTheme.borderRadiusMdAll,
         border: Border.all(
-          color: ClubBlackoutTheme.neonBlue.withOpacity(0.15),
+          color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.15),
         ),
       ),
       child: Row(
@@ -1188,7 +1176,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
           _summaryChip('Aggressive', aggressive, ClubBlackoutTheme.neonPink),
           _summaryChip('Defensive', defensive, ClubBlackoutTheme.neonBlue),
           _summaryChip('Chaos', chaos, Colors.orange),
-          _summaryChip('Other', other, cs.onSurface.withOpacity(0.7)),
+          _summaryChip('Other', other, cs.onSurface.withValues(alpha: 0.7)),
         ],
       ),
     );
@@ -1206,7 +1194,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
             fontWeight: FontWeight.bold,
             shadows: [
               Shadow(
-                color: color.withOpacity(0.5),
+                color: color.withValues(alpha: 0.5),
                 blurRadius: 8,
               ),
             ],
@@ -1215,7 +1203,7 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
         Text(
           label,
           style: TextStyle(
-            color: color.withOpacity(0.7),
+            color: color.withValues(alpha: 0.7),
             fontSize: 9,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.5,

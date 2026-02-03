@@ -27,6 +27,33 @@ class HallOfFameService extends ChangeNotifier {
     return list;
   }
 
+  // Placeholder: no suspended concept yet, but UI expects the getter.
+  List<HallOfFameProfile> get suspendedProfiles => const [];
+
+  String exportProfilesToJson() {
+    final list = _profiles.values.map((p) => p.toJson()).toList();
+    return jsonEncode(list);
+  }
+
+  Future<int> importProfilesFromJson(String jsonStr) async {
+    final decoded = jsonDecode(jsonStr);
+    if (decoded is! List) {
+      throw const FormatException('Invalid Hall of Fame data');
+    }
+
+    int imported = 0;
+    for (final item in decoded) {
+      if (item is Map<String, dynamic>) {
+        final profile = HallOfFameProfile.fromJson(item);
+        _profiles[profile.id] = profile;
+        imported++;
+      }
+    }
+
+    await _saveProfiles();
+    return imported;
+  }
+
   Future<void> _loadProfiles() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = prefs.getString(_prefsKey);

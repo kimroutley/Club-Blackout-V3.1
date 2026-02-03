@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../styles.dart';
 
@@ -15,10 +14,10 @@ class NeonGlassCard extends StatelessWidget {
     super.key,
     required this.glowColor,
     required this.child,
-    this.opacity = 0.7,
+    this.opacity = 0.95, // Solid card default
     this.padding,
     this.margin,
-    this.showBorder = true,
+    this.showBorder = false, // No border by default
     this.borderRadius,
   });
 
@@ -34,32 +33,35 @@ class NeonGlassCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(radius),
                 boxShadow: [
                 BoxShadow(
-                  color: glowColor.withValues(alpha: 0.25),
-                  blurRadius: 18,
-                  spreadRadius: 1,
+                  color: glowColor.withValues(alpha: 0.45),
+                  blurRadius: 24,
+                  spreadRadius: 2,
+                ),
+                BoxShadow(
+                  color: glowColor.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  spreadRadius: 6,
                 ),
               ],
             )
           : const BoxDecoration(),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            color: ClubBlackoutTheme.pureBlack.withValues(alpha: opacity),
-            child: Container(
-              decoration: showBorder
-                  ? BoxDecoration(
-                      borderRadius: BorderRadius.circular(radius),
-                      border: Border.all(
-                        color: glowColor.withValues(alpha: 0.55),
-                        width: 1,
-                      ),
-                    )
-                  : null,
-              padding: padding ?? ClubBlackoutTheme.cardPadding,
-              child: child,
-            ),
+        child: Card(
+          margin: EdgeInsets.zero,
+          elevation: 0,
+          clipBehavior: Clip.antiAlias,
+          color: ClubBlackoutTheme.kCardBg.withValues(alpha: opacity), // Use kCardBg
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radius),
+            side: showBorder
+                ? BorderSide(color: glowColor.withValues(alpha: 0.5), width: 1.0) // Thinner, subtler border if enabled
+                : BorderSide.none,
+          ),
+          child: Padding(
+            padding: padding ?? ClubBlackoutTheme.cardPadding,
+            child: child,
           ),
         ),
       ),

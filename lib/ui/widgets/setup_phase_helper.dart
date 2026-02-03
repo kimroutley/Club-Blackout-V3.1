@@ -88,10 +88,10 @@ class SetupPhaseHelper extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: ClubBlackoutTheme.neonBlue.withOpacity(0.05),
+              color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: ClubBlackoutTheme.neonBlue.withOpacity(0.15),
+                color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.15),
               ),
             ),
             child: Column(
@@ -175,13 +175,13 @@ class SetupPhaseHelper extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: ClubBlackoutTheme.neonGreen.withOpacity(0.05),
+        color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.05),
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(28),
         ),
         border: Border(
           bottom: BorderSide(
-            color: ClubBlackoutTheme.neonGreen.withOpacity(0.1),
+            color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.1),
           ),
         ),
       ),
@@ -194,14 +194,14 @@ class SetupPhaseHelper extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  ClubBlackoutTheme.neonGreen.withOpacity(0.3),
-                  ClubBlackoutTheme.neonBlue.withOpacity(0.25),
+                  ClubBlackoutTheme.neonGreen.withValues(alpha: 0.3),
+                  ClubBlackoutTheme.neonBlue.withValues(alpha: 0.25),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: ClubBlackoutTheme.neonGreen.withOpacity(0.2),
+                  color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.2),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
@@ -227,7 +227,7 @@ class SetupPhaseHelper extends StatelessWidget {
                     color: ClubBlackoutTheme.neonGreen,
                     shadows: [
                       Shadow(
-                        color: ClubBlackoutTheme.neonGreen.withOpacity(0.5),
+                        color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.5),
                         blurRadius: 12,
                       ),
                     ],
@@ -237,7 +237,7 @@ class SetupPhaseHelper extends StatelessWidget {
                 Text(
                   'Phase 0: Initialization'.toUpperCase(),
                   style: ClubBlackoutTheme.headingStyle.copyWith(
-                    color: cs.onSurface.withOpacity(0.5),
+                    color: cs.onSurface.withValues(alpha: 0.5),
                     fontSize: 10,
                   ),
                 ),
@@ -275,11 +275,11 @@ class _ChecklistItem extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: isComplete
-            ? ClubBlackoutTheme.neonGreen.withOpacity(0.05)
-            : cs.surfaceContainerHighest.withOpacity(0.3),
+            ? ClubBlackoutTheme.neonGreen.withValues(alpha: 0.05)
+            : cs.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: statusColor.withOpacity(isComplete ? 0.3 : 0.15),
+          color: statusColor.withValues(alpha: isComplete ? 0.3 : 0.15),
           width: 1.5,
         ),
       ),
@@ -288,7 +288,7 @@ class _ChecklistItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -317,7 +317,7 @@ class _ChecklistItem extends StatelessWidget {
                   detail,
                   style: TextStyle(
                     fontSize: 13,
-                    color: cs.onSurface.withOpacity(0.6),
+                    color: cs.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -328,7 +328,7 @@ class _ChecklistItem extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: progress!.clamp(0.0, 1.0),
                       minHeight: 8,
-                      backgroundColor: cs.onSurface.withOpacity(0.05),
+                      backgroundColor: cs.onSurface.withValues(alpha: 0.05),
                       valueColor: AlwaysStoppedAnimation(statusColor),
                     ),
                   ),
@@ -361,7 +361,7 @@ class _TipItem extends StatelessWidget {
             width: 6,
             height: 6,
             decoration: BoxDecoration(
-              color: ClubBlackoutTheme.neonBlue.withOpacity(0.4),
+              color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.4),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -377,7 +377,7 @@ class _TipItem extends StatelessWidget {
               tip,
               style: TextStyle(
                 fontSize: 13,
-                color: cs.onSurface.withOpacity(0.8),
+                color: cs.onSurface.withValues(alpha: 0.8),
                 height: 1.4,
                 fontWeight: FontWeight.w500,
               ),

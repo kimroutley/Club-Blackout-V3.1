@@ -63,6 +63,11 @@ class ExportFileService {
     );
   }
 
+  // Placeholder for manual import; currently unsupported on IO without a file picker.
+  static Future<String?> pickAndReadFile() {
+    throw UnsupportedError('File picking is not implemented on this platform.');
+  }
+
   static Future<void> openExportsFolder(
       {String subdirName = 'exports', bool useDownloads = false}) async {
     if (!supportsOpenFolder) {

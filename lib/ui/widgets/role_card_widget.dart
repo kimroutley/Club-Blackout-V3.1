@@ -509,8 +509,8 @@ class _RoleCardWidgetState extends State<RoleCardWidget>
                                 assetPath: role.assetPath,
                                 glowColor: role.color,
                                 size: widget.compact
-                                    ? 50
-                                    : 100, // Reduced to 50 for safety
+                                    ? 80
+                                    : 100, // Slightly smaller for better proportions
                                 glowIntensity: 0.65,
                               ),
                             ),
@@ -547,6 +547,7 @@ class _RoleCardWidgetState extends State<RoleCardWidget>
                       ],
                     ),
                   ),
+                  const Spacer(),
                   // FOOTER ROW
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,

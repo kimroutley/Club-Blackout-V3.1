@@ -439,18 +439,6 @@ class ScriptBuilder {
       ),
     );
 
-    // Marker only (hidden in GameScreen). Voting runs inside the day dialog.
-    daySteps.add(
-      const ScriptStep(
-        id: 'day_vote',
-        title: 'The Vote',
-        readAloudText: '',
-        instructionText: '',
-        isNight: false,
-        actionType: ScriptActionType.none,
-      ),
-    );
-
     return daySteps;
   }
 

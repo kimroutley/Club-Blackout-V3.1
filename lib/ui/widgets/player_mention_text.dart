@@ -31,8 +31,9 @@ class PlayerMentionText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final raw = text;
-    final activePlayers =
-        players.where((p) => p.name.trim().isNotEmpty).toList(growable: false);
+    final activePlayers = players
+        .where((p) => p.name.trim().isNotEmpty)
+        .toList(growable: false);
 
     if (raw.trim().isEmpty || activePlayers.isEmpty) {
       return Text(
@@ -83,14 +84,12 @@ class PlayerMentionText extends StatelessWidget {
 
       // Add text before the match.
       if (index < prefixStart) {
-        spans.add(
-            TextSpan(text: raw.substring(index, prefixStart), style: style));
+        spans.add(TextSpan(text: raw.substring(index, prefixStart), style: style));
       }
 
       // Add the boundary prefix char(s) (space/punct) if present.
       if (prefix.isNotEmpty) {
-        spans.add(TextSpan(
-            text: raw.substring(prefixStart, prefixEnd), style: style));
+        spans.add(TextSpan(text: raw.substring(prefixStart, prefixEnd), style: style));
       }
 
       final player = byLowerName[nameMatch.toLowerCase()];

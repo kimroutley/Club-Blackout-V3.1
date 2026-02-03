@@ -185,7 +185,7 @@ class PhaseCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'HOST TIPS',
+                        "HOST TIPS",
                         style: ClubBlackoutTheme.headingStyle.copyWith(
                           fontSize: 12,
                           color: phaseColor.withValues(alpha: 0.9),
@@ -200,7 +200,7 @@ class PhaseCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '•',
+                              "•",
                               style: TextStyle(
                                   color: phaseColor,
                                   fontWeight: FontWeight.bold),

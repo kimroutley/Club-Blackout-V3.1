@@ -533,16 +533,25 @@ class _SaveLoadDialogState extends State<SaveLoadDialog> {
                                 color: selected ? accent : cs.outline,
                                 opacity: selected ? 0.20 : 0.05,
                               ).copyWith(
-                                border: Border.all(
-                                  color: selected
-                                      ? accent
-                                      : accent.withValues(alpha: 0.1),
-                                  width: selected ? 2.0 : 1.0,
+                                border: Border(
+                                  left: BorderSide(
+                                    color:
+                                        selected ? accent : Colors.transparent,
+                                    width: 4,
+                                  ),
+                                  right: BorderSide(
+                                      color: accent.withValues(alpha: 0.1),
+                                      width: 1),
+                                  top: BorderSide(
+                                      color: accent.withValues(alpha: 0.1),
+                                      width: 1),
+                                  bottom: BorderSide(
+                                      color: accent.withValues(alpha: 0.1),
+                                      width: 1),
                                 ),
                               ),
                               child: Padding(
                                 padding: ClubBlackoutTheme.fieldPaddingLoose,
-
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

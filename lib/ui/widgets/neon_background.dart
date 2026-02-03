@@ -45,7 +45,7 @@ class NeonBackground extends StatelessWidget {
             ),
           ),
 
-        // Grade for readability with accent tint
+        // Grade for readability.
         if (showOverlay)
           Positioned.fill(
             child: DecoratedBox(
@@ -54,12 +54,9 @@ class NeonBackground extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    // Top: Accent tint + darkness
-                    accentColor.withValues(alpha: 0.15),
-                    // Middle: mostly black for content readability
-                    ClubBlackoutTheme.pureBlack.withValues(alpha: 0.9),
-                    // Bottom: subtle accent return
-                    accentColor.withValues(alpha: 0.1),
+                    ClubBlackoutTheme.pureBlack.withValues(alpha: 0.95),
+                    ClubBlackoutTheme.pureBlack.withValues(alpha: 0.85),
+                    ClubBlackoutTheme.pureBlack.withValues(alpha: 0.95),
                   ],
                   stops: const [0.0, 0.5, 1.0],
                 ),
