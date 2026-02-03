@@ -130,9 +130,13 @@ class _ClubBlackoutAppState extends State<ClubBlackoutApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Club Blackout',
-          theme: ClubBlackoutTheme.createTheme(lightScheme),
-          darkTheme: ClubBlackoutTheme.createTheme(darkScheme),
-          themeMode: ThemeMode.dark, // Enforce Dark Mode
+          theme: ClubBlackoutTheme.createTheme(lightScheme).copyWith(
+            scaffoldBackgroundColor: ClubBlackoutTheme.kBackground,
+          ),
+          darkTheme: ClubBlackoutTheme.createTheme(darkScheme).copyWith(
+            scaffoldBackgroundColor: ClubBlackoutTheme.kBackground,
+          ),
+          themeMode: ThemeMode.dark,
           scrollBehavior: const ClubBlackoutScrollBehavior(),
           home: _error != null
               ? _ErrorSummaryScreen(

@@ -160,7 +160,7 @@ class _LobbyScreenState extends State<LobbyScreen>
     messenger.showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: cs.surface.withValues(alpha: 0.96),
+        backgroundColor: cs.surface.withOpacity(0.96),
         content: Text(
           message,
           style: TextStyle(
@@ -319,12 +319,12 @@ class _LobbyScreenState extends State<LobbyScreen>
         color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: color.withValues(alpha: 0.3),
+          color: color.withOpacity(0.3),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.15),
+            color: color.withOpacity(0.15),
             blurRadius: 12,
             spreadRadius: 2,
             offset: const Offset(0, 4),
@@ -339,7 +339,7 @@ class _LobbyScreenState extends State<LobbyScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: color.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.check_circle_rounded, color: color, size: 20),
@@ -386,7 +386,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.2),
+                    color: ClubBlackoutTheme.neonBlue.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -436,8 +436,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                       decoration: BoxDecoration(
                         gradient: RadialGradient(
                           colors: [
-                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.15),
-                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.05),
+                            ClubBlackoutTheme.neonPurple.withOpacity(0.15),
+                            ClubBlackoutTheme.neonPurple.withOpacity(0.05),
                             Colors.transparent,
                           ],
                         ),
@@ -447,7 +447,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                         Icons.person_add_outlined,
                         size: 64,
                         color:
-                            ClubBlackoutTheme.neonPurple.withValues(alpha: 0.6),
+                            ClubBlackoutTheme.neonPurple.withOpacity(0.6),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -464,7 +464,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                     Text(
                       'Add at least 4 guests to start the game',
                       style: TextStyle(
-                        color: cs.onSurfaceVariant.withValues(alpha: 0.8),
+                        color: cs.onSurfaceVariant.withOpacity(0.8),
                         fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
@@ -494,7 +494,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        cs.errorContainer.withValues(alpha: 0.3),
+                        cs.errorContainer.withOpacity(0.3),
                         cs.errorContainer,
                       ],
                       begin: Alignment.centerLeft,
@@ -523,7 +523,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   ),
                 ),
                 child: NeonGlassCard(
-                  glowColor: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.4),
+                  glowColor: ClubBlackoutTheme.neonBlue.withOpacity(0.4),
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: EdgeInsets.zero,
                   child: UnifiedPlayerTile.compact(
@@ -549,7 +549,7 @@ class _LobbyScreenState extends State<LobbyScreen>
 
         // Input Area
         NeonGlassCard(
-          glowColor: cs.primary.withValues(alpha: 0.2),
+          glowColor: cs.primary.withOpacity(0.2),
           borderRadius: 32,
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
           margin: EdgeInsets.zero,
@@ -573,7 +573,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Divider(
-                        color: cs.primary.withValues(alpha: 0.2),
+                        color: cs.primary.withOpacity(0.2),
                         thickness: 1,
                       ),
                     ),
@@ -589,7 +589,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   child: Text(
                     'TIP: PRESS ENTER TO ADD QUICKLY, OR PASTE A LIST OF NAMES',
                     style: TextStyle(
-                      color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+                      color: cs.onSurfaceVariant.withOpacity(0.5),
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
@@ -707,7 +707,7 @@ class _LobbyScreenState extends State<LobbyScreen>
 
         // Middle: Player List
         NeonGlassCard(
-          glowColor: cs.primary.withValues(alpha: 0.5),
+          glowColor: cs.primary.withOpacity(0.5),
           margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: EdgeInsets.zero,
           child: Column(
@@ -720,7 +720,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: cs.primary.withValues(alpha: 0.15),
+                        color: cs.primary.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -744,10 +744,10 @@ class _LobbyScreenState extends State<LobbyScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: cs.primary.withValues(alpha: 0.2),
+                        color: cs.primary.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: cs.primary.withValues(alpha: 0.3),
+                          color: cs.primary.withOpacity(0.3),
                         ),
                       ),
                       child: Text(
@@ -763,7 +763,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                 ),
               ),
               Divider(
-                  height: 1, color: cs.outlineVariant.withValues(alpha: 0.2)),
+                  height: 1, color: cs.outlineVariant.withOpacity(0.2)),
               if (players.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
@@ -774,7 +774,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                         Icon(
                           Icons.person_add_outlined,
                           size: 56,
-                          color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+                          color: cs.onSurfaceVariant.withOpacity(0.3),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -789,7 +789,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                         Text(
                           'Go to the Guests tab to add players',
                           style: TextStyle(
-                            color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                            color: cs.onSurfaceVariant.withOpacity(0.7),
                             fontSize: 13,
                           ),
                         ),
@@ -807,7 +807,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   itemBuilder: (context, index) {
                     final p = players[index];
                     return NeonGlassCard(
-                      glowColor: cs.outlineVariant.withValues(alpha: 0.3),
+                      glowColor: cs.outlineVariant.withOpacity(0.3),
                       padding: EdgeInsets.zero,
                       opacity: 0.3,
                       borderRadius: 12,
@@ -831,7 +831,7 @@ class _LobbyScreenState extends State<LobbyScreen>
         if (showTestTools) ...[
           const SizedBox(height: 16),
           Card(
-            color: Colors.orange.withValues(alpha: 0.1),
+            color: Colors.orange.withOpacity(0.1),
             margin: const EdgeInsets.symmetric(horizontal: 16),
             child: Padding(
               padding: const EdgeInsets.all(8),
@@ -914,12 +914,12 @@ class _LobbyScreenState extends State<LobbyScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      accent.withValues(alpha: 0.3),
-                      accent.withValues(alpha: 0.15),
+                      accent.withOpacity(0.3),
+                      accent.withOpacity(0.15),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: accent.withValues(alpha: 0.4)),
+                  border: Border.all(color: accent.withOpacity(0.4)),
                 ),
                 child: const Icon(Icons.history_edu_rounded, color: accent, size: 24),
               ),
@@ -943,7 +943,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                           ? 'Saved when you last played'
                           : 'ARCHIVED: ${savedAt.toLocal().toString().split('.')[0]}',
                       style: TextStyle(
-                        color: cs.onSurface.withValues(alpha: 0.6),
+                        color: cs.onSurface.withOpacity(0.6),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -984,14 +984,14 @@ class _LobbyScreenState extends State<LobbyScreen>
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: cs.onSurface.withValues(alpha: 0.05),
+                color: cs.onSurface.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
+                border: Border.all(color: cs.onSurface.withOpacity(0.1)),
               ),
               child: Text(
                 winMessage,
                 style: TextStyle(
-                  color: cs.onSurface.withValues(alpha: 0.9),
+                  color: cs.onSurface.withOpacity(0.9),
                   fontSize: 14,
                   height: 1.4,
                   fontWeight: FontWeight.w500,
@@ -1039,7 +1039,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                       title: 'Snapshot');
                 },
                 icon: Icon(Icons.delete_outline_rounded,
-                    color: cs.onSurface.withValues(alpha: 0.4)),
+                    color: cs.onSurface.withOpacity(0.4)),
               ),
             ],
           ),
@@ -1057,9 +1057,9 @@ class _LobbyScreenState extends State<LobbyScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1067,7 +1067,7 @@ class _LobbyScreenState extends State<LobbyScreen>
           Text(
             label,
             style: TextStyle(
-              color: color.withValues(alpha: 0.8),
+              color: color.withOpacity(0.8),
               fontSize: 10,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.0,
@@ -1150,7 +1150,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                       ? 'Saved snapshot'
                       : 'Saved: ${savedAt.toLocal()}',
                   style: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.8),
+                    color: cs.onSurface.withOpacity(0.8),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1169,7 +1169,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                     Text(
                       winMessage,
                       style: TextStyle(
-                        color: cs.onSurface.withValues(alpha: 0.9),
+                        color: cs.onSurface.withOpacity(0.9),
                         height: 1.3,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1189,7 +1189,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   Text(
                     lastNightHostRecap!,
                     style: TextStyle(
-                      color: cs.onSurface.withValues(alpha: 0.9),
+                      color: cs.onSurface.withOpacity(0.9),
                       height: 1.25,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1208,7 +1208,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   Text(
                     lastNightSummary!,
                     style: TextStyle(
-                      color: cs.onSurface.withValues(alpha: 0.9),
+                      color: cs.onSurface.withOpacity(0.9),
                       height: 1.25,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1229,7 +1229,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                         .map((e) => '• ${e.key}: ${e.value}')
                         .join('\n'),
                     style: TextStyle(
-                      color: cs.onSurface.withValues(alpha: 0.9),
+                      color: cs.onSurface.withOpacity(0.9),
                       fontWeight: FontWeight.w600,
                       height: 1.25,
                     ),
@@ -1247,7 +1247,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                 Text(
                   rows.isEmpty ? 'No player data.' : rows.join('\n'),
                   style: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.9),
+                    color: cs.onSurface.withOpacity(0.9),
                     fontWeight: FontWeight.w700,
                     height: 1.3,
                   ),
@@ -1259,7 +1259,7 @@ class _LobbyScreenState extends State<LobbyScreen>
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               style: TextButton.styleFrom(
-                foregroundColor: cs.onSurface.withValues(alpha: 0.75),
+                foregroundColor: cs.onSurface.withOpacity(0.75),
               ),
               child: const Text('CLOSE'),
             ),
@@ -1312,7 +1312,7 @@ class _LobbyScreenState extends State<LobbyScreen>
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               style: TextButton.styleFrom(
-                foregroundColor: cs.onSurface.withValues(alpha: 0.7),
+                foregroundColor: cs.onSurface.withOpacity(0.7),
               ),
               child: const Text('CANCEL'),
             ),
@@ -1385,7 +1385,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                 ? 'This will overwrite the "$_quickTestSaveName" save with a fresh deterministic game and jump into gameplay.'
                 : 'This will load the "$_quickTestSaveName" save (or create it if missing) and jump into gameplay.',
             style: TextStyle(
-              color: cs.onSurface.withValues(alpha: 0.8),
+              color: cs.onSurface.withOpacity(0.8),
               fontSize: 15,
               height: 1.4,
               fontWeight: FontWeight.w500,
@@ -1395,7 +1395,7 @@ class _LobbyScreenState extends State<LobbyScreen>
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               style: TextButton.styleFrom(
-                foregroundColor: cs.onSurface.withValues(alpha: 0.7),
+                foregroundColor: cs.onSurface.withOpacity(0.7),
               ),
               child: const Text('CANCEL'),
             ),
@@ -1519,7 +1519,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   Text(
                     'Please wait',
                     style: TextStyle(
-                      color: cs.onSurface.withValues(alpha: 0.6),
+                      color: cs.onSurface.withOpacity(0.6),
                       letterSpacing: 2,
                       fontSize: 12,
                     ),
@@ -1589,7 +1589,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                                 separatorBuilder: (context, index) => Divider(
                                     height: 1,
                                     color: cs.outlineVariant
-                                        .withValues(alpha: 0.3)),
+                                        .withOpacity(0.3)),
                                 itemBuilder: (BuildContext context, int index) {
                                   final String option =
                                       options.elementAt(index);
@@ -1679,7 +1679,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: cs.primary.withValues(alpha: 0.2)),
+                    side: BorderSide(color: cs.primary.withOpacity(0.2)),
                   ),
                 ),
               ),
@@ -1701,7 +1701,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: cs.secondary.withValues(alpha: 0.2)),
+                    side: BorderSide(color: cs.secondary.withOpacity(0.2)),
                   ),
                 ),
               ),
@@ -1791,12 +1791,12 @@ class _LobbyScreenState extends State<LobbyScreen>
           Row(
             children: [
               Icon(Icons.history_toggle_off_rounded,
-                  size: 14, color: cs.primary.withValues(alpha: 0.7)),
+                  size: 14, color: cs.primary.withOpacity(0.7)),
               const SizedBox(width: 6),
               Text(
                 'QUICK RE-ADD',
                 style: TextStyle(
-                  color: cs.primary.withValues(alpha: 0.7),
+                  color: cs.primary.withOpacity(0.7),
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.2,
@@ -1826,11 +1826,11 @@ class _LobbyScreenState extends State<LobbyScreen>
                     ),
                     backgroundColor: alreadyIn
                         ? Colors.transparent
-                        : cs.primary.withValues(alpha: 0.1),
+                        : cs.primary.withOpacity(0.1),
                     side: BorderSide(
                       color: alreadyIn
-                          ? cs.outlineVariant.withValues(alpha: 0.2)
-                          : cs.primary.withValues(alpha: 0.3),
+                          ? cs.outlineVariant.withOpacity(0.2)
+                          : cs.primary.withOpacity(0.3),
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -1955,7 +1955,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                         child: Text(
                           label,
                           style: TextStyle(
-                            color: cs.onSurface.withValues(alpha: 0.7),
+                            color: cs.onSurface.withOpacity(0.7),
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.8,
                           ),
@@ -2004,7 +2004,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                             'No Hall of Fame entries yet.\nComplete a game to start building stats.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: cs.onSurface.withValues(alpha: 0.54)),
+                                color: cs.onSurface.withOpacity(0.54)),
                           ),
                         )
                       else
@@ -2019,7 +2019,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                               p.name,
                               style: TextStyle(
                                 color: alreadyIn
-                                    ? cs.onSurface.withValues(alpha: 0.3)
+                                    ? cs.onSurface.withOpacity(0.3)
                                     : cs.onSurface,
                                 fontSize: 18,
                               ),
@@ -2027,7 +2027,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                             subtitle: Text(
                               '${p.totalGames} games • ${(p.winRate * 100).toStringAsFixed(0)}% wins',
                               style: TextStyle(
-                                  color: cs.onSurface.withValues(alpha: 0.5)),
+                                  color: cs.onSurface.withOpacity(0.5)),
                             ),
                             value: isSelected || alreadyIn,
                             activeColor: ClubBlackoutTheme.neonBlue,
@@ -2048,7 +2048,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                       Padding(
                         padding: ClubBlackoutTheme.rowPadding,
                         child: Divider(
-                            color: cs.onSurface.withValues(alpha: 0.15)),
+                            color: cs.onSurface.withOpacity(0.15)),
                       ),
                       buildSectionHeader(
                         'RECENT NAMES',
@@ -2063,7 +2063,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                             'No recent names yet.\nAdd guests to build a quick-pick list.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: cs.onSurface.withValues(alpha: 0.54)),
+                                color: cs.onSurface.withOpacity(0.54)),
                           ),
                         )
                       else
@@ -2078,7 +2078,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                               name,
                               style: TextStyle(
                                 color: alreadyIn
-                                    ? cs.onSurface.withValues(alpha: 0.3)
+                                    ? cs.onSurface.withOpacity(0.3)
                                     : cs.onSurface,
                                 fontSize: 18,
                               ),
@@ -2086,7 +2086,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                             subtitle: Text(
                               'Recent',
                               style: TextStyle(
-                                  color: cs.onSurface.withValues(alpha: 0.5)),
+                                  color: cs.onSurface.withOpacity(0.5)),
                             ),
                             value: isSelected || alreadyIn,
                             activeColor: ClubBlackoutTheme.neonBlue,
@@ -2111,7 +2111,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: TextButton.styleFrom(
-                      foregroundColor: cs.onSurface.withValues(alpha: 0.7),
+                      foregroundColor: cs.onSurface.withOpacity(0.7),
                     ),
                     child: const Text('CANCEL'),
                   ),
@@ -2175,7 +2175,7 @@ class _LobbyScreenState extends State<LobbyScreen>
           content: Text(
             'This will remove everyone from the guest list. Are you sure?',
             style: TextStyle(
-              color: cs.onSurface.withValues(alpha: 0.8),
+              color: cs.onSurface.withOpacity(0.8),
               fontSize: 15,
               height: 1.4,
               fontWeight: FontWeight.w500,
@@ -2185,7 +2185,7 @@ class _LobbyScreenState extends State<LobbyScreen>
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               style: TextButton.styleFrom(
-                foregroundColor: cs.onSurface.withValues(alpha: 0.7),
+                foregroundColor: cs.onSurface.withOpacity(0.7),
               ),
               child: const Text('CANCEL'),
             ),

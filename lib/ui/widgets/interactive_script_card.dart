@@ -62,14 +62,15 @@ class InteractiveScriptCard extends StatelessWidget {
 
       return Container(
         width: double.infinity,
-        decoration: ClubBlackoutTheme.neonFrame(
-          color: color,
-          opacity: isActive ? 0.90 : 0.70,
-          borderRadius: 14,
-          borderWidth: 1.2,
-          showGlow: isActive,
-        ),
         padding: pad,
+        decoration: BoxDecoration(
+          color: color.withOpacity(isActive ? 0.12 : 0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(isActive ? 0.3 : 0.1),
+            width: 1,
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -79,14 +80,14 @@ class InteractiveScriptCard extends StatelessWidget {
                   Icon(
                     icon,
                     size: 16,
-                    color: color.withValues(alpha: 0.95),
+                    color: color.withOpacity(0.95),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       label.toUpperCase(),
                       style: ClubBlackoutTheme.headingStyle.copyWith(
-                        color: color.withValues(alpha: 0.95),
+                        color: color.withOpacity(0.95),
                         fontSize: 12,
                         letterSpacing: 1.2,
                         shadows: isActive
@@ -144,7 +145,7 @@ class InteractiveScriptCard extends StatelessWidget {
     );
 
     final bodyStyle = tt.bodyLarge?.copyWith(
-      color: cs.onSurface.withValues(alpha: isActive ? 0.90 : 0.75),
+      color: cs.onSurface.withOpacity(isActive ? 0.90 : 0.75),
       height: 1.35,
     );
 
@@ -183,7 +184,7 @@ class InteractiveScriptCard extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: accent.withValues(alpha: 0.2),
+                            color: accent.withOpacity(0.2),
                             blurRadius: 8,
                             spreadRadius: 1,
                           ),
@@ -202,7 +203,7 @@ class InteractiveScriptCard extends StatelessWidget {
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: isActive
-                            ? accent.withValues(alpha: 0.2)
+                            ? accent.withOpacity(0.2)
                             : cs.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -210,7 +211,7 @@ class InteractiveScriptCard extends StatelessWidget {
                         isActive ? Icons.play_circle_filled : Icons.check_circle,
                         color: isActive
                             ? accent
-                            : cs.onSurfaceVariant.withValues(alpha: 0.5),
+                            : cs.onSurfaceVariant.withOpacity(0.5),
                         size: bulletin ? 18 : 20,
                       ),
                     ),

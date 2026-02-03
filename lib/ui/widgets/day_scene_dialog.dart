@@ -180,14 +180,16 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
             ? ClubBlackoutTheme.neonGold
             : ClubBlackoutTheme.neonOrange);
 
-    return Container(
+    return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: ClubBlackoutTheme.neonFrame(
-        color: timerColor,
-        opacity: 0.15,
-        borderRadius: 20,
-        borderWidth: 2.0,
-        showGlow: true,
+      elevation: 0,
+      color: timerColor.withOpacity(0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: timerColor.withOpacity(0.4),
+          width: 1.5,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -197,12 +199,9 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: ClubBlackoutTheme.neonFrame(
-                    color: timerColor,
-                    opacity: 0.2,
-                    borderRadius: 14,
-                    borderWidth: 1.5,
-                    showGlow: false,
+                  decoration: BoxDecoration(
+                    color: timerColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
                     isDone ? Icons.alarm_off_rounded : Icons.timer_rounded,
@@ -267,7 +266,7 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 12,
-                backgroundColor: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+                backgroundColor: cs.surfaceContainerHighest.withOpacity(0.3),
                 valueColor: AlwaysStoppedAnimation<Color>(timerColor),
               ),
             ),
@@ -382,7 +381,7 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
                 child: Container(
-                  color: cs.scrim.withValues(alpha: 0.08),
+                  color: cs.scrim.withOpacity(0.08),
                 ),
               ),
             ),
@@ -395,9 +394,9 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      cs.scrim.withValues(alpha: 0.28),
+                      cs.scrim.withOpacity(0.28),
                       Colors.transparent,
-                      cs.scrim.withValues(alpha: 0.35),
+                      cs.scrim.withOpacity(0.35),
                     ],
                     stops: const [0.0, 0.45, 1.0],
                   ),
@@ -439,9 +438,9 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
             bottomNavigationBar: BottomAppBar(
               shape: const CircularNotchedRectangle(),
               notchMargin: 8.0,
-              color: cs.surfaceContainerHighest.withValues(alpha: 0.92),
+              color: cs.surfaceContainerHighest.withOpacity(0.92),
               surfaceTintColor:
-                  ClubBlackoutTheme.neonOrange.withValues(alpha: 0.10),
+                  ClubBlackoutTheme.neonOrange.withOpacity(0.10),
               child: Row(
                 children: [
                   const Spacer(),
@@ -477,7 +476,7 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                         padding: ClubBlackoutTheme.topInset16,
                         child: Card(
                           elevation: 0,
-                          color: ClubBlackoutTheme.neonPink.withValues(alpha: 0.1),
+                          color: ClubBlackoutTheme.neonPink.withOpacity(0.1),
                           shape: RoundedRectangleBorder(
                             borderRadius: ClubBlackoutTheme.borderRadiusMdAll,
                             side: BorderSide(
@@ -532,13 +531,16 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                         _maxVotes < _requiredVotesToReachVerdict(engine))
                       Padding(
                         padding: ClubBlackoutTheme.topInset24,
-                        child: Container(
-                          decoration: ClubBlackoutTheme.neonFrame(
-                            color: ClubBlackoutTheme.neonBlue,
-                            opacity: 0.1,
-                            borderRadius: ClubBlackoutTheme.radiusMd,
-                            borderWidth: 1.2,
-                            showGlow: true,
+                        child: Card(
+                          elevation: 0,
+                          color: ClubBlackoutTheme.neonBlue.withOpacity(0.1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: ClubBlackoutTheme.borderRadiusMdAll,
+                            side: BorderSide(
+                              color: ClubBlackoutTheme.neonBlue
+                                  .withValues(alpha: 0.4),
+                              width: 1.2,
+                            ),
                           ),
                           child: Padding(
                             padding: ClubBlackoutTheme.inset24,
@@ -565,7 +567,7 @@ class _DaySceneDialogState extends State<DaySceneDialog> {
                                   'Not enough votes were cast to reach a verdict. No one was eliminated today.',
                                   textAlign: TextAlign.center,
                                   style: tt.bodyMedium?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white.withOpacity(0.8),
                                   ),
                                 ),
                                 ClubBlackoutTheme.gap24,

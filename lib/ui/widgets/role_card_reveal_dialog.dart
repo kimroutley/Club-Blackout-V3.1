@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/player.dart';
 import '../styles.dart';
-import 'bulletin_dialog_shell.dart';
+import 'active_event_card.dart';
+import 'player_icon.dart';
 import 'role_card_widget.dart';
 import 'role_facts_context.dart';
 
@@ -20,47 +21,75 @@ class RoleCardRevealDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    const accent = ClubBlackoutTheme.neonPurple;
-    return BulletinDialogShell(
-      accent: accent,
-      maxWidth: 560,
-      insetPadding: ClubBlackoutTheme.dialogInsetPadding,
-      title: Text(
-        'CONFIRM TARGET',
-        style: ClubBlackoutTheme.bulletinHeaderStyle(accent),
-        textAlign: TextAlign.center,
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          RoleCardWidget(
-            role: player.role,
-            compact: false,
-            allowFlip: false,
-            tapToFlip: false,
-            factsContext: factsContext,
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: TextButton.styleFrom(
-            foregroundColor: cs.onSurface.withValues(alpha: 0.7),
-          ),
-          child: const Text('CANCEL'),
+    final role = player.role;
+    final accent = role.color;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ActiveEventCard(
+        header: Row(
+          children: [
+            PlayerIcon(
+              assetPath: role.assetPath,
+              glowColor: accent,
+              size: 40,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ROLE REVEAL',
+                    style: ClubBlackoutTheme.neonGlowFont.copyWith(
+                      color: accent,
+                      fontSize: 12,
+                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    player.name.toUpperCase(),
+                    style: ClubBlackoutTheme.neonGlowFont.copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        FilledButton(
-          style: ClubBlackoutTheme.neonButtonStyle(accent, isPrimary: true),
-          onPressed: () {
-            Navigator.of(context).pop();
-            onConfirm();
-          },
-          child: const Text('CONFIRM'),
+        body: Column(
+          children: [
+            RoleCardWidget(
+              role: role,
+              compact: false,
+              allowFlip: false,
+              tapToFlip: false,
+              factsContext: factsContext,
+            ),
+          ],
         ),
-      ],
+        actionSlot: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: FilledButton(
+              style: ClubBlackoutTheme.neonButtonStyle(accent, isPrimary: true),
+              onPressed: () {
+                Navigator.of(context).pop();
+                onConfirm();
+              },
+              child: const Text('CONFIRM & CONTINUE'),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

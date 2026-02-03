@@ -3,109 +3,113 @@ import '../styles.dart';
 
 class BottomGameControls extends StatelessWidget {
   final VoidCallback? onBack;
+  final VoidCallback? onMenu;
   final VoidCallback? onSkip;
   final VoidCallback? onNext;
-  final VoidCallback? onMenu; 
-  final bool nextEnabled;
-  final String nextLabel;
+  final bool canSkip;
+  final bool canNext;
 
   const BottomGameControls({
     super.key,
     this.onBack,
+    this.onMenu,
     this.onSkip,
     this.onNext,
-    this.onMenu,
-    this.nextEnabled = true,
-    this.nextLabel = 'NEXT',
+    this.canSkip = false,
+    this.canNext = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), // Extra bottom padding for safe area
-      decoration: BoxDecoration(
-        color: ClubBlackoutTheme.kBackground.withValues(alpha: 0.95),
-        border: Border(
-           top: BorderSide(color: ClubBlackoutTheme.kNeonCyan.withValues(alpha: 0.3), width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          )
-        ]
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
       child: Row(
         children: [
-           // Back (Circle)
-           IconButton.filledTonal(
-             onPressed: onBack,
-             tooltip: 'Back',
-             style: IconButton.styleFrom(
-               backgroundColor: Colors.white.withValues(alpha: 0.05),
-               foregroundColor: Colors.white,
-               side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-             ),
-             icon: const Icon(Icons.arrow_back_rounded),
-           ),
-           
-           const SizedBox(width: 12),
+          // Back (Circle)
+          if (onBack != null)
+            _CircleButton(
+              icon: Icons.arrow_back_rounded,
+              onTap: onBack!,
+              color: Colors.white.withOpacity(0.1),
+            )
+          else
+            const SizedBox(width: 48),
 
-           // Menu (Flash)
-           IconButton.filled(
-             onPressed: onMenu,
-             tooltip: 'Menu',
-             style: IconButton.styleFrom(
-               backgroundColor: ClubBlackoutTheme.kNeonPink.withValues(alpha: 0.2),
-               foregroundColor: ClubBlackoutTheme.kNeonPink,
-               side: const BorderSide(color: ClubBlackoutTheme.kNeonPink),
-             ),
-             icon: const Icon(Icons.bolt_rounded), // Flash/Bolt
-           ),
-           
-           const SizedBox(width: 12),
+          const Spacer(),
 
-           // Skip (Capsule) - if permissible
-           if (onSkip != null)
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.white24),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: TextButton(
-                 onPressed: onSkip,
-                 style: TextButton.styleFrom(
-                    foregroundColor: Colors.white60,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                 ),
-                 child: Text(
-                   'SKIP', 
-                   style: ClubBlackoutTheme.mainFont.copyWith(fontSize: 12),
-                 ),
-               ),
+          // Menu (Flash style - placeholder for now, using Icon)
+          if (onMenu != null)
+            IconButton(
+              icon: const Icon(Icons.menu_rounded, color: Colors.white),
+              onPressed: onMenu,
             ),
 
-           const Spacer(),
+          const SizedBox(width: 16),
 
-           // Next (Flash/Primary)
-           FilledButton.icon(
-             onPressed: nextEnabled ? onNext : null,
-             style: FilledButton.styleFrom(
-               backgroundColor: ClubBlackoutTheme.kNeonCyan,
-               foregroundColor: Colors.black,
-               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-               textStyle: ClubBlackoutTheme.mainFont.copyWith(
-                 fontWeight: FontWeight.bold,
-                 letterSpacing: 1.0,
-               ),
-               elevation: nextEnabled ? 8 : 0,
-               shadowColor: ClubBlackoutTheme.kNeonCyan.withValues(alpha: 0.5),
-             ),
-             icon: const Icon(Icons.arrow_forward_rounded, size: 20),
-             label: Text(nextLabel),
-           ),
+          // Skip (Capsule)
+          if (canSkip && onSkip != null)
+            FilledButton(
+              onPressed: onSkip,
+              style: FilledButton.styleFrom(
+                backgroundColor: ClubBlackoutTheme.kCardBg,
+                shape: const StadiumBorder(),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                side: BorderSide(color: Colors.white.withOpacity(0.2)),
+              ),
+              child: Text(
+                'SKIP',
+                style: ClubBlackoutTheme.neonGlowFont.copyWith(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          
+          const SizedBox(width: 16),
+
+          // Next (Flash style / Circle)
+          if (onNext != null)
+            _CircleButton(
+              icon: Icons.arrow_forward_rounded,
+              onTap: onNext!,
+              color: canNext ? ClubBlackoutTheme.kNeonCyan : Colors.white.withOpacity(0.1),
+              iconColor: canNext ? Colors.black : Colors.white.withOpacity(0.5),
+            )
+          else
+             const SizedBox(width: 48),
         ],
+      ),
+    );
+  }
+}
+
+class _CircleButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color color;
+  final Color? iconColor;
+
+  const _CircleButton({
+    required this.icon,
+    required this.onTap,
+    required this.color,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(50),
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: iconColor ?? Colors.white),
       ),
     );
   }

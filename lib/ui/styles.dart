@@ -3,20 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ClubBlackoutTheme {
-  // --- CYBER-CLUB NEW PALETTE ---
-  // The 'Deep Purple' void background
+  // --- CYBER-CLUB THEME FOUNDATION ---
   static const Color kBackground = Color(0xFF151026);
-  // The primary neon accent (Cyan/Electric Blue)
   static const Color kNeonCyan = Color(0xFF00E5FF);
-  // The secondary neon accent (Pink/Magenta)
-  static const Color kNeonPink = Color(0xFFFF00FF);
-  
-  // Standard Fonts (Roboto)
-  static String get mainFontFamily => GoogleFonts.roboto().fontFamily!;
-  static TextStyle get mainFont => GoogleFonts.roboto();
+  static const Color kNeonPink = Color(0xFFFF4FD8);
+  static const Color kCardBg = Color(0xFF1C1632);
 
-  // Legacy / Existing Colors (Refactored or Alias)
-  static const neonBlue = kNeonCyan; // Alias old blue to new cyan where appropriate or keep separate
+  // Legacy colors (maintained for compatibility)
+  static const neonBlue = Color(0xFF00D1FF);
   static const electricBlue = Color(0xFF2E5BFF);
 
   static final String neonGlowFontFamily = GoogleFonts.roboto().fontFamily!;

@@ -407,9 +407,14 @@ class UnifiedPlayerTile extends StatelessWidget {
     final isInteractive = config.isInteractive && isEnabled;
     final isCompact = config.variant == PlayerTileVariant.compact;
 
-    final effectChips = config.showStatusChips
+    final allChips = config.showStatusChips
         ? _collectEffectChips(player: player, engine: gameEngine)
         : const <_EffectChip>[];
+
+    // Filter out status chips that are now shown in the main row
+    final effectChips = allChips
+        .where((chip) => !['Dead', 'Disabled'].contains(chip.label))
+        .toList();
 
     final showBanner = config.statusChipsAsBanner && effectChips.isNotEmpty;
 
@@ -418,10 +423,10 @@ class UnifiedPlayerTile extends StatelessWidget {
         : Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: roleColor.withValues(alpha: 0.2),
+              color: roleColor.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: roleColor.withValues(alpha: 0.6),
+                color: roleColor.withOpacity(0.6),
                 width: 1.5,
               ),
             ),
@@ -482,30 +487,74 @@ class UnifiedPlayerTile extends StatelessWidget {
                             : Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withValues(alpha: 0.4),
+                                .withOpacity(0.4),
                         shadows: isEnabled && config.isSelected
                             ? ClubBlackoutTheme.textGlow(roleColor, intensity: 1.2)
                             : null,
                       ),
                     ),
-                  if (config.showPlayerName && config.showSubtitle)
-                    const SizedBox(height: 2),
-                  if (config.showSubtitle)
-                    AutoScrollText(
-                      subtitleText,
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: isEnabled
-                            ? roleColor.withValues(alpha: 0.7)
-                            : Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.3),
-                      ),
+                  if (config.showSubtitle) ...[
+                    const SizedBox(height: 4),
+                    if (config.subtitleOverride != null)
+                      AutoScrollText(
+                        config.subtitleOverride!,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color: isEnabled
+                              ? roleColor.withOpacity(0.7)
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.3),
+                        ),
+                      )
+                    else
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                        Text(
+                          player.role.name.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: isEnabled
+                                ? roleColor.withOpacity(0.9)
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.3),
+                          ),
+                        ),
+                        Text(
+                          '•',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.3),
+                            fontSize: 10,
+                          ),
+                        ),
+                        Text(
+                          player.alliance.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: isEnabled
+                                ? Colors.white.withOpacity(0.7)
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.3),
+                          ),
+                        ),
+                        if (config.showStatusChips)
+                          _buildStatusChip(context, player),
+                      ],
                     ),
+                  ],
                   if (!showBanner && effectChips.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     AutoScrollHStack(
@@ -588,48 +637,78 @@ class UnifiedPlayerTile extends StatelessWidget {
     final isEnabled = config.enabledOverride ?? player.isEnabled;
     final isInteractive = config.isInteractive && isEnabled;
 
-    // Collect status chips for Night Phase too
-    final effectChips = config.showStatusChips
-        ? _collectEffectChips(player: player, engine: gameEngine)
-        : const <_EffectChip>[];
-
-    Widget content = InkWell(
-      onTap: isInteractive ? config.onTap : null,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            // Standardized Icon container (matches Standard variant but slightly larger for emphasis)
-            Hero(
-              tag: 'player_icon_${player.id}',
-              child: PlayerIcon(
-                assetPath: player.role.assetPath,
-                glowColor: accent,
-                size: 48, // Standardized size (Standard is 48)
-                isAlive: player.isAlive,
-                isEnabled: isEnabled,
-                glowIntensity: config.isSelected && isEnabled ? 1.5 : 1.0,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: config.isSelected
+              ? LinearGradient(
+                  colors: [
+                    accent.withOpacity(isEnabled ? 0.35 : 0.15),
+                    accent.withOpacity(isEnabled ? 0.15 : 0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : LinearGradient(
+                  colors: [
+                    cs.surfaceContainerHigh.withOpacity(isEnabled ? 0.9 : 0.4),
+                    cs.surfaceContainerHigh.withOpacity(isEnabled ? 0.7 : 0.3),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          border: Border.all(
+            color: config.isSelected
+                ? accent.withOpacity(isEnabled ? 1.0 : 0.4)
+                : cs.outlineVariant.withOpacity(isEnabled ? 0.3 : 0.1),
+            width: config.isSelected ? 2.5 : 1.5,
+          ),
+          boxShadow: config.isSelected && isEnabled
+              ? [
+                  BoxShadow(
+                    color: accent.withOpacity(0.3),
+                    blurRadius: 16,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: accent.withOpacity(0.2),
+                    blurRadius: 24,
+                    spreadRadius: 4,
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isInteractive ? config.onTap : null,
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
                 children: [
-                  Text(
-                    player.name.toUpperCase(),
-                    style: ClubBlackoutTheme.headingStyle.copyWith(
-                      fontSize: 18, // Standardized to closer match Day Phase (was 20)
-                      color: isEnabled
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.4),
-                      shadows: config.isSelected && isEnabled
-                          ? ClubBlackoutTheme.textGlow(accent, intensity: 1.3)
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: config.isSelected && isEnabled
+                          ? [
+                              BoxShadow(
+                                color: accent.withOpacity(0.5),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                            ]
                           : null,
                     ),
                   ),
@@ -642,49 +721,50 @@ class UnifiedPlayerTile extends StatelessWidget {
                       color: accent.withValues(alpha: isEnabled ? 0.85 : 0.3),
                     ),
                   ),
-                  // Add Chips for Night Phase
-                  if (effectChips.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    AutoScrollHStack(
-                      autoScroll: true,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (var i = 0; i < effectChips.length; i++) ...[
-                            _buildChip(context, effectChips[i]),
-                            if (i != effectChips.length - 1)
-                              const SizedBox(width: 8),
-                          ],
-                        ],
-                      ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          player.name.toUpperCase(),
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
+                            fontSize: 20,
+                            color: isEnabled
+                                ? cs.onSurface
+                                : cs.onSurface.withOpacity(0.4),
+                            shadows: config.isSelected && isEnabled
+                                ? ClubBlackoutTheme.textGlow(accent, intensity: 1.3)
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: accent.withOpacity(
+                                isEnabled ? 0.85 : 0.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (config.isSelected && config.onConfirm != null && isEnabled)
+                    IconButton(
+                      icon: Icon(Icons.check_circle_rounded, color: accent),
+                      iconSize: 32,
+                      onPressed: config.onConfirm,
                     ),
                   ],
-                ],
               ),
             ),
-            if (config.isSelected && config.onConfirm != null && isEnabled)
-              IconButton(
-                icon: Icon(Icons.check_circle_rounded, color: accent),
-                iconSize: 32,
-                onPressed: config.onConfirm,
-              ),
-          ],
         ),
       ),
     );
 
-    // Use NeonGlassCard for consistent aesthetics
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: NeonGlassCard(
-        glowColor: accent,
-        opacity: config.isSelected ? 0.35 : (isEnabled ? 0.15 : 0.05),
-        borderRadius: 16, // Unified borderRadius
-        // borderOpacity removed as it is not a property of NeonGlassCard
-        padding: EdgeInsets.zero,
-        child: content,
-      ),
-    );
+
   }
 
   /// Build banner variant for live updates
@@ -699,15 +779,15 @@ class UnifiedPlayerTile extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            roleColor.withValues(alpha: isEnabled ? 0.2 : 0.05),
-            roleColor.withValues(alpha: isEnabled ? 0.1 : 0.02),
+            roleColor.withOpacity(isEnabled ? 0.2 : 0.05),
+            roleColor.withOpacity(isEnabled ? 0.1 : 0.02),
           ],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(16), // Unified borderRadius (was 12)
         border: Border.all(
-          color: roleColor.withValues(alpha: isEnabled ? 0.4 : 0.1),
+          color: roleColor.withOpacity(isEnabled ? 0.4 : 0.1),
           width: 1.5,
         ),
       ),
@@ -740,7 +820,7 @@ class UnifiedPlayerTile extends StatelessWidget {
                         fontSize: 16,
                         color: isEnabled
                             ? cs.onSurface
-                            : cs.onSurface.withValues(alpha: 0.4),
+                            : cs.onSurface.withOpacity(0.4),
                       ),
                     ),
                     if (config.showStatusChips) ...[
@@ -798,8 +878,57 @@ class UnifiedPlayerTile extends StatelessWidget {
                     : Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withValues(alpha: 0.4),
+                        .withOpacity(0.4),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildStatusChip(BuildContext context, Player player) {
+    String label;
+    Color color;
+
+    if (!player.isAlive) {
+      label = 'DEAD';
+      color = ClubBlackoutTheme.neonRed;
+    } else if (!player.isEnabled) {
+      label = 'DISABLED';
+      color = Colors.grey;
+    } else {
+      label = 'ALIVE';
+      color = ClubBlackoutTheme.neonGreen;
+    }
+
+    final bg = color.withOpacity(0.2);
+    final border = color.withOpacity(0.8);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: border, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.25),
+            blurRadius: 6,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          shadows: [
+            Shadow(
+              color: color,
+              blurRadius: 8,
             ),
           ],
         ),
@@ -926,19 +1055,23 @@ class UnifiedPlayerTile extends StatelessWidget {
 
   static Widget _buildChip(BuildContext context, _EffectChip chip) {
     final c = chip.color ?? ClubBlackoutTheme.neonBlue;
-    final bg = c.withValues(alpha: 0.12);
-    final border = c.withValues(alpha: 0.6);
+    final bg = c.withOpacity(0.2); // Slightly more opaque background for M3 feel
+    final border = c.withOpacity(0.8); // Stronger border
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      // Compact padding
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: border, width: 1),
+        // Rounded corners for M3 feel (pill-ish but slightly squared for "neon box")
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: border, width: 1.2),
         boxShadow: [
+          // Inner/outer glow for neon effect
           BoxShadow(
-            color: c.withValues(alpha: 0.1),
-            blurRadius: 4,
+            color: c.withOpacity(0.25),
+            blurRadius: 6,
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -947,13 +1080,14 @@ class UnifiedPlayerTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.visible,
         style: ClubBlackoutTheme.headingStyle.copyWith(
-          fontSize: 9,
+          fontSize: 8, // Slightly smaller font
           letterSpacing: 0.5,
-          color: c,
+          fontWeight: FontWeight.bold, // Bolder text
+          color: Colors.white, // White text often pops better against neon bg
           shadows: [
             Shadow(
-              color: c.withValues(alpha: 0.4),
-              blurRadius: 4,
+              color: c,
+              blurRadius: 8,
             ),
           ],
         ),

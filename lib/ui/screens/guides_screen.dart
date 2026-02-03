@@ -21,14 +21,7 @@ class GuidesScreen extends StatelessWidget {
       children: [
         if (!isNight)
           const Positioned.fill(
-            child: NeonBackground(
-              accentColor: ClubBlackoutTheme.neonOrange,
-              backgroundAsset:
-                  'Backgrounds/Club Blackout V2 Game Background.png',
-              blurSigma: 12.0,
-              showOverlay: true,
-              child: SizedBox.expand(),
-            ),
+            child: ColoredBox(color: ClubBlackoutTheme.kBackground),
           ),
         DefaultTabController(
           length: 3,
@@ -36,7 +29,7 @@ class GuidesScreen extends StatelessWidget {
             backgroundColor: isNight ? null : Colors.transparent,
             appBar: AppBar(
               backgroundColor:
-                  isNight ? cs.surface : Colors.black.withValues(alpha: 0.3),
+                  isNight ? cs.surface : Colors.black.withOpacity(0.3),
               surfaceTintColor: isNight ? cs.surfaceTint : Colors.transparent,
               elevation: 0,
               iconTheme: IconThemeData(
@@ -59,8 +52,8 @@ class GuidesScreen extends StatelessWidget {
                     border: Border(
                       bottom: BorderSide(
                         color: isNight
-                            ? cs.outlineVariant.withValues(alpha: 0.5)
-                            : Colors.white.withValues(alpha: 0.2),
+                            ? cs.outlineVariant.withOpacity(0.5)
+                            : Colors.white.withOpacity(0.2),
                         width: 1,
                       ),
                     ),
@@ -70,7 +63,7 @@ class GuidesScreen extends StatelessWidget {
                         isNight ? cs.primary : ClubBlackoutTheme.neonOrange,
                     unselectedLabelColor: isNight
                         ? cs.onSurfaceVariant
-                        : Colors.white.withValues(alpha: 0.7),
+                        : Colors.white.withOpacity(0.7),
                     indicatorColor:
                         isNight ? cs.primary : ClubBlackoutTheme.neonOrange,
                     indicatorWeight: 3,

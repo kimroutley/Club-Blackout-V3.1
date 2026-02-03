@@ -22,7 +22,7 @@ Future<void> showDeathAnnouncement(
   await showDialog<void>(
     context: context,
     barrierDismissible: false,
-    barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.88),
+    barrierColor: Theme.of(context).colorScheme.scrim.withOpacity(0.88),
     builder: (context) => DeathAnnouncementDialog(
       player: player,
       role: role,
@@ -158,7 +158,7 @@ class _DeathAnnouncementDialogState extends State<DeathAnnouncementDialog>
                         textAlign: TextAlign.center,
                         style: ClubBlackoutTheme.headingStyle.copyWith(
                           fontSize: 12,
-                          color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                          color: cs.onSurfaceVariant.withOpacity(0.7),
                           letterSpacing: 2.0,
                         ),
                       ),
@@ -171,21 +171,18 @@ class _DeathAnnouncementDialogState extends State<DeathAnnouncementDialog>
                       ),
                     ],
                     const SizedBox(height: 12),
-                    Container(
-                      decoration: ClubBlackoutTheme.neonFrame(
-                        color: cs.errorContainer,
-                        opacity: 0.45,
-                        borderRadius: 12,
-                        borderWidth: 0,
-                        showGlow: false,
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      child: Text(
-                        'They have been eliminated from the game',
-                        textAlign: TextAlign.center,
-                        style: (tt.bodyMedium ?? const TextStyle()).copyWith(
-                          color: cs.onSurface.withValues(alpha: 0.9),
-                          fontWeight: FontWeight.w600,
+                    Card(
+                      elevation: 0,
+                      color: cs.errorContainer.withOpacity(0.45),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          'THEY HAVE BEEN ELIMINATED FROM THE GAME',
+                          textAlign: TextAlign.center,
+                          style: ClubBlackoutTheme.headingStyle.copyWith(
+                            fontSize: 10,
+                            color: cs.onSurface.withOpacity(0.9),
+                          ),
                         ),
                       ),
                     ),
