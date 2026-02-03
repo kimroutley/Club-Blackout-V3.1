@@ -328,133 +328,151 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
               ],
             ),
             const SizedBox(height: 14),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
+            // Quick Actions Row 1 (Core Phase Management)
+            Row(
               children: [
-                _buildNeonToolButton(
-                  context,
-                  label: 'Skip phase',
-                  icon: Icons.skip_next_rounded,
-                  color: ClubBlackoutTheme.neonBlue,
-                  onPressed: () => runOrWarn(() async {
-                    final ok = await _confirmHostAction(
-                      title: 'Skip to next phase?',
-                      message:
-                          'This advances the game immediately. Use if the table is stuck.',
-                      confirmLabel: 'Skip',
-                      icon: Icons.skip_next_rounded,
-                    );
-                    if (!ok) return;
-                    HapticFeedback.mediumImpact();
-                    engine.skipToNextPhase();
-                    _showHostSnack('Skipped to next phase.');
-                  }),
-                ),
-                _buildNeonToolButton(
-                  context,
-                  label: 'Clear votes',
-                  icon: Icons.delete_sweep_rounded,
-                  color: cs.onSurface.withValues(alpha: 0.6),
-                  onPressed: () => runOrWarn(() async {
-                    final ok = await _confirmHostAction(
-                      title: 'Clear day votes?',
-                      message:
-                          'This clears the current day vote map (useful if votes were entered incorrectly).',
-                      confirmLabel: 'Clear',
-                      icon: Icons.delete_sweep_rounded,
-                    );
-                    if (!ok) return;
-                    HapticFeedback.selectionClick();
-                    engine.clearDayVotes();
-                    _showHostSnack('Day votes cleared.');
-                  }),
-                ),
-                _buildNeonToolButton(
-                  context,
-                  label: 'Force vote-out',
-                  icon: Icons.how_to_vote_rounded,
-                  color: ClubBlackoutTheme.neonBlue,
-                  onPressed: () => runOrWarn(() async {
-                    final target = await _pickPlayer(
-                      engine: engine,
-                      title: 'Force vote-out: pick a player',
-                      aliveOnly: true,
-                    );
-                    if (target == null) return;
-
-                    final ok = await _confirmHostAction(
-                      title: 'Force vote-out?',
-                      message:
-                          'This will eliminate ${target.name} as if voted out.',
-                      confirmLabel: 'Vote out',
-                      icon: Icons.how_to_vote_rounded,
-                    );
-                    if (!ok) return;
-                    HapticFeedback.mediumImpact();
-                    final success = engine.voteOutPlayer(target.id);
-                    if (success) {
-                      _showHostSnack('${target.name} voted out.');
-                    } else {
-                      _showHostSnack('Vote-out failed (see log for details).');
-                    }
-                  }),
-                ),
-                _buildNeonToolButton(
-                  context,
-                  label: 'Admin kill',
-                  icon: Icons.dangerous_rounded,
-                  color: ClubBlackoutTheme.neonRed,
-                  onPressed: () => runOrWarn(() async {
-                    final target = await _pickPlayer(
-                      engine: engine,
-                      title: 'Admin kill: pick a player',
-                      aliveOnly: true,
-                    );
-                    if (target == null) return;
-
-                    final ok = await _confirmHostAction(
-                      title: 'Admin kill?',
-                      message:
-                          'This will immediately kill ${target.name} (ignores most protections).',
-                      confirmLabel: 'Kill',
-                      icon: Icons.dangerous_rounded,
-                    );
-                    if (!ok) return;
-                    HapticFeedback.heavyImpact();
-                    engine.processDeath(target, cause: DeathCause.adminKill);
-                    _showHostSnack('${target.name} killed.');
-                  }),
-                ),
-                _buildNeonToolButton(
-                  context,
-                  label: 'Admin revive',
-                  icon: Icons.volunteer_activism_rounded,
-                  color: ClubBlackoutTheme.neonGreen,
-                  onPressed: () => runOrWarn(() async {
-                    final target = await _pickPlayer(
-                      engine: engine,
-                      title: 'Admin revive: pick a player',
-                      deadOnly: true,
-                    );
-                    if (target == null) return;
-
-                    final ok = await _confirmHostAction(
-                        title: 'Admin revive?',
+                Expanded(
+                  child: _buildNeonToolButton(
+                    context,
+                    label: 'Skip phase',
+                    icon: Icons.skip_next_rounded,
+                    color: ClubBlackoutTheme.neonBlue,
+                    onPressed: () => runOrWarn(() async {
+                      final ok = await _confirmHostAction(
+                        title: 'Skip to next phase?',
                         message:
-                            'This will revive ${target.name} and return them to the game.',
-                        confirmLabel: 'Revive',
-                        icon: Icons.volunteer_activism_rounded);
-                    if (!ok) return;
-                    HapticFeedback.mediumImpact();
-                    final success = engine.adminRevivePlayer(target.id);
-                    if (success) {
-                      _showHostSnack('${target.name} revived.');
-                    } else {
-                      _showHostSnack(
-                          'Revive failed (player not found/already alive).');
-                    }
-                  }),
+                            'This advances the game immediately. Use if the table is stuck.',
+                        confirmLabel: 'Skip',
+                        icon: Icons.skip_next_rounded,
+                      );
+                      if (!ok) return;
+                      HapticFeedback.mediumImpact();
+                      engine.skipToNextPhase();
+                      _showHostSnack('Skipped to next phase.');
+                    }),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildNeonToolButton(
+                    context,
+                    label: 'Clear votes',
+                    icon: Icons.delete_sweep_rounded,
+                    color: cs.onSurface.withValues(alpha: 0.6),
+                    onPressed: () => runOrWarn(() async {
+                      final ok = await _confirmHostAction(
+                        title: 'Clear day votes?',
+                        message:
+                            'This clears the current day vote map (useful if votes were entered incorrectly).',
+                        confirmLabel: 'Clear',
+                        icon: Icons.delete_sweep_rounded,
+                      );
+                      if (!ok) return;
+                      HapticFeedback.selectionClick();
+                      engine.clearDayVotes();
+                      _showHostSnack('Day votes cleared.');
+                    }),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Quick Actions Row 2 (Player Management)
+            Row(
+              children: [
+                Expanded(
+                  child: _buildNeonToolButton(
+                    context,
+                    label: 'Force out',
+                    icon: Icons.how_to_vote_rounded,
+                    color: ClubBlackoutTheme.neonBlue,
+                    onPressed: () => runOrWarn(() async {
+                      final target = await _pickPlayer(
+                        engine: engine,
+                        title: 'Force vote-out: pick a player',
+                        aliveOnly: true,
+                      );
+                      if (target == null) return;
+
+                      final ok = await _confirmHostAction(
+                        title: 'Force vote-out?',
+                        message:
+                            'This will eliminate ${target.name} as if voted out.',
+                        confirmLabel: 'Vote out',
+                        icon: Icons.how_to_vote_rounded,
+                      );
+                      if (!ok) return;
+                      HapticFeedback.mediumImpact();
+                      final success = engine.voteOutPlayer(target.id);
+                      if (success) {
+                        _showHostSnack('${target.name} voted out.');
+                      } else {
+                        _showHostSnack('Vote-out failed (see log for details).');
+                      }
+                    }),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildNeonToolButton(
+                    context,
+                    label: 'Kill',
+                    icon: Icons.dangerous_rounded,
+                    color: ClubBlackoutTheme.neonRed,
+                    onPressed: () => runOrWarn(() async {
+                      final target = await _pickPlayer(
+                        engine: engine,
+                        title: 'Admin kill: pick a player',
+                        aliveOnly: true,
+                      );
+                      if (target == null) return;
+
+                      final ok = await _confirmHostAction(
+                        title: 'Admin kill?',
+                        message:
+                            'This will immediately kill ${target.name} (ignores most protections).',
+                        confirmLabel: 'Kill',
+                        icon: Icons.dangerous_rounded,
+                      );
+                      if (!ok) return;
+                      HapticFeedback.heavyImpact();
+                      engine.processDeath(target, cause: DeathCause.adminKill);
+                      _showHostSnack('${target.name} killed.');
+                    }),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildNeonToolButton(
+                    context,
+                    label: 'Revive',
+                    icon: Icons.volunteer_activism_rounded,
+                    color: ClubBlackoutTheme.neonGreen,
+                    onPressed: () => runOrWarn(() async {
+                      final target = await _pickPlayer(
+                        engine: engine,
+                        title: 'Admin revive: pick a player',
+                        deadOnly: true,
+                      );
+                      if (target == null) return;
+
+                      final ok = await _confirmHostAction(
+                          title: 'Admin revive?',
+                          message:
+                              'This will revive ${target.name} and return them to the game.',
+                          confirmLabel: 'Revive',
+                          icon: Icons.volunteer_activism_rounded);
+                      if (!ok) return;
+                      HapticFeedback.mediumImpact();
+                      final success = engine.adminRevivePlayer(target.id);
+                      if (success) {
+                        _showHostSnack('${target.name} revived.');
+                      } else {
+                        _showHostSnack(
+                            'Revive failed (player not found/already alive).');
+                      }
+                    }),
+                  ),
                 ),
               ],
             ),
@@ -471,25 +489,25 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
     required Color color,
     required VoidCallback onPressed,
   }) {
-    return OutlinedButton.icon(
+    return FilledButton.tonalIcon(
       onPressed: onPressed,
-      icon: Icon(icon, size: 18, color: color),
+      icon: Icon(icon, size: 18),
       label: Text(
         label.toUpperCase(),
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w900,
-          color: color,
           letterSpacing: 0.5,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
-      style: OutlinedButton.styleFrom(
-        side: BorderSide(color: color.withValues(alpha: 0.4), width: 1.5),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: color.withValues(alpha: 0.05),
-      ).copyWith(
-        overlayColor: WidgetStateProperty.all(color.withValues(alpha: 0.1)),
+      style: FilledButton.styleFrom(
+        backgroundColor: color.withValues(alpha: 0.15),
+        foregroundColor: color,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
       ),
     );
   }
@@ -1005,7 +1023,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                   ),
                   const PopupMenuDivider(),
                   PopupMenuItem(
-                    onPressed: _toggleKeepScreenAwake,
+                    onTap: _toggleKeepScreenAwake,
                     child: ListenableBuilder(
                       listenable: KeepScreenAwakeService.status,
                       builder: (context, _) {
@@ -1029,7 +1047,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                     ),
                   ),
                   PopupMenuItem(
-                    onPressed: _openPrivacyMode,
+                    onTap: _openPrivacyMode,
                     child: const Row(
                       children: [
                         Icon(Icons.visibility_off_rounded, size: 20),
@@ -1040,7 +1058,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                   ),
                   if (gameEngine.lastArchivedGameBlobJson != null)
                     PopupMenuItem(
-                      onPressed: _loadingArchived ? null : _toggleArchivedView,
+                      onTap: _loadingArchived ? null : _toggleArchivedView,
                       child: Row(
                         children: [
                           Icon(
@@ -1058,7 +1076,7 @@ class _HostOverviewScreenState extends State<HostOverviewScreen> {
                       ),
                     ),
                   PopupMenuItem(
-                    onPressed: (_oddsSimRunning || _viewingArchived)
+                    onTap: (_oddsSimRunning || _viewingArchived)
                         ? null
                         : () => _maybeRunOddsSimulation(),
                     child: Row(

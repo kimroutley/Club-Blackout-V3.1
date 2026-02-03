@@ -64,7 +64,7 @@ class InteractiveScriptCard extends StatelessWidget {
         width: double.infinity,
         decoration: ClubBlackoutTheme.neonFrame(
           color: color,
-          opacity: isActive ? 0.14 : 0.08,
+          opacity: isActive ? 0.90 : 0.70,
           borderRadius: 14,
           borderWidth: 1.2,
           showGlow: isActive,
@@ -162,46 +162,42 @@ class InteractiveScriptCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                if (showPlayerTile) ...[
-                  Flexible(
-                    flex: 0,
-                    child: UnifiedPlayerTile(
-                      player: player!,
-                      gameEngine: gameEngine,
-                      config: const PlayerTileConfig(
-                        variant: PlayerTileVariant.minimal,
-                        isInteractive: false,
-                        showStatusChips: false,
-                        showSubtitle: false,
-                        wrapInCard: false,
+            if (showPlayerTile)
+              UnifiedPlayerTile(
+                player: player!,
+                gameEngine: gameEngine,
+                config: const PlayerTileConfig(
+                  variant: PlayerTileVariant.standard,
+                  isInteractive: false,
+                  wrapInCard: true,
+                  tileColor: Colors.black12,
+                ),
+              )
+            else
+              Row(
+                children: [
+                   if (isActive && role != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: PlayerIcon(
+                        assetPath: role!.assetPath,
+                        glowColor: accent,
+                        glowIntensity: 0.4,
+                        size: bulletin ? 30 : 36,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                ] else if (isActive && role != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: accent.withValues(alpha: 0.2),
-                          blurRadius: 8,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                    child: PlayerIcon(
-                      assetPath: role!.assetPath,
-                      glowColor: accent,
-                      glowIntensity: 0.4,
-                      size: bulletin ? 30 : 36,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                ] else ...[
+                    const SizedBox(width: 14),
+                  ] else ...[
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
@@ -220,15 +216,14 @@ class InteractiveScriptCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                   ],
-                  if (!showPlayerTile)
-                    Expanded(
-                      child: Text(
-                        (byline == null || byline.isEmpty)
-                            ? step.title
-                            : '${step.title} · $byline',
-                        style: headerStyle,
-                      ),
+                  Expanded(
+                    child: Text(
+                      (byline == null || byline.isEmpty)
+                          ? step.title
+                          : '${step.title} · $byline',
+                      style: headerStyle,
                     ),
+                  ),
                 ],
               ),
               if (roleContext != null) ...[
@@ -237,14 +232,51 @@ class InteractiveScriptCard extends StatelessWidget {
               ],
               if (readAloudText.isNotEmpty) ...[
                 ClubBlackoutTheme.gap12,
-                buildScriptSection(
-                  label: 'Read aloud',
-                  icon: Icons.record_voice_over_rounded,
-                  color: ClubBlackoutTheme.neonBlue,
-                  showHeader: !readAloudHasPrefix,
-                  child: Text(
-                    readAloudText,
-                    style: bodyStyle?.copyWith(fontStyle: FontStyle.italic),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: ClubBlackoutTheme.kNeonCyan.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.record_voice_over_rounded,
+                              color: ClubBlackoutTheme.kNeonCyan, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'READ ALOUD',
+                            style: ClubBlackoutTheme.headingStyle.copyWith(
+                              color: ClubBlackoutTheme.kNeonCyan,
+                              fontSize: 12,
+                              letterSpacing: 1.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        readAloudHasPrefix
+                            ? readAloudText.replaceFirst(
+                                RegExp(r'^read\s*aloud\s*:\s*',
+                                    caseSensitive: false),
+                                '')
+                            : readAloudText,
+                        style: tt.titleMedium?.copyWith(
+                          color: Colors.white,
+                          height: 1.4,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

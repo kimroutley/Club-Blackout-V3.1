@@ -85,16 +85,13 @@ class _AutoScrollTextState extends State<AutoScrollText> {
     _running = false;
   }
 
+/*
   bool _computeShouldScroll(
       BoxConstraints constraints, TextStyle effectiveStyle) {
-    final tp = TextPainter(
-      text: TextSpan(text: widget.text, style: effectiveStyle),
-      maxLines: widget.maxLines,
-      textDirection: Directionality.of(context),
-    )..layout(maxWidth: constraints.maxWidth);
-
-    return tp.didExceedMaxLines;
+    // ... logic omitted ...
+    return false; 
   }
+*/
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +131,6 @@ class _AutoScrollTextState extends State<AutoScrollText> {
       ),
     );
   }
-}
 }
 
 /// A horizontally-scrollable container that can optionally auto-pan when

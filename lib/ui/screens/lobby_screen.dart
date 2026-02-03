@@ -1759,8 +1759,24 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 
   Widget _buildRecentPlayersChips(BuildContext context) {
-    final profiles = HallOfFameService.instance.allProfiles.take(12).toList();
-    if (profiles.isEmpty) return const SizedBox.shrink();
+    // Merge Hall of Fame + Recent Name History
+    final profileNames = HallOfFameService.instance.allProfiles
+        .map((p) => p.name)
+        .toSet();
+    
+    // Recent names that are NOT in Hall of Fame (to avoid duplicates/clutter)
+    final recentHistory = widget.gameEngine.nameHistory
+        .where((n) => n.trim().isNotEmpty)
+        .where((n) => !profileNames.contains(n))
+        .toList()
+        .reversed
+        .take(8);
+
+    final hallOfFame = HallOfFameService.instance.allProfiles.take(8).map((p) => p.name);
+    
+    final combined = [...hallOfFame, ...recentHistory].toList();
+
+    if (combined.isEmpty) return const SizedBox.shrink();
 
     final cs = Theme.of(context).colorScheme;
     final guestNames = widget.gameEngine.players
@@ -1792,16 +1808,16 @@ class _LobbyScreenState extends State<LobbyScreen>
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: profiles.map((p) {
+              children: combined.map((name) {
                 final alreadyIn =
-                    guestNames.contains(p.name.trim().toLowerCase());
+                    guestNames.contains(name.trim().toLowerCase());
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: ActionChip(
-                    label: Text(p.name.toUpperCase()),
+                    label: Text(name.toUpperCase()),
                     onPressed: alreadyIn
                         ? null
-                        : () => _addGuestsFromText(context, p.name),
+                        : () => _addGuestsFromText(context, name),
                     padding: EdgeInsets.zero,
                     labelStyle: TextStyle(
                       color: alreadyIn ? cs.outline : cs.primary,

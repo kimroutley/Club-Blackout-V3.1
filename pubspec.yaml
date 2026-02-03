@@ -1,7 +1,7 @@
 name: club_blackout
 description: Club Blackout (Flutter)
 publish_to: "none"
-version: 0.0.1+2
+version: 1.0.0+1
 
 environment:
   sdk: ">=3.3.0 <4.0.0"

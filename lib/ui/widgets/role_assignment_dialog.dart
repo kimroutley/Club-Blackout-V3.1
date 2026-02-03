@@ -423,9 +423,10 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
 
     // Final checks
     if (selected.length < playerCount) {
-      throw StateError(
-        'Not enough unique roles to fill $playerCount players. Add more roles or reduce players.',
-      );
+      // Fallback: Fill remaining slots with Party Animals instead of crashing
+      while (selected.length < playerCount) {
+        selected.add(partyAnimalRole);
+      }
     }
 
     // Ensure Dealer Majority rule doesn't break game
@@ -989,8 +990,19 @@ class _RoleAssignmentDialogState extends State<RoleAssignmentDialog> {
                     ClubBlackoutTheme.hGap12,
                     FilledButton(
                       onPressed: () {
-                        _assignRolesByMode(_selectedMode);
-                        HapticFeedback.mediumImpact();
+                        try {
+                          _assignRolesByMode(_selectedMode);
+                          HapticFeedback.mediumImpact();
+                        } catch (e, st) {
+                           debugPrint('Assign Roles Error: $e\n$st');
+                           // Try to show toast if engine available, or just log
+                           // widget.gameEngine.showToast('Assignment failed: $e'); 
+                           // Safest is to just print for now as we might not have scaffold access depending on dialog state
+                           // But wait, showToast usually uses Fluttertoast or ScaffoldMessenger
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             SnackBar(content: Text('Assignment failed: $e')),
+                           );
+                        }
                       },
                       style: ClubBlackoutTheme.neonButtonStyle(
                         ClubBlackoutTheme.neonPink,

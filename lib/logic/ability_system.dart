@@ -25,6 +25,11 @@ enum AbilityEffect {
   block,
   redirect,
   mark,
+  silence,
+  rumour,
+  heartbreak,
+  mimic,
+  investigate,
   other,
 }
 
@@ -150,6 +155,60 @@ class AbilityLibrary {
           trigger: AbilityTrigger.nightAction,
           priority: 30)
     ],
+    'sober': [
+      const Ability(
+          id: 'sober_send_home',
+          name: 'Send Home',
+          description: 'Blocks all actions against target.',
+          trigger: AbilityTrigger.nightAction,
+          priority: 1)
+    ],
+    'roofi': [
+      const Ability(
+          id: 'roofi_silence',
+          name: 'Silence',
+          description: 'Silences a player for the next day.',
+          trigger: AbilityTrigger.nightAction,
+          priority: 35)
+    ],
+    'clinger': [
+      const Ability(
+          id: 'clinger_obsession',
+          name: 'Obsess',
+          description: 'Setup obsess target.',
+          trigger: AbilityTrigger.startup,
+          priority: 40),
+      const Ability(
+          id: 'clinger_kill',
+          name: 'Attack Dog',
+          description: 'Kill ordered by dealer.',
+          trigger: AbilityTrigger.nightAction,
+          priority: 45)
+    ],
+    'messy_bitch': [
+      const Ability(
+          id: 'messy_bitch_rumour',
+          name: 'Tumour',
+          description: 'Start a rumour about a player.',
+          trigger: AbilityTrigger.nightAction,
+          priority: 60)
+    ],
+    'wallflower': [
+      const Ability(
+          id: 'wallflower_witness',
+          name: 'Witness',
+          description: 'Observe a player.',
+          trigger: AbilityTrigger.nightAction,
+          priority: 70)
+    ],
+    'creep': [
+      const Ability(
+          id: 'creep_mimic',
+          name: 'Mimic',
+          description: 'Mimic another role.',
+          trigger: AbilityTrigger.startup,
+          priority: 80)
+    ],
     'drama_queen': [
       const Ability(
           id: 'drama_queen_swap',
@@ -213,36 +272,174 @@ class AbilityResolver {
     _queue.addAll(other._queue.map((a) => a.copy()));
   }
 
+  /// Checks if a player is targeted by a specific ability
+  bool isTargetedBy(String abilityId, String targetId) {
+    return _queue.any((a) =>
+        a.abilityId == abilityId && a.targetPlayerIds.contains(targetId));
+  }
+
+  /// Removes all abilities queued by a specific source player
+  void removeAbilitiesForSource(String sourcePlayerId) {
+    _queue.removeWhere((a) => a.sourcePlayerId == sourcePlayerId);
+  }
+
   /// Process all queued abilities in priority order
   List<AbilityResult> resolveAllAbilities(List<Player> players) {
+    // 1. Sort by Priority
     _queue.sort((a, b) => a.priority.compareTo(b.priority));
-    final List<AbilityResult> results = [];
-    final protectedIds = <String>{};
-    final deadOnArrival = <String>{};
 
-    for (final ability in _queue) {
-      if (ability.abilityId == 'medic_protect' ||
-          ability.abilityId == 'sober_send_home') {
-        protectedIds.addAll(ability.targetPlayerIds);
-        results.add(AbilityResult(
-            abilityId: ability.abilityId, targets: ability.targetPlayerIds));
-      } else if (ability.abilityId == 'dealer_kill') {
-        final kills = <String>[];
-        final saved = <String>[];
-        for (final tid in ability.targetPlayerIds) {
-          if (protectedIds.contains(tid)) {
-            saved.add(tid);
-          } else {
-            kills.add(tid);
-            deadOnArrival.add(tid);
-          }
-        }
-        results.add(AbilityResult(
-            abilityId: ability.abilityId,
-            targets: kills,
-            metadata: {'protected': saved}));
+    final List<AbilityResult> results = [];
+    final protectedPlayerIds =
+        <String>{}; // Tracks all protected players (for reporting/logic)
+    final immuneToAll = <String>{}; // Sober targets (blocks everything)
+    final immuneToKill = <String>{}; // Medic targets (blocks kill only)
+    final killedPlayerIds = <String>{}; // Tracks players killed this turn
+    final blockedSourceIds = <String>{}; // Sources prevented from acting (e.g. Sent Home)
+
+    // Helper to find player by ID
+    Player? getPlayer(String id) {
+      try {
+        return players.firstWhere((p) => p.id == id);
+      } catch (e) {
+        return null;
       }
     }
+
+    // 2. Iterate through queue
+    for (final ability in _queue) {
+      // Check if source is blocked (e.g. Sent Home or Paralyzed/Roofied earlier)
+      if (blockedSourceIds.contains(ability.sourcePlayerId)) {
+        results.add(AbilityResult(
+            abilityId: ability.abilityId,
+            targets: [],
+            success: false,
+            metadata: {'blocked_source': true}));
+        continue;
+      }
+
+      // Logic for Sober (Priority 1)
+      if (ability.abilityId == 'sober_send_home') {
+        immuneToAll.addAll(ability.targetPlayerIds);
+        protectedPlayerIds.addAll(ability.targetPlayerIds);
+        blockedSourceIds.addAll(ability.targetPlayerIds); // Sent home = cannot act
+        results.add(AbilityResult(
+            abilityId: ability.abilityId,
+            targets: ability.targetPlayerIds,
+            success: true));
+        continue;
+      }
+
+      // Logic for Medic (Priority 20)
+      if (ability.abilityId == 'medic_protect') {
+        final validTargets = <String>[];
+        for (final tid in ability.targetPlayerIds) {
+           if (!immuneToAll.contains(tid)) validTargets.add(tid);
+        }
+
+        immuneToKill.addAll(validTargets);
+        protectedPlayerIds.addAll(validTargets);
+        results.add(AbilityResult(
+            abilityId: ability.abilityId,
+            targets: validTargets,
+            success: validTargets.isNotEmpty));
+        continue;
+      }
+
+      // Logic for Roofi (Priority 35)
+      if (ability.abilityId == 'roofi_silence') {
+         final validTargets = <String>[];
+         final blockedTargets = <String>[];
+         for (final tid in ability.targetPlayerIds) {
+             if (immuneToAll.contains(tid)) {
+                 blockedTargets.add(tid);
+             } else {
+                 validTargets.add(tid);
+             }
+         }
+         
+         blockedSourceIds.addAll(validTargets); // Paralyzed = cannot act later (e.g. Dealer Kill at 50)
+         
+         results.add(AbilityResult(
+             abilityId: ability.abilityId, 
+             targets: validTargets, 
+             success: validTargets.isNotEmpty,
+             metadata: blockedTargets.isNotEmpty ? {'blocked_by_sober': blockedTargets} : {}
+         ));
+         continue;
+      }
+
+      // Logic for Kills (Dealer/Clinger)
+      if (ability.abilityId == 'dealer_kill' ||
+          ability.abilityId == 'clinger_kill') {
+        final killed = <String>[];
+        final saved = <String>[];
+        final minorBlocked = <String>[];
+
+        for (final tid in ability.targetPlayerIds) {
+          final targetPlayer = getPlayer(tid);
+
+          // Check Sober Protection (Blocks everything)
+          if (immuneToAll.contains(tid)) {
+            saved.add(tid);
+            continue;
+          }
+
+          // Check Medic Protection (Blocks Kill)
+          if (immuneToKill.contains(tid)) {
+            saved.add(tid); // Metadata protected: true
+            continue;
+          }
+
+          // Check Minor Protection Logic
+          // If Target is Minor + !ID'd + Source is Dealer -> Block Kill
+          if (targetPlayer != null &&
+              ability.abilityId == 'dealer_kill' &&
+              targetPlayer.role.id == 'minor' &&
+              !targetPlayer.minorHasBeenIDd) {
+            minorBlocked.add(tid);
+            continue;
+          }
+
+          // If no protection, kill succeeds
+          killed.add(tid);
+          killedPlayerIds.add(tid);
+        }
+
+        // Construct Metadata
+        final metadata = <String, dynamic>{};
+        if (saved.isNotEmpty) metadata['protected'] = saved;
+        if (minorBlocked.isNotEmpty) metadata['minor_protected'] = minorBlocked;
+
+        results.add(AbilityResult(
+            abilityId: ability.abilityId,
+            targets: killed,
+            metadata: metadata,
+            success: killed.isNotEmpty));
+        continue;
+      }
+
+      // Logic for Others (Silence, Rumour, etc.)
+      // These generally succeed unless target is Sober-protected (immuneToAll)
+      final successfulTargets = <String>[];
+      final blockedTargets = <String>[];
+
+      for (final tid in ability.targetPlayerIds) {
+        if (immuneToAll.contains(tid)) {
+          blockedTargets.add(tid);
+        } else {
+          successfulTargets.add(tid);
+        }
+      }
+
+      results.add(AbilityResult(
+        abilityId: ability.abilityId,
+        targets: successfulTargets,
+        metadata:
+            blockedTargets.isNotEmpty ? {'blocked_by_sober': blockedTargets} : {},
+        success: successfulTargets.isNotEmpty,
+      ));
+    }
+
     return results;
   }
 }

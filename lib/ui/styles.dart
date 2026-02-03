@@ -3,13 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ClubBlackoutTheme {
-  static const neonBlue = Color(0xFF00D1FF);
+  // --- CYBER-CLUB NEW PALETTE ---
+  // The 'Deep Purple' void background
+  static const Color kBackground = Color(0xFF151026);
+  // The primary neon accent (Cyan/Electric Blue)
+  static const Color kNeonCyan = Color(0xFF00E5FF);
+  // The secondary neon accent (Pink/Magenta)
+  static const Color kNeonPink = Color(0xFFFF00FF);
+  
+  // Standard Fonts (Roboto)
+  static String get mainFontFamily => GoogleFonts.roboto().fontFamily!;
+  static TextStyle get mainFont => GoogleFonts.roboto();
+
+  // Legacy / Existing Colors (Refactored or Alias)
+  static const neonBlue = kNeonCyan; // Alias old blue to new cyan where appropriate or keep separate
   static const electricBlue = Color(0xFF2E5BFF);
 
-  static final String neonGlowFontFamily = GoogleFonts.audiowide().fontFamily!;
-  static final TextStyle neonGlowFont = GoogleFonts.audiowide();
+  static final String neonGlowFontFamily = GoogleFonts.roboto().fontFamily!;
+  static final TextStyle neonGlowFont = GoogleFonts.roboto();
 
-  static final TextStyle neonGlowTitle = GoogleFonts.audiowide(
+  static final TextStyle neonGlowTitle = GoogleFonts.roboto(
     fontSize: 22,
     fontWeight: FontWeight.bold,
     letterSpacing: 1.2,
@@ -179,9 +192,9 @@ class ClubBlackoutTheme {
 
   static TextStyle get primaryFont => const TextStyle();
 
-  static TextStyle get headingStyle => GoogleFonts.audiowide(
+  static TextStyle get headingStyle => GoogleFonts.roboto(
         fontSize: 24,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w900,
         letterSpacing: 1.5,
       );
 
@@ -464,6 +477,8 @@ class ClubBlackoutTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       brightness: colorScheme.brightness,
+      fontFamily: mainFontFamily, // 1. Set global font to Roboto
+      scaffoldBackgroundColor: kBackground, // 2. Set global background to Deep Purple
     );
 
     final onSurface = colorScheme.onSurface;
@@ -548,7 +563,7 @@ class ClubBlackoutTheme {
     final defaultRadius = BorderRadius.circular(16);
 
     return base.copyWith(
-      scaffoldBackgroundColor: colorScheme.surface,
+      scaffoldBackgroundColor: kBackground, // Force Deep Purple Background
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),

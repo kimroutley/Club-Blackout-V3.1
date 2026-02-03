@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -15,23 +16,20 @@ import '../../models/game_log_entry.dart';
 import '../../models/player.dart';
 import '../../models/script_step.dart';
 import '../../services/dynamic_theme_service.dart';
+import '../../services/sound_service.dart';
 import '../../utils/game_exceptions.dart';
 import '../styles.dart';
 import '../utils/player_sort.dart';
 import '../widgets/bulletin_dialog_shell.dart';
 import '../widgets/club_alert_dialog.dart';
-import '../widgets/connectivity_error_widget.dart';
 import '../widgets/day_scene_dialog.dart';
 import '../widgets/game_drawer.dart';
-import '../widgets/host_alert_listener.dart';
+import '../widgets/game_fab_menu.dart';
 import '../widgets/interactive_script_card.dart';
-import '../widgets/neon_glass_card.dart';
 import '../widgets/phase_card.dart';
-import '../widgets/phase_transition_overlay.dart';
+import '../widgets/unified_player_tile.dart';
 import '../widgets/role_reveal_widget.dart';
 import '../widgets/swap_setup_flow.dart';
-import '../widgets/unified_player_tile.dart';
-import 'guides_screen.dart';
 import 'host_overview_screen.dart';
 
 class GameScreen extends StatefulWidget {
@@ -47,7 +45,7 @@ class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _scrollController = ScrollController();
-  final GlobalKey _activeStepKey = GlobalKey();
+  final Map<int, GlobalKey> _stepKeys = {};
   int _lastScriptIndex = 0;
   final Set<String> _currentSelection = {};
   final Map<String, int> _voteCounts = {};
@@ -60,12 +58,6 @@ class _GameScreenState extends State<GameScreen>
   bool _abilityNotificationsPrimed =
       false; // Avoid firing snacks before first activation edge
   Timer? _scrollDebounceTimer;
-
-  bool _isTransitioningPhase = false;
-  String _transitionPhaseName = '';
-  Color _transitionPhaseColor = Colors.white;
-  IconData _transitionPhaseIcon = Icons.circle;
-  String? _transitionTip;
 
   bool _autoOpenedDayDialog = false;
 
@@ -82,19 +74,21 @@ class _GameScreenState extends State<GameScreen>
     // ignore: unused_element
     widget.gameEngine.onPhaseChanged = (oldPhase, newPhase) {
       if (mounted) {
-        final config = _getPhaseConfig(newPhase);
-        setState(() {
-          _isTransitioningPhase = true;
-          _transitionPhaseName = config.name;
-          _transitionPhaseColor = config.color;
-          _transitionPhaseIcon = config.icon;
-          _transitionTip = config.tip;
-        });
-
+        unawaited(SoundService().playPhaseTransition());
+        setState(() {});
         _scrollToStep(widget.gameEngine.currentScriptIndex);
 
         // Update theme when phase changes (different roles may be active)
         _updateDynamicTheme();
+
+        // UX: After the last night action, go straight into Day Phase dialog.
+        if (newPhase == GamePhase.day && !_autoOpenedDayDialog) {
+          _autoOpenedDayDialog = true;
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _showDaySceneDialog();
+          });
+        }
 
         // Reset guard when leaving day.
         if (newPhase != GamePhase.day) {
@@ -193,63 +187,12 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
-  ({String name, Color color, IconData icon, String tip}) _getPhaseConfig(
-      GamePhase phase) {
-    switch (phase) {
-      case GamePhase.lobby:
-        return (
-          name: 'LOBBY',
-          color: ClubBlackoutTheme.neonBlue,
-          icon: Icons.sensors_rounded,
-          tip: 'Waiting for guests to arrive...'
-        );
-      case GamePhase.setup:
-        return (
-          name: 'INITIAL SETUP',
-          color: ClubBlackoutTheme.neonPurple,
-          icon: Icons.terminal_rounded,
-          tip: 'Preparing the night\'s events...'
-        );
-      case GamePhase.night:
-        return (
-          name: 'NIGHT PHASE',
-          color: ClubBlackoutTheme.neonPurple,
-          icon: Icons.visibility_off_rounded,
-          tip: 'The club is dark. Watch your back.'
-        );
-      case GamePhase.day:
-        return (
-          name: 'DAY PHASE',
-          color: ClubBlackoutTheme.neonOrange,
-          icon: Icons.light_mode_rounded,
-          tip: 'The sun rises. Tensions are high.'
-        );
-      case GamePhase.resolution:
-        return (
-          name: 'RESOLUTION',
-          color: ClubBlackoutTheme.neonBlue,
-          icon: Icons.analytics_rounded,
-          tip: 'Determining the night\'s outcome...'
-        );
-      case GamePhase.endGame:
-        return (
-          name: 'GAME OVER',
-          color: ClubBlackoutTheme.neonGreen,
-          icon: Icons.emoji_events_rounded,
-          tip: 'The night has finally ended.'
-        );
-    }
-  }
-
   void _scrollToStep(int index, {double alignment = 0.0, bool gentle = false}) {
     _scrollDebounceTimer?.cancel();
     _scrollDebounceTimer = Timer(const Duration(milliseconds: 70), () {
       if (!mounted) return;
-      if (index != widget.gameEngine.currentScriptIndex) {
-        _scrollToBottom(durationMs: gentle ? 220 : 320);
-        return;
-      }
-      final ctx = _activeStepKey.currentContext;
+      final key = _stepKeys[index];
+      final ctx = key?.currentContext;
       if (ctx != null && _scrollController.hasClients) {
         final box = ctx.findRenderObject();
         final viewport = box != null ? RenderAbstractViewport.of(box) : null;
@@ -286,11 +229,8 @@ class _GameScreenState extends State<GameScreen>
       // Fallback if no context yet
       SchedulerBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        if (index != widget.gameEngine.currentScriptIndex) {
-          _scrollToBottom(durationMs: gentle ? 220 : 320);
-          return;
-        }
-        final fallbackCtx = _activeStepKey.currentContext;
+        final fallbackKey = _stepKeys[index];
+        final fallbackCtx = fallbackKey?.currentContext;
         if (fallbackCtx != null) {
           Scrollable.ensureVisible(
             fallbackCtx,
@@ -298,13 +238,22 @@ class _GameScreenState extends State<GameScreen>
             curve: Curves.easeInOut,
             alignment: alignment,
           );
+        } else if (index == widget.gameEngine.scriptQueue.length - 1) {
+          _scrollToBottom(durationMs: gentle ? 220 : 320);
         }
       });
     });
   }
 
   void _prewarmNextStepScroll() {
-    // Disabled while stabilizing GameScreen rendering.
+    final nextIndex = widget.gameEngine.currentScriptIndex + 1;
+    final steps = widget.gameEngine.scriptQueue;
+    if (nextIndex >= steps.length) return;
+    _stepKeys.putIfAbsent(nextIndex, () => GlobalKey());
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _scrollToStep(nextIndex, alignment: 0.1, gentle: true);
+    });
   }
 
   void _scrollToBottom({int durationMs = 500}) {
@@ -401,11 +350,9 @@ class _GameScreenState extends State<GameScreen>
                       size: 28,
                     ),
                     const SizedBox(width: 12),
-                    Text(
+                    const Text(
                       'VOTE RESULT',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                          ),
+                      style: TextStyle(color: Colors.white, fontSize: 20),
                     ),
                   ],
                 ),
@@ -413,34 +360,35 @@ class _GameScreenState extends State<GameScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (survivedVote) ...[
-                      Text(
+                      const Text(
                         'SECOND WIND!',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: Colors.amber,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: TextStyle(
+                          color: Colors.amber,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Text(
                         "${victim?.name ?? 'The target'} refuses to die!",
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Colors.white,
-                            ),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
                       ),
                       const SizedBox(height: 12),
-                      Text(
+                      const Text(
                         'The Dealers must decide their fate.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.amber,
-                            ),
+                        style: TextStyle(color: Colors.amber),
                       ),
                     ] else ...[
                       Text(
                         player.name,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -448,9 +396,7 @@ class _GameScreenState extends State<GameScreen>
                             ? 'The group has successfully eliminated a Dealer!'
                             : 'The Party Animals have lost an innocent member.',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.white70,
-                            ),
+                        style: const TextStyle(color: Colors.white70),
                       ),
                     ],
 
@@ -470,32 +416,30 @@ class _GameScreenState extends State<GameScreen>
                         ),
                         child: Column(
                           children: [
-                            Row(
+                            const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.warning_amber_rounded,
                                   color: Colors.amber,
                                 ),
-                                const SizedBox(width: 8),
+                                SizedBox(width: 8),
                                 Text(
                                   'REACTIVE ROLE',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall
-                                      ?.copyWith(
-                                        color: Colors.amber,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  style: TextStyle(
+                                    color: Colors.amber,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(
                               "This player was a ${victim?.role.name ?? 'mystery role'}.\nOpen the Action Menu (FAB) immediately to trigger their retaliation ability!",
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.white,
-                                  ),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -560,16 +504,8 @@ class _GameScreenState extends State<GameScreen>
       context: context,
       builder: (context) => ClubAlertDialog(
         backgroundColor: Colors.grey[900],
-        title: Text('Error',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(color: Colors.redAccent)),
-        content: Text(message,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: Colors.white70)),
+        title: const Text('Error', style: TextStyle(color: Colors.redAccent)),
+        content: Text(message, style: const TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -585,16 +521,11 @@ class _GameScreenState extends State<GameScreen>
 
     // 1. Comprehensive Logging for "Game Log" & Host Transparency
     // This ensures every tap of the green tick is recorded.
-    final selectedNames = _currentSelection.map((value) {
-      // toggleOption and other non-player selections store option strings.
-      if (step.actionType == ScriptActionType.selectPlayer ||
-          step.actionType == ScriptActionType.selectTwoPlayers) {
-        final player =
-            widget.gameEngine.players.where((p) => p.id == value).firstOrNull;
-        return player?.name ?? value;
-      }
-      return value;
-    }).join(', ');
+    final selectedNames = _currentSelection
+        .map(
+          (id) => widget.gameEngine.players.firstWhere((p) => p.id == id).name,
+        )
+        .join(', ');
 
     widget.gameEngine.logAction(
       'Action Confirmed: ${step.title}',
@@ -602,11 +533,7 @@ class _GameScreenState extends State<GameScreen>
     );
 
     // 2. Apply action using canonical engine logic (prevents UI/engine drift)
-    if (step.actionType == ScriptActionType.toggleOption) {
-      widget.gameEngine.handleScriptOption(step, _currentSelection.first);
-    } else {
-      widget.gameEngine.handleScriptAction(step, _currentSelection.toList());
-    }
+    widget.gameEngine.handleScriptAction(step, _currentSelection.toList());
 
     // 3. Specific Role Logic & Host Status Documentation
     if (step.actionType == ScriptActionType.selectPlayer) {
@@ -625,19 +552,13 @@ class _GameScreenState extends State<GameScreen>
             context: context,
             builder: (context) => ClubAlertDialog(
               backgroundColor: Colors.grey[900],
-              title: Text(
+              title: const Text(
                 'Sent Home Early',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(color: Colors.white),
+                style: TextStyle(color: Colors.white),
               ),
               content: Text(
                 '${target.name} was sent home early and is immune to all night requests.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: Colors.white70),
+                style: const TextStyle(color: Colors.white70),
               ),
               actions: [
                 TextButton(
@@ -722,16 +643,18 @@ class _GameScreenState extends State<GameScreen>
             : ClubBlackoutTheme.neonRed;
         final titleText = isDealerAlly ? 'DEALER CONFIRMED' : 'NOT A DEALER';
 
-        return ClubAlertDialog(
-          neonBorderColor: accent,
+        return BulletinDialogShell(
+          accent: accent,
+          maxWidth: 420,
           title: Text(
             titleText,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontFamily: 'Hyperwave',
-                  color: accent,
-                  shadows: ClubBlackoutTheme.textGlow(accent),
-                ),
+            style: TextStyle(
+              fontFamily: 'Hyperwave',
+              fontSize: 32,
+              color: accent,
+              shadows: ClubBlackoutTheme.textGlow(accent),
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -748,7 +671,8 @@ class _GameScreenState extends State<GameScreen>
               Text(
                 target.name,
                 style: Theme.of(context)
-                    .textTheme.headlineSmall
+                    .textTheme
+                    .headlineSmall
                     ?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
@@ -758,9 +682,7 @@ class _GameScreenState extends State<GameScreen>
                     ? 'Is a Dealer or an ally of the Dealers.'
                     : 'Is not a known associate of the Dealers.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
+                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 16),
               ),
               if (target.role.id == 'minor') ...[
                 const SizedBox(height: 16),
@@ -784,23 +706,21 @@ class _GameScreenState extends State<GameScreen>
                           size: 22,
                         ),
                         const SizedBox(width: 10),
-                        Expanded(
+                        const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'MINOR ID CHECKED',
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
                               ),
-                              const SizedBox(height: 4),
+                              SizedBox(height: 4),
                               Text(
                                 'Immunity stripped! The Minor is now vulnerable to Dealer attacks.',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontSize: 13,
-                                      height: 1.3,
-                                    ),
+                                style: TextStyle(fontSize: 13, height: 1.3),
                               ),
                             ],
                           ),
@@ -853,12 +773,9 @@ class _GameScreenState extends State<GameScreen>
             width: 1,
           ),
         ),
-        child: Text(
+        child: const Text(
           'They are now bound to this player. They must vote exactly as their object of obsession votes. If the obsession dies, the Clinger dies.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-                height: 1.4,
-              ),
+          style: TextStyle(fontSize: 13, color: Colors.white70, height: 1.4),
           textAlign: TextAlign.center,
         ),
       ),
@@ -876,24 +793,26 @@ class _GameScreenState extends State<GameScreen>
             ? ClubBlackoutTheme.neonRed
             : ClubBlackoutTheme.neonGreen;
 
-        return ClubAlertDialog(
-          neonBorderColor: accent,
+        return BulletinDialogShell(
+          accent: accent,
+          maxWidth: 520,
           title: Text(
             '${winner.toUpperCase()} WIN!',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontFamily: 'Hyperwave',
-                  color: accent,
-                  shadows: ClubBlackoutTheme.textGlow(accent),
-                ),
+            style: TextStyle(
+              fontFamily: 'Hyperwave',
+              fontSize: 42,
+              color: accent,
+              shadows: ClubBlackoutTheme.textGlow(accent),
+            ),
           ),
           content: Text(
             message,
             textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .bodyLarge
-                ?.copyWith(color: cs.onSurfaceVariant),
+            style: TextStyle(
+              color: cs.onSurfaceVariant,
+              fontSize: 18,
+            ),
           ),
           actions: [
             FilledButton(
@@ -917,31 +836,29 @@ class _GameScreenState extends State<GameScreen>
       builder: (context) {
         final cs = Theme.of(context).colorScheme;
         const accent = Colors.orange;
-        return ClubAlertDialog(
-            neonBorderColor: accent,
-            title: Text(
-              'DOUBLE DEATH!',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: accent,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.6,
-                  ),
+        return BulletinDialogShell(
+          accent: accent,
+          maxWidth: 520,
+          title: const Text(
+            'DOUBLE DEATH!',
+            style: TextStyle(
+              color: accent,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.6,
             ),
-            content: Text(
-              "$clingerName's obsession, $obsessionName, has died. As a Clinger, $clingerName dies with them!",
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          content: Text(
+            "$clingerName's obsession, $obsessionName, has died. As a Clinger, $clingerName dies with them!",
+            style: TextStyle(color: cs.onSurfaceVariant),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              style: ClubBlackoutTheme.neonButtonStyle(accent),
+              child: const Text('CLOSE'),
             ),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                style: ClubBlackoutTheme.neonButtonStyle(accent),
-                child: const Text('CLOSE'),
-              ),
-            ],
-          );
+          ],
+        );
       },
     );
   }
@@ -957,8 +874,10 @@ class _GameScreenState extends State<GameScreen>
         builder: (context) {
           final cs = Theme.of(context).colorScheme;
 
-          return ClubAlertDialog(
-            neonBorderColor: ClubBlackoutTheme.neonPurple,
+          return BulletinDialogShell(
+            accent: ClubBlackoutTheme.neonPurple,
+            maxWidth: 520,
+            maxHeight: MediaQuery.sizeOf(context).height * 0.82,
             title: Row(
               children: [
                 const Icon(
@@ -982,20 +901,20 @@ class _GameScreenState extends State<GameScreen>
               children: [
                 Text(
                   lightweight.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: cs.onSurface.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w700,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 if (lightweight.tabooNames.isEmpty)
                   Text(
                     'No taboo names assigned yet.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontStyle: FontStyle.italic,
-                        ),
+                    style: TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontStyle: FontStyle.italic,
+                    ),
                     textAlign: TextAlign.center,
                   )
                 else
@@ -1025,18 +944,11 @@ class _GameScreenState extends State<GameScreen>
                             ),
                             title: Text(
                               name,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: cs.onSurface,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              style: TextStyle(
+                                color: cs.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            onTap: () {
-                              widget.gameEngine.markLightweightTabooViolation(
-                                tabooName: name,
-                                lightweightId: lightweight.id,
-                              );
-                              widget.gameEngine.refreshUi();
-                            },
                           ),
                         );
                       },
@@ -1045,10 +957,11 @@ class _GameScreenState extends State<GameScreen>
                 const SizedBox(height: 12),
                 Text(
                   '⚠️ The Lightweight dies if they speak any of these names!',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontStyle: FontStyle.italic,
-                      ),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -1107,8 +1020,9 @@ class _GameScreenState extends State<GameScreen>
         context: context,
         builder: (context) {
           final cs = Theme.of(context).colorScheme;
-          return ClubAlertDialog(
-            neonBorderColor: ClubBlackoutTheme.neonGreen,
+          return BulletinDialogShell(
+            accent: ClubBlackoutTheme.neonGreen,
+            maxWidth: 520,
             title: Row(
               children: [
                 const Icon(
@@ -1133,10 +1047,7 @@ class _GameScreenState extends State<GameScreen>
                 Text(
                   'Queue the Medic to revive themselves at dawn?\n\nThis only works if the Medic died today.',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: cs.onSurfaceVariant),
+                  style: TextStyle(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -1190,8 +1101,10 @@ class _GameScreenState extends State<GameScreen>
         context: context,
         builder: (context) {
           final cs = Theme.of(context).colorScheme;
-          return ClubAlertDialog(
-            neonBorderColor: ClubBlackoutTheme.neonBlue,
+          return BulletinDialogShell(
+            accent: ClubBlackoutTheme.neonBlue,
+            maxWidth: 560,
+            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
             title: Row(
               children: [
                 const Icon(
@@ -1215,10 +1128,7 @@ class _GameScreenState extends State<GameScreen>
               children: [
                 Text(
                   'Choose one player to ply with alcohol. They must reveal their role card to the group immediately.',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: cs.onSurfaceVariant),
+                  style: TextStyle(color: cs.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
@@ -1239,11 +1149,12 @@ class _GameScreenState extends State<GameScreen>
                     child: Text(
                       'ONE TIME USE ONLY',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: cs.error,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.6,
-                          ),
+                      style: TextStyle(
+                        color: cs.error,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.6,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -1324,8 +1235,8 @@ class _GameScreenState extends State<GameScreen>
           final cs = Theme.of(context).colorScheme;
           const accent = Color(0xFFDE3163);
 
-          return ClubAlertDialog(
-            neonBorderColor: accent,
+          return BulletinDialogShell(
+            accent: accent,
             title: Text(
               'SECOND WIND CONVERSION',
               style: ClubBlackoutTheme.headingStyle.copyWith(color: accent),
@@ -1338,18 +1249,17 @@ class _GameScreenState extends State<GameScreen>
                 const SizedBox(height: 12),
                 Text(
                   '${secondWind.name} was killed by the Dealers!',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Do the Dealers agree to convert The Second Wind and bring them back to life as a Dealer?',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                  style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -1462,8 +1372,8 @@ class _GameScreenState extends State<GameScreen>
           final cs = Theme.of(context).colorScheme;
           const accent = Color(0xFFFFFF00);
 
-          return ClubAlertDialog(
-            neonBorderColor: accent,
+          return BulletinDialogShell(
+            accent: accent,
             title: Text(
               'ATTACK DOG CONVERSION',
               style: ClubBlackoutTheme.headingStyle.copyWith(color: accent),
@@ -1476,9 +1386,7 @@ class _GameScreenState extends State<GameScreen>
                 const SizedBox(height: 12),
                 Text(
                   'Did ${obsession.name} call ${clinger.name} a "controller"?',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: cs.onSurface,
-                      ),
+                  style: TextStyle(fontSize: 16, color: cs.onSurface),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -1547,14 +1455,15 @@ class _GameScreenState extends State<GameScreen>
                 child: ListView(
                   children: killTargets
                       .map(
-                        (player) => UnifiedPlayerTile.selection(
+                        (player) => UnifiedPlayerTile(
                           player: player,
                           gameEngine: widget.gameEngine,
-                          isSelected: false,
-                          onTap: () {
-                            Navigator.pop(context);
-                            _executeAttackDogKill(clinger, player);
-                          },
+                          config: PlayerTileConfig(
+                            onTap: () {
+                              Navigator.pop(context);
+                              _executeAttackDogKill(clinger, player);
+                            },
+                          ),
                         ),
                       )
                       .toList(),
@@ -1603,43 +1512,42 @@ class _GameScreenState extends State<GameScreen>
 
       showDialog(
         context: context,
-        builder: (context) => ClubAlertDialog(
-          title: Text(
-            'OBSESSION REVEAL',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: obsessionRole.color,
+        builder: (context) => Dialog(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'OBSESSION REVEAL',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: obsessionRole.color,
+                  ),
                 ),
-            textAlign: TextAlign.center,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Your obsession is: ${obsession.name}',
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Their Role: ${obsessionRole.name}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: obsessionRole.color,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(context);
-                widget.gameEngine.advanceScript();
-                setState(() {});
-              },
-              child: const Text('CONFIRM'),
+                const SizedBox(height: 16),
+                Text(
+                  'Your obsession is: ${obsession.name}',
+                  style: const TextStyle(fontSize: 20),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Their Role: ${obsessionRole.name}',
+                  style: TextStyle(color: obsessionRole.color),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    widget.gameEngine.advanceScript();
+                    setState(() {});
+                  },
+                  child: const Text('CONFIRM'),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     } catch (e) {
@@ -1666,42 +1574,38 @@ class _GameScreenState extends State<GameScreen>
 
       showDialog(
         context: context,
-        builder: (context) => ClubAlertDialog(
-          title: Text(
-            'CREEP TARGET',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+        builder: (context) => Dialog(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'CREEP TARGET',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-            textAlign: TextAlign.center,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Mimicking: ${target.name}',
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Their Role: ${targetRole.name}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: targetRole.color,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(context);
-                widget.gameEngine.advanceScript();
-                setState(() {});
-              },
-              child: const Text('CONFIRM'),
+                const SizedBox(height: 16),
+                Text(
+                  'Mimicking: ${target.name}',
+                  style: const TextStyle(fontSize: 20),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Their Role: ${targetRole.name}',
+                  style: TextStyle(color: targetRole.color),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    widget.gameEngine.advanceScript();
+                    setState(() {});
+                  },
+                  child: const Text('CONFIRM'),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     } catch (e) {
@@ -1713,35 +1617,28 @@ class _GameScreenState extends State<GameScreen>
   void _showRoleReveal(Player target, String actionTitle) {
     showDialog(
       context: context,
-      builder: (context) => ClubAlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              target.role.name,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: target.role.color,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            if (actionTitle.isNotEmpty) ...[
-              const SizedBox(height: 16),
+      builder: (context) => Dialog(
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Text(
-                actionTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                target.role.name,
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: target.role.color,
+                ),
+              ),
+              const SizedBox(height: 32),
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('CONTINUE'),
               ),
             ],
-          ],
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CONTINUE'),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1755,10 +1652,6 @@ class _GameScreenState extends State<GameScreen>
       options = ['PROTECT', 'REVIVE'];
       title = 'Choose Your Mode (PERMANENT)';
       optionColor = ClubBlackoutTheme.neonGreen;
-    } else if (step.id == 'wallflower_act') {
-      options = ['PEEK', 'STARE', 'SKIP'];
-      title = 'Witness Murder? (Optional)';
-      optionColor = ClubBlackoutTheme.neonPurple;
     }
 
     return Container(
@@ -1767,11 +1660,12 @@ class _GameScreenState extends State<GameScreen>
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: optionColor,
-                  letterSpacing: 1.2,
-                ),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: optionColor,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: 16),
           GridView.builder(
@@ -1823,18 +1717,19 @@ class _GameScreenState extends State<GameScreen>
                       child: Text(
                         option,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: cs.onSurface,
-                              letterSpacing: 0.4,
-                              shadows: [
-                                Shadow(
-                                  color: cs.shadow.withValues(alpha: 0.6),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface,
+                          letterSpacing: 0.4,
+                          shadows: [
+                            Shadow(
+                              color: cs.shadow.withValues(alpha: 0.6),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
                             ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1873,416 +1768,326 @@ class _GameScreenState extends State<GameScreen>
 
   @override
   Widget build(BuildContext context) {
-    return ErrorBoundary(
-      fallbackTitle: 'Game Error',
-      fallbackMessage: 'Something crashed in the game view.',
-      child: AnimatedBuilder(
-        animation: widget.gameEngine,
-        builder: (context, child) {
-          // Check scroll and ability notifications
-          SchedulerBinding.instance.addPostFrameCallback((_) => _checkScroll());
-          _checkAbilityNotifications();
+    return AnimatedBuilder(
+      animation: widget.gameEngine,
+      builder: (context, child) {
+        _checkScroll();
+        _checkAbilityNotifications(); // Check for new ability availability
 
-          final cs = Theme.of(context).colorScheme;
-          final steps = widget.gameEngine.scriptQueue;
-          final safeIndex =
-              widget.gameEngine.currentScriptIndex.clamp(0, steps.length);
-          final isWaiting = safeIndex >= steps.length;
-          final visibleCount = safeIndex + (isWaiting ? 0 : 1);
+        final cs = Theme.of(context).colorScheme;
 
-          ScriptStep? currentStep;
-          if (!isWaiting && steps.isNotEmpty) {
-            currentStep = steps[safeIndex];
-          }
+        final steps = widget.gameEngine.scriptQueue;
+        final safeIndex = widget.gameEngine.currentScriptIndex.clamp(
+          0,
+          steps.length,
+        );
+        final isWaiting = safeIndex >= steps.length;
+        final visibleCount = safeIndex + (isWaiting ? 0 : 1);
 
-          // Check for active abilities to determine if FAB should show
-          final bool showAbilityFab = _shouldShowAbilityFab();
+        ScriptStep? currentStep;
+        if (!isWaiting && steps.isNotEmpty) {
+          currentStep = steps[safeIndex];
+        }
 
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              // 1. Background Layer (Modern NeonBackground)
-              NeonBackground(
-                accentColor: ClubBlackoutTheme.neonBlue,
-                backgroundAsset:
-                    'Backgrounds/Club Blackout V2 Game Background.png',
-                blurSigma: 12.0,
-                showOverlay: true,
-                child: const SizedBox.expand(),
-              ),
-
-              // 2. Main App Shell
-              Scaffold(
-                key: _scaffoldKey,
-                backgroundColor: Colors.transparent,
-                extendBodyBehindAppBar: true,
-                extendBody: true,
-                
-                // M3 AppBar
-                appBar: AppBar(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  scrolledUnderElevation: 0,
-                  centerTitle: true,
-                  title: Text(
-                    'CLUB BLACKOUT',
-                    style: ClubBlackoutTheme.neonGlowTitle.copyWith(
-                      fontSize: 20,
-                    ),
-                  ),
-                  leading: IconButton(
-                    icon: const Icon(Icons.menu_rounded),
-                    onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                    tooltip: 'Menu',
-                    color: ClubBlackoutTheme.neonBlue,
-                    shadows: [
-                      const Shadow(
-                          color: ClubBlackoutTheme.neonBlue, blurRadius: 10),
-                    ],
-                  ),
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.history_rounded),
-                      onPressed: _showLog,
-                      tooltip: 'Game Log',
-                      color: ClubBlackoutTheme.neonBlue,
-                      shadows: [
-                        const Shadow(
-                            color: ClubBlackoutTheme.neonBlue, blurRadius: 10),
+        return Scaffold(
+          key: _scaffoldKey,
+          extendBodyBehindAppBar: true,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            flexibleSpace: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        cs.scrim.withValues(alpha: 0.7),
+                        cs.scrim.withValues(alpha: 0.0),
                       ],
                     ),
-                    const SizedBox(width: 4),
+                  ),
+                ),
+              ),
+            ),
+            leading: Builder(
+              builder: (BuildContext context) {
+                return IconButton(
+                  icon: Icon(Icons.menu, color: cs.onSurface, size: 28),
+                  onPressed: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                  tooltip: 'Game Menu',
+                );
+              },
+            ),
+            title: const Text('CLUB BLACKOUT'),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon:
+                    Icon(Icons.history_rounded, color: cs.onSurface, size: 24),
+                onPressed: _showLog,
+                tooltip: 'Game Log',
+              ),
+            ],
+          ),
+          drawer: GameDrawer(
+            gameEngine: widget.gameEngine,
+            onGameLogTap: _showLog,
+            onHostDashboardTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      HostOverviewScreen(gameEngine: widget.gameEngine),
+                ),
+              );
+            },
+            onNavigate: (index) {
+              Navigator.pop(context); // Close drawer
+              // For GameScreen, we probably want to leave and go to home?
+              if (index == 0) {
+                Navigator.pop(context);
+              }
+            },
+          ),
+          body: Stack(
+            children: [
+              // Enhanced background with overlay
+              Positioned.fill(
+                child: Stack(
+                  children: [
+                    ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                      child: Image.asset(
+                        'Backgrounds/Club Blackout V2 Game Background.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, o, s) =>
+                            Container(color: Theme.of(c).colorScheme.surface),
+                      ),
+                    ),
+                    // Dark overlay for better text contrast with phase tint
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 1200),
+                      curve: Curves.easeInOut,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(
+                          alpha: widget.gameEngine.currentPhase == GamePhase.day
+                              ? 0.3
+                              : 0.5,
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: widget.gameEngine.currentPhase ==
+                                  GamePhase.day
+                              ? [
+                                  ClubBlackoutTheme.neonOrange
+                                      .withValues(alpha: 0.2),
+                                  Colors.black.withValues(alpha: 0.4),
+                                  ClubBlackoutTheme.neonOrange
+                                      .withValues(alpha: 0.15),
+                                ]
+                              : [
+                                  cs.scrim.withValues(alpha: 0.8),
+                                  cs.scrim.withValues(alpha: 0.5),
+                                  ClubBlackoutTheme.neonPurple
+                                      .withValues(alpha: 0.2),
+                                ],
+                          stops: const [0.0, 0.5, 1.0],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                drawer: GameDrawer(
-                  gameEngine: widget.gameEngine,
-                  onGameLogTap: _showLog,
-                  onHostDashboardTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            HostOverviewScreen(gameEngine: widget.gameEngine),
-                      ),
-                    );
-                  },
-                  onNavigate: (index) {
-                    if (index == 0) Navigator.pop(context);
-                    if (index == 2) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (c) =>
-                              GuidesScreen(gameEngine: widget.gameEngine),
-                        ),
-                      );
-                    }
-                  },
-                ),
-                
-                // Content Body
-                body: (steps.isEmpty || isWaiting)
-                    ? Center(
-                        child: steps.isEmpty
-                            ? _buildErrorView(cs)
-                            : _buildWaitingView(cs),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        // Add padding for AppBar and BottomAppBar
-                        padding: const EdgeInsets.fromLTRB(0, 100, 0, 120),
-                        itemCount: visibleCount,
-                        itemBuilder: (context, index) {
-                          return _buildScriptItem(context, steps, index,
-                              safeIndex, visibleCount, isWaiting);
-                        },
-                      ),
-
-                // Floating Action Button (Ability Menu)
-                floatingActionButton: showAbilityFab
-                    ? FloatingActionButton(
-                        onPressed: () => setState(
-                            () => _abilityFabExpanded = !_abilityFabExpanded),
-                        backgroundColor: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.8),
-                        foregroundColor: Colors.white,
-                        elevation: 8,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          side: BorderSide(
-                            color: ClubBlackoutTheme.pureWhite.withValues(alpha: 0.5),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: ClubBlackoutTheme.circleGlow(ClubBlackoutTheme.neonPurple),
-                          ),
-                          child: Icon(
-                            _abilityFabExpanded ? Icons.close_rounded : Icons.flash_on_rounded,
-                            size: 28,
-                          ),
-                        ),
-                      )
-                    : null,
-                floatingActionButtonLocation:
-                    FloatingActionButtonLocation.endContained,
-
-                // Bottom Navigation Bar (Controls)
-                bottomNavigationBar: currentStep != null
-                    ? _buildBottomControlBar(currentStep, showAbilityFab)
-                    : null,
               ),
+              if (steps.isNotEmpty && !isWaiting)
+                Positioned.fill(
+                  child: SafeArea(
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.only(top: 88, bottom: 200),
+                      itemCount: visibleCount,
+                      itemBuilder: (context, index) {
+                        final step = steps[index];
+                        final isLast = index == visibleCount - 1;
 
-              // 3. Overlays (Ability Dock, Rumour Mill, Alerts, Transitions)
-              if (_abilityFabExpanded) _buildAbilityDock(),
+                        // Ensure GlobalKey exists for this index
+                        _stepKeys.putIfAbsent(index, () => GlobalKey());
+                        final key = _stepKeys[index]!;
+
+                        // Day Phase Integration
+                        if (step.id.startsWith('day_start_discussion')) {
+                          return _buildDayPhaseLauncher(step);
+                        }
+                        if (step.id == 'day_vote') {
+                          // Automatically handled by the DaySceneDialog logic
+                          return const SizedBox.shrink();
+                        }
+
+                        if (step.actionType ==
+                            ScriptActionType.phaseTransition) {
+                          return PhaseCard(
+                            key: key,
+                            phaseName:
+                                step.isNight ? 'PARTY TIME!' : 'CLUB IS CLOSED',
+                            subtitle: step.id == 'club_closed'
+                                ? step.readAloudText
+                                : null,
+                            phaseColor: step.isNight
+                                ? ClubBlackoutTheme.neonPurple
+                                : ClubBlackoutTheme.neonOrange,
+                            phaseIcon: step.isNight
+                                ? Icons.nightlight_round
+                                : Icons.wb_sunny,
+                            isActive: isLast,
+                          );
+                        }
+
+                        final role = widget.gameEngine.roleRepository
+                            .getRoleById(step.roleId ?? '');
+
+                        // Find the player with this role
+                        Player? player;
+                        if (role != null) {
+                          try {
+                            player = widget.gameEngine.players.firstWhere(
+                              (p) =>
+                                  p.role.id == role.id &&
+                                  p.isActive &&
+                                  !p.soberSentHome,
+                            );
+                          } catch (_) {}
+                        }
+
+                        return Column(
+                          key: key,
+                          children: [
+                            InteractiveScriptCard(
+                              step: step,
+                              isActive: isLast,
+                              stepColor:
+                                  role?.color ?? ClubBlackoutTheme.neonOrange,
+                              role: role,
+                              playerName: player?.name,
+                              player: player,
+                              gameEngine: widget.gameEngine,
+                            ),
+                            if (isLast && step.id == 'day_vote')
+                              _buildVotingGrid(step),
+                            if (isLast &&
+                                (step.actionType ==
+                                        ScriptActionType.selectPlayer ||
+                                    step.actionType ==
+                                        ScriptActionType.selectTwoPlayers) &&
+                                step.id != 'day_vote')
+                              _buildPlayerSelectionList(step),
+                            if (isLast &&
+                                step.actionType ==
+                                    ScriptActionType.toggleOption)
+                              _buildToggleOptionGrid(step),
+                            if (isLast &&
+                                step.actionType ==
+                                    ScriptActionType.binaryChoice)
+                              _buildBinaryChoice(step),
+                            if (isLast &&
+                                step.actionType == ScriptActionType.showInfo)
+                              _buildShowInfoAction(step),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                )
+              else if (isWaiting)
+                const Center(
+                  child: Text(
+                    'Phase Complete',
+                    style: TextStyle(fontSize: 32, color: Colors.white),
+                  ),
+                ),
+              if (!isWaiting && currentStep != null)
+                Positioned(
+                  bottom: 30,
+                  left: 20,
+                  right: 20,
+                  child: _buildFloatingActionBar(currentStep),
+                ),
+              if (isWaiting)
+                Positioned(
+                  bottom: 30,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: FilledButton(
+                      onPressed: _advanceScript,
+                      child: const Text('CONTINUE'),
+                    ),
+                  ),
+                ),
+              if (_abilityFabExpanded) _buildAbilityFabMenu(),
               if (_rumourMillExpanded)
                 Positioned.fill(child: _buildRumourMillPanel()),
-              if (_isTransitioningPhase)
-                PhaseTransitionOverlay(
-                  phaseName: _transitionPhaseName,
-                  phaseColor: _transitionPhaseColor,
-                  phaseIcon: _transitionPhaseIcon,
-                  tip: _transitionTip,
-                  dayNumber: widget.gameEngine.dayCount,
-                  playersAlive:
-                      widget.gameEngine.players.where((p) => p.isActive).length,
-                  onComplete: () {
-                    setState(() => _isTransitioningPhase = false);
-
-                    // UX: After transition, if it's Day, show the dialog.
-                    if (widget.gameEngine.currentPhase == GamePhase.day &&
-                        !_autoOpenedDayDialog) {
-                      _autoOpenedDayDialog = true;
-                      _showDaySceneDialog();
-                    }
-                  },
-                ),
-              HostAlertListener(engine: widget.gameEngine),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  // Extracted Error View
-  Widget _buildErrorView(ColorScheme cs) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.error_outline_rounded, size: 64, color: cs.error),
-        const SizedBox(height: 16),
-        Text(
-          'SCRIPT ERROR',
-          style: ClubBlackoutTheme.headingStyle.copyWith(
-            color: cs.error,
-            fontSize: 20,
-            shadows: [
-              Shadow(
-                color: cs.error.withValues(alpha: 0.5),
-                blurRadius: 10,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'No script steps generated.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: cs.onSurface,
-              ),
-        ),
-        const SizedBox(height: 24),
-        FilledButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('RETURN TO LOBBY'),
-        ),
-      ],
-    );
-  }
-
-  // Extracted Waiting View
-  Widget _buildWaitingView(ColorScheme cs) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const CircularProgressIndicator(),
-        const SizedBox(height: 16),
-        Text(
-          'Waiting for next step...',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: cs.onSurface,
-              ),
-        ),
-        const SizedBox(height: 24),
-        FilledButton(onPressed: _advanceScript, child: const Text('CONTINUE')),
-      ],
-    );
-  }
-
-  // Extracted Script Item Builder
-  Widget _buildScriptItem(BuildContext context, List<ScriptStep> steps,
-      int index, int safeIndex, int visibleCount, bool isWaiting) {
-    try {
-      final step = steps[index];
-      final isLast = index == visibleCount - 1;
-      final itemKey =
-          index == safeIndex ? _activeStepKey : ValueKey('step-$index');
-
-      // Day Phase Integration
-      if (step.id == 'intro_party_time') {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              PhaseCard(
-                phaseName: 'PARTY TIME',
-                subtitle: step.readAloudText,
-                phaseColor: ClubBlackoutTheme.neonPurple,
-                phaseIcon: Icons.nightlife_rounded,
-                isActive: isLast,
-              ),
-              InteractiveScriptCard(
-                step: step,
-                isActive: isLast,
-                stepColor: ClubBlackoutTheme.neonPurple,
-                role: null,
-                playerName: null,
-                player: null,
-                gameEngine: widget.gameEngine,
-              ),
             ],
           ),
         );
-      }
-
-      if (step.id.startsWith('day_start_discussion')) {
-        return Column(
-          key: itemKey,
-          children: [
-            PhaseCard(
-              phaseName: 'DAY BREAKS',
-              subtitle: step.readAloudText,
-              phaseColor: ClubBlackoutTheme.neonOrange,
-              phaseIcon: Icons.wb_sunny,
-              isActive: isLast,
-            ),
-            _buildDayPhaseLauncher(step),
-          ],
-        );
-      }
-      if (step.id == 'night_start') {
-        return PhaseCard(
-          key: itemKey,
-          phaseName: 'NIGHT FALLS',
-          subtitle: step.readAloudText,
-          phaseColor: ClubBlackoutTheme.neonPurple,
-          phaseIcon: Icons.nightlight_round,
-          isActive: isLast,
-        );
-      }
-      if (step.id == 'setup_complete') {
-        return PhaseCard(
-          key: itemKey,
-          phaseName: 'SETUP COMPLETE',
-          subtitle: step.readAloudText,
-          phaseColor: ClubBlackoutTheme.neonGreen,
-          phaseIcon: Icons.check_circle_rounded,
-          isActive: isLast,
-        );
-      }
-      if (step.id == 'day_vote') {
-        return const SizedBox.shrink();
-      }
-
-      if (step.actionType == ScriptActionType.phaseTransition) {
-        return PhaseCard(
-          key: itemKey,
-          phaseName: step.isNight ? 'PARTY TIME!' : 'CLUB IS CLOSED',
-          subtitle: step.id == 'club_closed' ? step.readAloudText : null,
-          phaseColor: step.isNight
-              ? ClubBlackoutTheme.neonPurple
-              : ClubBlackoutTheme.neonOrange,
-          phaseIcon: step.isNight ? Icons.nightlight_round : Icons.wb_sunny,
-          isActive: isLast,
-        );
-      }
-
-      final role = widget.gameEngine.roleRepository.getRoleById(step.roleId ?? '');
-      Player? player;
-      if (role != null) {
-        try {
-          player = widget.gameEngine.players.firstWhere(
-            (p) => p.role.id == role.id && p.isActive && !p.soberSentHome,
-          );
-        } catch (_) {}
-      }
-
-      return Column(
-        key: itemKey,
-        children: [
-          InteractiveScriptCard(
-            step: step,
-            isActive: isLast,
-            stepColor: role?.color ?? ClubBlackoutTheme.neonOrange,
-            role: role,
-            playerName: player?.name,
-            player: player,
-            gameEngine: widget.gameEngine,
-          ),
-          if (isLast && step.id == 'day_vote') _buildVotingGrid(step),
-          if (isLast &&
-              (step.actionType == ScriptActionType.selectPlayer ||
-                  step.actionType == ScriptActionType.selectTwoPlayers) &&
-              step.id != 'day_vote')
-            _buildPlayerSelectionList(step),
-          if (isLast && step.actionType == ScriptActionType.toggleOption)
-            _buildToggleOptionGrid(step),
-          if (isLast && step.actionType == ScriptActionType.binaryChoice)
-            _buildBinaryChoice(step),
-          if (isLast && step.actionType == ScriptActionType.showInfo)
-            _buildShowInfoAction(step),
-        ],
-      );
-    } catch (e) {
-      debugPrint('Error building item $index: $e');
-      return Text('Error building item $index: $e',
-          style: const TextStyle(color: Colors.red));
-    }
+      },
+    );
   }
 
-  bool _shouldShowAbilityFab() {
-    final hasMessyBitch = widget.gameEngine.players
-        .any((p) => p.role.id == 'messy_bitch');
-    final hasLightweight = widget.gameEngine.players
-        .any((p) => p.role.id == 'lightweight' && p.isActive);
-    final hasClingerToFree = widget.gameEngine.players.any((p) =>
-        p.role.id == 'clinger' &&
-        p.isActive &&
-        p.clingerPartnerId != null &&
-        !p.clingerAttackDogUsed);
-    final hasSecondWindConversion = widget.gameEngine.players.any((p) =>
-        p.role.id == 'second_wind' &&
-        p.secondWindPendingConversion &&
-        !p.secondWindConverted);
-    final hasTeaSpiller = widget.gameEngine.players
-        .any((p) => p.role.id == 'tea_spiller');
-    final hasPredator = widget.gameEngine.players
-        .any((p) => p.role.id == 'predator');
+  Widget _buildFloatingActionBar(ScriptStep step) {
+    final cs = Theme.of(context).colorScheme;
+
+    // Hide forward button during player selection steps
+    final isSelectionStep = (step.actionType == ScriptActionType.selectPlayer ||
+            step.actionType == ScriptActionType.selectTwoPlayers) &&
+        step.id != 'day_vote';
+    final isSelectionReady = !isSelectionStep || _isSelectionValidForStep(step);
+
+    // Recalculate ability availability for the FAB visibility
+    final hasMessyBitch = widget.gameEngine.players.any(
+      (p) => p.role.id == 'messy_bitch',
+    );
+    final hasLightweight = widget.gameEngine.players.any(
+      (p) => p.role.id == 'lightweight' && p.isActive,
+    );
+    final hasClingerToFree = widget.gameEngine.players.any(
+      (p) =>
+          p.role.id == 'clinger' &&
+          p.isActive &&
+          p.clingerPartnerId != null &&
+          !p.clingerAttackDogUsed,
+    );
+    final hasSecondWindConversion = widget.gameEngine.players.any(
+      (p) =>
+          p.role.id == 'second_wind' &&
+          p.secondWindPendingConversion &&
+          !p.secondWindConverted,
+    );
+    final hasTeaSpiller = widget.gameEngine.players.any(
+      (p) => p.role.id == 'tea_spiller',
+    );
+    final hasPredator = widget.gameEngine.players.any(
+      (p) => p.role.id == 'predator',
+    );
     final hasDramaQueen = widget.gameEngine.dramaQueenSwapPending;
-    final hasMedic = widget.gameEngine.players.any((p) =>
-        p.role.id == 'medic' &&
-        p.isActive &&
-        p.medicChoice == 'REVIVE' &&
-        !p.hasReviveToken);
-    final hasSober = widget.gameEngine.players
-        .any((p) => p.role.id == 'sober' && p.isActive);
-    final hasBouncer = widget.gameEngine.players
-        .any((p) => p.role.id == 'bouncer' && p.isActive && !p.bouncerAbilityRevoked);
+    final hasMedic = widget.gameEngine.players.any(
+      (p) =>
+          p.role.id == 'medic' &&
+          p.isActive &&
+          p.medicChoice == 'REVIVE' &&
+          !p.hasReviveToken,
+    );
+    final hasSober = widget.gameEngine.players.any(
+      (p) => p.role.id == 'sober' && p.isActive,
+    );
+    final hasBouncer = widget.gameEngine.players.any(
+      (p) => p.role.id == 'bouncer' && p.isActive && !p.bouncerAbilityRevoked,
+    );
 
-    return hasMessyBitch ||
+    final hasAnyAbility = hasMessyBitch ||
         hasLightweight ||
         hasClingerToFree ||
         hasSecondWindConversion ||
@@ -2292,71 +2097,125 @@ class _GameScreenState extends State<GameScreen>
         hasMedic ||
         hasSober ||
         hasBouncer;
-  }
 
-  Widget _buildBottomControlBar(ScriptStep step, bool hasFab) {
-    // Hide forward button during player selection steps
-    final isSelectionStep =
-        (step.actionType == ScriptActionType.selectPlayer ||
-                step.actionType == ScriptActionType.selectTwoPlayers) &&
-            step.id != 'day_vote';
-    final isSelectionReady = !isSelectionStep || _isSelectionValidForStep(step);
-
-    return BottomAppBar(
-      color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.9),
-      elevation: 4,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      height: 80,
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 800),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(32),
+        gradient: LinearGradient(
+          colors: [
+            cs.surfaceContainerHigh.withValues(alpha: 0.78),
+            cs.surfaceContainerHighest.withValues(alpha: 0.86),
+          ],
+        ),
+        border: Border.all(
+          color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: cs.shadow.withValues(alpha: 0.3),
+            blurRadius: 16,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.2),
+            blurRadius: 24,
+            spreadRadius: 4,
+          ),
+        ],
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Back Button
-          IconButton(
+          // 1. Back Button
+          _buildBottomBarButton(
+            icon: Icons.arrow_back_rounded,
             onPressed: widget.gameEngine.regressScript,
-            icon: const Icon(Icons.arrow_back_rounded),
             color: ClubBlackoutTheme.neonBlue,
             tooltip: 'Back',
-            style: IconButton.styleFrom(
-              backgroundColor: ClubBlackoutTheme.neonBlue.withValues(alpha: 0.1),
-            ),
           ),
-          const SizedBox(width: 8),
-          
-          // Skip Button
-          IconButton(
+
+          // 2. FAB Menu (Lightning Bolt)
+          if (hasAnyAbility)
+            GestureDetector(
+              onTap: () =>
+                  setState(() => _abilityFabExpanded = !_abilityFabExpanded),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      ClubBlackoutTheme.neonPurple.withValues(alpha: 0.5),
+                      ClubBlackoutTheme.neonPurple.withValues(alpha: 0.2),
+                    ],
+                  ),
+                  boxShadow: _abilityFabExpanded
+                      ? [
+                          BoxShadow(
+                            color: ClubBlackoutTheme.neonPurple
+                                .withValues(alpha: 0.8),
+                            blurRadius: 28,
+                            spreadRadius: 6,
+                          ),
+                          BoxShadow(
+                            color: ClubBlackoutTheme.neonPurple
+                                .withValues(alpha: 0.5),
+                            blurRadius: 40,
+                            spreadRadius: 10,
+                          ),
+                        ]
+                      : [
+                          BoxShadow(
+                            color: ClubBlackoutTheme.neonPurple
+                                .withValues(alpha: 0.5),
+                            blurRadius: 16,
+                            spreadRadius: 3,
+                          ),
+                        ],
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+                  ),
+                  child: const Icon(
+                    Icons.flash_on_rounded,
+                    size: 32,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            )
+          else
+            const SizedBox(width: 64),
+
+          // 3. Skip Button (Fast Forward)
+          _buildBottomBarButton(
+            icon: Icons.fast_forward_rounded,
             onPressed: _confirmSkip,
-            icon: const Icon(Icons.fast_forward_rounded),
             color: ClubBlackoutTheme.neonOrange,
             tooltip: 'Skip',
-             style: IconButton.styleFrom(
-              backgroundColor: ClubBlackoutTheme.neonOrange.withValues(alpha: 0.1),
-            ),
           ),
-          
-          const Spacer(),
-          
-          // Confirm / Continue
-          Padding(
-            padding: EdgeInsets.only(right: hasFab ? 60.0 : 0), // Make space for FAB if present
-            child: FilledButton.icon(
-              onPressed: isSelectionReady ? _advanceScript : null,
-              icon: Icon(isSelectionReady ? Icons.check_rounded : Icons.pending),
-              label: Text(isSelectionStep 
-                ? (isSelectionReady ? 'CONFIRM' : 'SELECT PLAYER') 
-                : 'CONTINUE'),
-              style: FilledButton.styleFrom(
-                backgroundColor: isSelectionReady 
-                    ? ClubBlackoutTheme.neonGreen.withValues(alpha: 0.2) 
-                    : Colors.grey.withValues(alpha: 0.2),
-                foregroundColor: isSelectionReady 
-                    ? ClubBlackoutTheme.neonGreen 
-                    : Colors.grey,
-                side: BorderSide(
-                    color: isSelectionReady 
-                        ? ClubBlackoutTheme.neonGreen 
-                        : Colors.transparent),
-              ),
-            ),
+
+          // 4. Confirm/Advance Button (Tick)
+          _buildBottomBarButton(
+            icon: Icons.check_rounded,
+            onPressed: isSelectionReady ? _advanceScript : null,
+            color: isSelectionReady ? ClubBlackoutTheme.neonGreen : Colors.grey,
+            tooltip: isSelectionStep
+                ? (isSelectionReady
+                    ? 'Confirm selection'
+                    : (step.actionType == ScriptActionType.selectTwoPlayers
+                        ? 'Select 2 players first'
+                        : 'Select a player first'))
+                : 'Confirm',
           ),
         ],
       ),
@@ -2373,7 +2232,53 @@ class _GameScreenState extends State<GameScreen>
     return true;
   }
 
+  Widget _buildBottomBarButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required Color color,
+    required String tooltip,
+  }) {
+    final isEnabled = onPressed != null;
 
+    return Tooltip(
+      message: tooltip,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: isEnabled
+              ? RadialGradient(
+                  colors: [
+                    color.withValues(alpha: 0.5),
+                    color.withValues(alpha: 0.2),
+                  ],
+                )
+              : null,
+          color: isEnabled ? null : Colors.grey.withValues(alpha: 0.3),
+          boxShadow: isEnabled
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.5),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ]
+              : [],
+        ),
+        child: IconButton(
+          onPressed: onPressed,
+          icon: Icon(icon, size: 26),
+          style: IconButton.styleFrom(
+            foregroundColor: isEnabled ? Colors.white : Colors.grey,
+            backgroundColor: Colors.transparent,
+            padding: EdgeInsets.zero,
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildVotingGrid(ScriptStep step) {
     // Exclude players sent home by Sober from the voting list
@@ -2391,12 +2296,14 @@ class _GameScreenState extends State<GameScreen>
           return Row(
             children: [
               Expanded(
-                child: UnifiedPlayerTile.compact(
+                child: UnifiedPlayerTile(
                   player: player,
                   gameEngine: widget.gameEngine,
-                  voteCount: votes,
-                  onTap: () =>
-                      setState(() => _voteCounts[player.id] = votes + 1),
+                  config: PlayerTileConfig(
+                    voteCount: votes,
+                    onTap: () =>
+                        setState(() => _voteCounts[player.id] = votes + 1),
+                  ),
                 ),
               ),
               Column(
@@ -2533,53 +2440,54 @@ class _GameScreenState extends State<GameScreen>
               ),
             )
           else
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ...players.map((p) {
-                  final isSelected = _currentSelection.contains(p.id);
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: players.length,
+              itemBuilder: (context, index) {
+                final p = players[index];
+                final isSelected = _currentSelection.contains(p.id);
 
-                  String stats = '';
-                  if (p.role.id == 'clinger' && p.clingerPartnerId != null) {
-                    final partner = widget.gameEngine.players.firstWhere(
-                      (pl) => pl.id == p.clingerPartnerId,
-                      orElse: () => p,
-                    );
-                    stats = 'Obsession: ${partner.name}';
-                  } else if (p.role.id == 'creep' && p.creepTargetId != null) {
-                    final target = widget.gameEngine.players.firstWhere(
-                      (pl) => pl.id == p.creepTargetId,
-                      orElse: () => p,
-                    );
-                    stats = 'Mimicking: ${target.role.name}';
-                  } else if (p.role.id == 'tea_spiller' &&
-                      p.teaSpillerTargetId != null) {
-                    final target = widget.gameEngine.players.firstWhere(
-                      (pl) => pl.id == p.teaSpillerTargetId,
-                      orElse: () => p,
-                    );
-                    stats = 'Target: ${target.name}';
-                  } else if (p.role.id == 'predator' &&
-                      p.predatorTargetId != null) {
-                    final prey = widget.gameEngine.players.firstWhere(
-                      (pl) => pl.id == p.predatorTargetId,
-                      orElse: () => p,
-                    );
-                    stats = 'Prey: ${prey.name}';
-                  }
-
-                  return UnifiedPlayerTile.nightPhase(
-                    player: p,
-                    gameEngine: widget.gameEngine,
-                    isSelected: isSelected,
-                    statsText: stats,
-                    onTap: () {
-                      // Standard selection toggle
-                      _onPlayerSelected(p.id);
-                    },
+                String stats = '';
+                if (p.role.id == 'clinger' && p.clingerPartnerId != null) {
+                  final partner = widget.gameEngine.players.firstWhere(
+                    (pl) => pl.id == p.clingerPartnerId,
+                    orElse: () => p,
                   );
-                }),
-              ],
+                  stats = 'Obsession: ${partner.name}';
+                } else if (p.role.id == 'creep' && p.creepTargetId != null) {
+                  final target = widget.gameEngine.players.firstWhere(
+                    (pl) => pl.id == p.creepTargetId,
+                    orElse: () => p,
+                  );
+                  stats = 'Mimicking: ${target.role.name}';
+                } else if (p.role.id == 'tea_spiller' &&
+                    p.teaSpillerTargetId != null) {
+                  final target = widget.gameEngine.players.firstWhere(
+                    (pl) => pl.id == p.teaSpillerTargetId,
+                    orElse: () => p,
+                  );
+                  stats = 'Target: ${target.name}';
+                } else if (p.role.id == 'predator' &&
+                    p.predatorTargetId != null) {
+                  final prey = widget.gameEngine.players.firstWhere(
+                    (pl) => pl.id == p.predatorTargetId,
+                    orElse: () => p,
+                  );
+                  stats = 'Prey: ${prey.name}';
+                }
+
+                return UnifiedPlayerTile.nightPhase(
+                  player: p,
+                  isSelected: isSelected,
+                  gameEngine: widget.gameEngine,
+                  statsText: stats,
+                  onTap: () {
+                    // Standard selection toggle
+                    _onPlayerSelected(p.id);
+                  },
+                );
+              },
             ),
         ],
       ),
@@ -2587,8 +2495,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Widget _buildBinaryChoice(ScriptStep step) {
-    if (step.id == 'second_wind_conversion_choice' ||
-        step.id == 'second_wind_conversion_vote') {
+    if (step.id == 'second_wind_decision') {
       final secondWind = widget.gameEngine.players.firstWhere(
         (p) => p.role.id == 'second_wind',
       );
@@ -2729,12 +2636,20 @@ class _GameScreenState extends State<GameScreen>
         },
         {
           'id_base': 'tea_spiller_ready',
-          'condition': widget.gameEngine.hasPendingTeaSpillerReveal,
+          'condition': widget.gameEngine.players.any(
+            (p) =>
+                p.role.id == 'tea_spiller' &&
+                widget.gameEngine.deadPlayerIds.contains(p.id),
+          ),
           'msg': 'Tea Spiller DIED: Check menu for Tea Spilling opportunity.',
         },
         {
           'id_base': 'predator_ready',
-          'condition': widget.gameEngine.hasPendingPredatorRetaliation,
+          'condition': widget.gameEngine.players.any(
+            (p) =>
+                p.role.id == 'predator' &&
+                widget.gameEngine.deadPlayerIds.contains(p.id),
+          ),
           'msg': 'Predator DIED: Check menu for Retaliation opportunity.',
         },
         {
@@ -2828,131 +2743,166 @@ class _GameScreenState extends State<GameScreen>
     });
   }
 
-  Widget _buildAbilityDock() {
-    final List<Widget> items = [];
-    final engine = widget.gameEngine;
-
-    // Ally Cat -> MEOW
-    if (engine.players.any((p) => p.role.id == 'ally_cat' && p.isActive)) {
-      items.add(_buildDockAction(
-        roleId: 'ally_cat',
-        onPressed: engine.triggerMeowAlert,
-      ));
-    }
-
-    // Messy Bitch -> Rumour Mill
-    if (engine.players.any((p) => p.role.id == 'messy_bitch' && p.isActive)) {
-      items.add(_buildDockAction(
-        roleId: 'messy_bitch',
-        onPressed: () => setState(() => _rumourMillExpanded = true),
-      ));
-    }
-
-    // Messy Bitch -> Victory
-    if (engine.messyBitchVictoryPending) {
-      items.add(_buildDockAction(
-        roleId: 'messy_bitch',
-        onPressed: _showMessyBitchVictoryDialog,
-      ));
-    }
-
-    // Clinger -> Attack Dog
-    if (engine.players.any((p) =>
-        p.role.id == 'clinger' &&
-        p.isActive &&
-        p.clingerPartnerId != null &&
-        !p.clingerAttackDogUsed)) {
-      items.add(_buildDockAction(
-        roleId: 'clinger',
-        onPressed: _showAttackDogConversion,
-      ));
-    }
-
-    // Second Wind -> Conversion
-    if (engine.players.any((p) =>
-        p.role.id == 'second_wind' &&
-        p.secondWindPendingConversion &&
-        !p.secondWindConverted)) {
-      items.add(_buildDockAction(
-        roleId: 'second_wind',
-        onPressed: _showSecondWindConversion,
-      ));
-    }
-
-    // Lightweight -> Taboo List
-    if (engine.players.any((p) => p.role.id == 'lightweight' && p.isActive)) {
-      items.add(_buildDockAction(
-        roleId: 'lightweight',
-        onPressed: _showTabooList,
-      ));
-    }
-
-    // Tea Spiller -> Reveal
-    if (engine.hasPendingTeaSpillerReveal) {
-      items.add(_buildDockAction(
-        roleId: 'tea_spiller',
-        onPressed: _showTeaSpillerRevealDialog,
-      ));
-    }
-
-    // Predator -> Retaliation
-    if (engine.hasPendingPredatorRetaliation) {
-      items.add(_buildDockAction(
-        roleId: 'predator',
-        onPressed: _showPredatorRetaliationDialog,
-      ));
-    }
-
-    // Drama Queen -> Swap
-    if (engine.dramaQueenSwapPending) {
-      items.add(_buildDockAction(
-        roleId: 'drama_queen',
-        onPressed: _showDramaQueenSwapDialog,
-      ));
-    }
-
-    // Medic -> Revive
-    if (engine.players.any((p) =>
-        p.role.id == 'medic' &&
-        engine.deadPlayerIds.contains(p.id) &&
-        (p.medicChoice ?? '').toUpperCase() == 'REVIVE' &&
-        !p.reviveUsed &&
-        p.deathDay == engine.dayCount &&
-        engine.currentPhase == GamePhase.night)) {
-      items.add(_buildDockAction(
-        roleId: 'medic',
-        onPressed: _showMedicSelfReviveDialog,
-      ));
-    }
-
-    // Bouncer -> Confront Roofi
-    if (engine.players.any((p) =>
-        p.role.id == 'bouncer' &&
-        p.isActive &&
-        !p.bouncerAbilityRevoked &&
-        !p.bouncerHasRoofiAbility)) {
-      items.add(_buildDockAction(
-        roleId: 'bouncer',
-        onPressed: _showBouncerConfrontDialog,
-      ));
-    }
-
-    if (items.isEmpty) return const SizedBox.shrink();
-
+  Widget _buildAbilityFabMenu() {
     return Positioned(
       bottom: 100,
-      left: 16,
-      right: 16,
+      left: 20,
+      right: 20,
       child: Center(
-        child: NeonGlassCard(
-          glowColor: ClubBlackoutTheme.neonPurple,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          borderRadius: 40,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.5),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 16,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.2),
+                blurRadius: 24,
+                spreadRadius: 4,
+              ),
+            ],
+          ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: items,
+              children: [
+                // Messy Bitch -> Rumour Mill (Info/Tool)
+                if (widget.gameEngine.players.any(
+                  (p) => p.role.id == 'messy_bitch' && p.isActive,
+                ))
+                  _buildNeonDockItem(
+                    roleId: 'messy_bitch',
+                    label: 'Rumours',
+                    onPressed: () => setState(() => _rumourMillExpanded = true),
+                  ),
+
+                // Clinger -> Attack Dog (Manual Activation)
+                if (widget.gameEngine.players.any(
+                  (p) =>
+                      p.role.id == 'clinger' &&
+                      p.isActive &&
+                      p.clingerPartnerId != null &&
+                      !p.clingerAttackDogUsed,
+                ))
+                  _buildNeonDockItem(
+                    roleId: 'clinger',
+                    label: 'Attack Dog',
+                    onPressed: _showAttackDogConversion,
+                  ),
+
+                // Second Wind -> Conversion (Manual Activation)
+                if (widget.gameEngine.players.any(
+                  (p) =>
+                      p.role.id == 'second_wind' &&
+                      p.secondWindPendingConversion &&
+                      !p.secondWindConverted,
+                ))
+                  _buildNeonDockItem(
+                    roleId: 'second_wind',
+                    label: 'Convert',
+                    onPressed: _showSecondWindConversion,
+                  ),
+
+                // Lightweight -> Taboo List (Info)
+                if (widget.gameEngine.players.any(
+                  (p) => p.role.id == 'lightweight' && p.isActive,
+                ))
+                  _buildNeonDockItem(
+                    roleId: 'lightweight',
+                    label: 'Taboo',
+                    onPressed: _showTabooList,
+                  ),
+
+                // Predator -> Retaliation (Pending Action)
+                if (widget.gameEngine.hasPendingPredatorRetaliation)
+                  _buildNeonDockItem(
+                    roleId: 'predator',
+                    label: 'Retaliate',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              HostOverviewScreen(gameEngine: widget.gameEngine),
+                        ),
+                      );
+                    },
+                  ),
+
+                // Messy Bitch -> Pending victory confirmation
+                if (widget.gameEngine.messyBitchVictoryPending)
+                  _buildNeonDockItem(
+                    roleId: 'messy_bitch',
+                    label: 'Victory',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              HostOverviewScreen(gameEngine: widget.gameEngine),
+                        ),
+                      );
+                    },
+                  ),
+
+                // Tea Spiller -> Reveal (Death Reaction)
+                if (widget.gameEngine.hasPendingTeaSpillerReveal)
+                  _buildNeonDockItem(
+                    roleId: 'tea_spiller',
+                    label: 'Reveal',
+                    onPressed: _showTeaSpillerRevealDialog,
+                  ),
+
+                // Drama Queen -> Swap (Death Reaction)
+                if (widget.gameEngine.dramaQueenSwapPending)
+                  _buildNeonDockItem(
+                    roleId: 'drama_queen',
+                    label: 'Swap',
+                    onPressed: _showDramaQueenSwapDialog,
+                  ),
+
+                // Medic -> Revive (Manual Activation)
+                if (widget.gameEngine.players.any(
+                  (p) =>
+                      p.role.id == 'medic' &&
+                      widget.gameEngine.deadPlayerIds.contains(p.id) &&
+                      (p.medicChoice ?? '').toUpperCase() == 'REVIVE' &&
+                      !p.reviveUsed &&
+                      p.deathDay == widget.gameEngine.dayCount &&
+                      widget.gameEngine.currentPhase == GamePhase.night,
+                ))
+                  _buildNeonDockItem(
+                    roleId: 'medic',
+                    label: 'Revive',
+                    onPressed: _showMedicSelfReviveDialog,
+                  ),
+
+                // Bouncer -> Confront Roofi (Manual Activation)
+                if (widget.gameEngine.players.any(
+                  (p) =>
+                      p.role.id == 'bouncer' &&
+                      p.isActive &&
+                      !p.bouncerAbilityRevoked &&
+                      !p.bouncerHasRoofiAbility,
+                ))
+                  _buildNeonDockItem(
+                    roleId: 'bouncer',
+                    label: 'Confront',
+                    onPressed: _showBouncerConfrontDialog,
+                  ),
+              ],
             ),
           ),
         ),
@@ -2960,8 +2910,9 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  Widget _buildDockAction({
+  Widget _buildNeonDockItem({
     required String roleId,
+    required String label,
     required VoidCallback onPressed,
   }) {
     final player = widget.gameEngine.players.firstWhere(
@@ -2971,31 +2922,47 @@ class _GameScreenState extends State<GameScreen>
     final color = player.role.color;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: GestureDetector(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: InkWell(
         onTap: () {
           setState(() => _abilityFabExpanded = false);
           onPressed();
         },
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.6),
-                blurRadius: 15,
-                spreadRadius: 2,
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.4),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+                border: Border.all(color: color, width: 2),
               ),
-            ],
-            border: Border.all(color: color, width: 2),
-          ),
-          child: ClipOval(
-            child: player.role.assetPath.isNotEmpty
-                ? Image.asset(player.role.assetPath, fit: BoxFit.cover)
-                : Icon(Icons.help, color: color),
-          ),
+              child: ClipOval(
+                child: player.role.assetPath.isNotEmpty
+                    ? Image.asset(player.role.assetPath, fit: BoxFit.cover)
+                    : Icon(Icons.help, color: color),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -3015,24 +2982,8 @@ class _GameScreenState extends State<GameScreen>
     final totalTargets = alivePlayers.length;
 
     return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.95),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(
-            color: ClubBlackoutTheme.neonGreen.withValues(alpha: 0.5),
-            width: 2,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 30,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      color: cs.surfaceContainerHighest.withValues(alpha: 0.92),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       child: Column(
         children: [
           Text(
@@ -3044,9 +2995,7 @@ class _GameScreenState extends State<GameScreen>
           const SizedBox(height: 8),
           Text(
             '$heardCount / $totalTargets Targets Reached',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: cs.onSurfaceVariant,
-                ),
+            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 16),
           ),
           const SizedBox(height: 8),
           LinearProgressIndicator(
@@ -3098,18 +3047,20 @@ class _GameScreenState extends State<GameScreen>
                           children: [
                             Text(
                               p.name,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: cs.onSurface,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: TextStyle(
+                                color: cs.onSurface,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               hasHeard ? 'Has heard the rumour' : 'Uninformed',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: hasHeard
-                                        ? ClubBlackoutTheme.neonGreen
-                                        : cs.onSurfaceVariant,
-                                  ),
+                              style: TextStyle(
+                                color: hasHeard
+                                    ? ClubBlackoutTheme.neonGreen
+                                    : cs.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
@@ -3127,18 +3078,15 @@ class _GameScreenState extends State<GameScreen>
           ),
           const SizedBox(height: 20),
           FilledButton(
-            style: ClubBlackoutTheme.neonButtonStyle(
-              ClubBlackoutTheme.neonGreen,
-              isPrimary: true,
-            ).copyWith(
-              padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
+            style: FilledButton.styleFrom(
+              backgroundColor: ClubBlackoutTheme.neonGreen,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
             onPressed: () => setState(() => _rumourMillExpanded = false),
-            child: Text(
+            child: const Text(
               'CLOSE RUMOUR MILL',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -3167,10 +3115,7 @@ class _GameScreenState extends State<GameScreen>
             children: [
               Text(
                 'Does the Bouncer suspect someone? Select their target.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: cs.onSurfaceVariant),
+                style: TextStyle(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: 16),
               DecoratedBox(
@@ -3196,10 +3141,7 @@ class _GameScreenState extends State<GameScreen>
                       Expanded(
                         child: Text(
                           'RISK: If Bouncer is wrong, they lose their I.D. checking ability forever.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: cs.error,
-                                fontSize: 13,
-                              ),
+                          style: TextStyle(color: cs.error, fontSize: 13),
                         ),
                       ),
                     ],
@@ -3218,9 +3160,7 @@ class _GameScreenState extends State<GameScreen>
                             backgroundColor: p.role.color,
                             child: Text(
                               p.name[0],
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: Colors.black,
-                                  ),
+                              style: const TextStyle(color: Colors.black),
                             ),
                           ),
                           title: Text(p.name),
@@ -3295,10 +3235,7 @@ class _GameScreenState extends State<GameScreen>
           accent: color,
           title: Text(
             title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+            style: TextStyle(color: color, fontWeight: FontWeight.bold),
           ),
           content: Text(body),
           actions: [
@@ -3316,283 +3253,79 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  void _showPredatorRetaliationDialog() {
-    final engine = widget.gameEngine;
-    final predatorId = engine.pendingPredatorId;
-    if (predatorId == null) {
-      engine.showToast('No Predator retaliation pending.');
-      return;
-    }
-
+  void _showTeaSpillerRevealDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        final cs = Theme.of(context).colorScheme;
-
-        final alive = engine.players
-            .where((p) => p.isAlive && p.isEnabled)
-            .toList(growable: false);
-        final baseCandidates =
-            alive.where((p) => p.id != predatorId).toList(growable: false);
-
-        String? selected = engine.pendingPredatorPreferredTargetId;
-        if (selected == null ||
-            !baseCandidates.any((p) => p.id == selected)) {
-          selected = baseCandidates.isNotEmpty ? baseCandidates.first.id : null;
-        }
-
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return BulletinDialogShell(
-              accent: ClubBlackoutTheme.neonRed,
-              maxHeight: MediaQuery.sizeOf(context).height * 0.82,
-              title: Text(
-                'PREDATOR RETALIATION',
-                style: ClubBlackoutTheme.headingStyle.copyWith(
-                  color: ClubBlackoutTheme.neonRed,
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'The Predator is dying! Choose who dies with them.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: cs.onSurfaceVariant),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    key: ValueKey<String?>(selected),
-                    initialValue: selected,
-                    decoration: InputDecoration(
-                      labelText: 'Select target',
-                      filled: true,
-                      fillColor: cs.surface.withValues(alpha: 0.12),
-                      border: OutlineInputBorder(
-                        borderRadius: ClubBlackoutTheme.borderRadiusControl,
-                        borderSide: BorderSide(
-                          color:
-                              ClubBlackoutTheme.neonRed.withValues(alpha: 0.30),
-                        ),
-                      ),
-                    ),
-                    items: baseCandidates
-                        .map(
-                          (p) => DropdownMenuItem<String>(
-                            value: p.id,
-                            child: Text(p.name),
-                          ),
-                        )
-                        .toList(growable: false),
-                    onChanged: (v) => setStateDialog(() => selected = v),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('CANCEL'),
-                ),
-                FilledButton(
-                  onPressed: selected == null
-                      ? null
-                      : () {
-                          final ok = engine.completePredatorRetaliation(selected!);
-                          if (!ok) {
-                            engine.showToast('Retaliation failed.');
-                            return;
-                          }
-                          Navigator.pop(context);
-                          engine.showToast('Retaliation applied.');
-                        },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: ClubBlackoutTheme.neonRed,
-                    foregroundColor: Colors.black,
-                  ),
-                  child: const Text('RETALIATE'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _showMessyBitchVictoryDialog() {
-    final engine = widget.gameEngine;
-    if (!engine.messyBitchVictoryPending) {
-      engine.showToast('No Messy Bitch victory pending.');
-      return;
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
       builder: (context) {
         final cs = Theme.of(context).colorScheme;
 
         return BulletinDialogShell(
-          accent: ClubBlackoutTheme.neonGreen,
-          maxWidth: 520,
+          accent: ClubBlackoutTheme.neonOrange,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.82,
           title: Text(
-            'MESSY BITCH VICTORY',
+            'TEA SPILLER REVEAL',
             style: ClubBlackoutTheme.headingStyle.copyWith(
-              color: ClubBlackoutTheme.neonGreen,
+              color: ClubBlackoutTheme.neonOrange,
             ),
           ),
-          content: Text(
-            'The Messy Bitch has spread a rumour to every player. Declare their victory?',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: cs.onSurfaceVariant),
-            textAlign: TextAlign.center,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'The Tea Spiller has died. Select a player to reveal their role.',
+                style: TextStyle(color: cs.onSurfaceVariant),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 320,
+                child: ListView(
+                  children: widget.gameEngine.players
+                      .map(
+                        (p) => ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: p.role.color,
+                            child: Text(
+                              p.name[0],
+                              style: const TextStyle(color: Colors.black),
+                            ),
+                          ),
+                          title: Text(p.name),
+                          subtitle: Text(
+                            p.role.name,
+                            style: TextStyle(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                          ),
+                          /* Host sees roles */
+                          onTap: () {
+                            Navigator.pop(context);
+                            widget.gameEngine.logAction(
+                              'Tea Spiller Reveal',
+                              'Tea Spiller revealed ${p.name} as ${p.role.name}.',
+                            );
+                            showRoleReveal(
+                              context,
+                              p.role,
+                              p.name,
+                              subtitle: 'Tea Spilled by the Dead!',
+                            );
+                          },
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('CANCEL'),
-            ),
-            FilledButton(
-              onPressed: () {
-                engine.declareMessyBitchVictory();
-                Navigator.pop(context);
-                engine.showToast('Messy Bitch victory declared.');
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: ClubBlackoutTheme.neonGreen,
-                foregroundColor: Colors.black,
-              ),
-              child: const Text('DECLARE'),
+              child: const Text('CLOSE'),
             ),
           ],
-        );
-      },
-    );
-  }
-
-  void _showTeaSpillerRevealDialog() {
-    final engine = widget.gameEngine;
-    if (!engine.hasPendingTeaSpillerReveal) {
-      engine.showToast('No Tea Spiller reveal pending.');
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        final cs = Theme.of(context).colorScheme;
-
-        final teaId = engine.pendingTeaSpillerId;
-        if (teaId == null) return const SizedBox.shrink();
-
-        final tea = engine.players.where((p) => p.id == teaId).firstOrNull;
-        final teaName = tea?.name ?? 'Tea Spiller';
-
-        final alive =
-            engine.players.where((p) => p.isAlive && p.isEnabled).toList();
-        final candidates = alive
-            .where((p) => engine.pendingTeaSpillerEligibleVoterIds
-                .contains(p.id))
-            .toList(growable: false);
-
-        String? selected = candidates.isNotEmpty ? candidates.first.id : null;
-
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return BulletinDialogShell(
-              accent: ClubBlackoutTheme.neonOrange,
-              maxHeight: MediaQuery.sizeOf(context).height * 0.82,
-              title: Text(
-                'TEA SPILLER REVEAL',
-                style: ClubBlackoutTheme.headingStyle.copyWith(
-                  color: ClubBlackoutTheme.neonOrange,
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    '$teaName was eliminated by vote. Choose one of their voters to expose.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: cs.onSurfaceVariant),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    key: ValueKey<String?>(selected),
-                    initialValue: selected,
-                    decoration: InputDecoration(
-                      labelText: 'Select voter to reveal',
-                      filled: true,
-                      fillColor: cs.surface.withValues(alpha: 0.12),
-                      border: OutlineInputBorder(
-                        borderRadius: ClubBlackoutTheme.borderRadiusControl,
-                        borderSide: BorderSide(
-                          color: ClubBlackoutTheme.neonOrange.withValues(
-                            alpha: 0.30,
-                          ),
-                        ),
-                      ),
-                    ),
-                    items: candidates
-                        .map(
-                          (p) => DropdownMenuItem<String>(
-                            value: p.id,
-                            child: Text(p.name),
-                          ),
-                        )
-                        .toList(growable: false),
-                    onChanged: (v) => setStateDialog(() => selected = v),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('CANCEL'),
-                ),
-                FilledButton(
-                  onPressed: selected == null
-                      ? null
-                      : () {
-                          final ok =
-                              engine.completeTeaSpillerReveal(selected!);
-                          if (!ok) {
-                            engine.showToast('Unable to spill the tea.');
-                            return;
-                          }
-                          Navigator.pop(context);
-                          final target = engine.players
-                              .where((p) => p.id == selected)
-                              .firstOrNull;
-                          if (target != null) {
-                            showRoleReveal(
-                              context,
-                              target.role,
-                              target.name,
-                              subtitle: 'Tea Spilled by the Dead!',
-                            );
-                          }
-                        },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: ClubBlackoutTheme.neonOrange,
-                    foregroundColor: Colors.black,
-                  ),
-                  child: const Text('REVEAL'),
-                ),
-              ],
-            );
-          },
         );
       },
     );
@@ -3635,10 +3368,7 @@ class _GameScreenState extends State<GameScreen>
                 children: [
                   Text(
                     'Drama Queen is dead. Pick two players to swap devices, then confirm.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: cs.onSurfaceVariant),
+                    style: TextStyle(color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -3732,12 +3462,9 @@ class _GameScreenState extends State<GameScreen>
                                     const SizedBox(height: 16),
                                     Text(
                                       'Host instructions:\n1) Ask all players to close their eyes.\n2) Swap the devices/cards.\n3) Give everyone 10 seconds to check their role.\n4) Resume into the next night.',
-                                      style: Theme.of(ctx)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: cs2.onSurfaceVariant,
-                                          ),
+                                      style: TextStyle(
+                                        color: cs2.onSurfaceVariant,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -3769,15 +3496,16 @@ class _GameScreenState extends State<GameScreen>
     final isActive = widget.gameEngine.currentScriptStep?.id == step.id;
 
     if (!isActive) {
-      return Padding(
-        padding: const EdgeInsets.all(16),
-        child: NeonGlassCard(
-          glowColor: Colors.white,
+      return const Card(
+        color: Colors.white10,
+        margin: EdgeInsets.all(16),
+        child: Padding(
+          padding: EdgeInsets.all(16),
           child: Row(
             children: [
-              const Icon(Icons.wb_sunny, color: Colors.white30),
-              const SizedBox(width: 16),
-              const Text(
+              Icon(Icons.wb_sunny, color: Colors.white30),
+              SizedBox(width: 16),
+              Text(
                 'Day Phase Completed',
                 style: TextStyle(color: Colors.white30, fontSize: 18),
               ),
@@ -3835,14 +3563,13 @@ class _GameScreenState extends State<GameScreen>
             padding: EdgeInsets.symmetric(vertical: 16.0),
             child: Text('BEGIN DAY PHASE', style: TextStyle(fontSize: 20)),
           ),
-          style: ClubBlackoutTheme.neonButtonStyle(
-            ClubBlackoutTheme.neonOrange,
-            isPrimary: true,
-          ).copyWith(
-            padding: WidgetStateProperty.all(const EdgeInsets.all(20)),
-            shape: WidgetStateProperty.all(
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          style: FilledButton.styleFrom(
+            backgroundColor: ClubBlackoutTheme.neonOrange,
+            foregroundColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
+            padding: const EdgeInsets.all(20),
           ),
         ),
       ),
@@ -3973,7 +3700,7 @@ class _GameLogDialogState extends State<_GameLogDialog> {
       context: context,
       builder: (context) {
         final cs = Theme.of(context).colorScheme;
-        return AlertDialog(
+        return ClubAlertDialog(
           title: const Text('Export Log'),
           content: SizedBox(
             width: 520,
@@ -4245,12 +3972,17 @@ class _GameLogDialogState extends State<_GameLogDialog> {
           Container(
             margin: const EdgeInsets.only(bottom: 12, top: 8),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: ClubBlackoutTheme.neonFrame(
-              color: ClubBlackoutTheme.neonPurple,
-              opacity: 0.15,
-              borderRadius: 12,
-              borderWidth: 1.0,
-              showGlow: false,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  ClubBlackoutTheme.neonPurple.withValues(alpha: 0.15),
+                  ClubBlackoutTheme.neonBlue.withValues(alpha: 0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: ClubBlackoutTheme.neonPurple.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               children: [
@@ -4309,12 +4041,20 @@ class _GameLogDialogState extends State<_GameLogDialog> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: ClubBlackoutTheme.neonFrame(
-        color: typeColor,
-        opacity: 0.15,
-        borderRadius: 16,
-        borderWidth: 1.2,
-        showGlow: false,
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: typeColor.withValues(alpha: 0.35),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: cs.shadow.withValues(alpha: 0.25),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -4328,12 +4068,12 @@ class _GameLogDialogState extends State<_GameLogDialog> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: ClubBlackoutTheme.neonFrame(
-                    color: typeColor,
-                    opacity: 0.15,
-                    borderRadius: 12,
-                    borderWidth: 1.0,
-                    showGlow: false,
+                  decoration: BoxDecoration(
+                    color: typeColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: typeColor.withValues(alpha: 0.45),
+                    ),
                   ),
                   child: Icon(
                     typeIcon,
@@ -4427,7 +4167,7 @@ class _GameLogDialogState extends State<_GameLogDialog> {
       case 'details':
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (context) => ClubAlertDialog(
             title: const Text('Entry Details'),
             content: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../styles.dart';
 
@@ -42,21 +43,23 @@ class NeonGlassCard extends StatelessWidget {
           : const BoxDecoration(),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: Card(
-          margin: EdgeInsets.zero,
-          elevation: 0,
-          clipBehavior: Clip.antiAlias,
-          color: ClubBlackoutTheme.pureBlack.withValues(alpha: opacity),
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radius),
-            side: showBorder
-                ? BorderSide(color: glowColor.withValues(alpha: 0.55), width: 1)
-                : BorderSide.none,
-          ),
-          child: Padding(
-            padding: padding ?? ClubBlackoutTheme.cardPadding,
-            child: child,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            color: ClubBlackoutTheme.pureBlack.withValues(alpha: opacity),
+            child: Container(
+              decoration: showBorder
+                  ? BoxDecoration(
+                      borderRadius: BorderRadius.circular(radius),
+                      border: Border.all(
+                        color: glowColor.withValues(alpha: 0.55),
+                        width: 1,
+                      ),
+                    )
+                  : null,
+              padding: padding ?? ClubBlackoutTheme.cardPadding,
+              child: child,
+            ),
           ),
         ),
       ),

@@ -123,6 +123,8 @@ class _ClubBlackoutAppState extends State<ClubBlackoutApp> {
             ColorScheme.fromSeed(
               seedColor: ClubBlackoutTheme.neonPurple,
               brightness: Brightness.dark,
+              surface: ClubBlackoutTheme.kBackground, // Ensure surface matches background in seed
+              background: ClubBlackoutTheme.kBackground,
             );
 
         return MaterialApp(
@@ -130,7 +132,7 @@ class _ClubBlackoutAppState extends State<ClubBlackoutApp> {
           title: 'Club Blackout',
           theme: ClubBlackoutTheme.createTheme(lightScheme),
           darkTheme: ClubBlackoutTheme.createTheme(darkScheme),
-          themeMode: ThemeMode.dark,
+          themeMode: ThemeMode.dark, // Enforce Dark Mode
           scrollBehavior: const ClubBlackoutScrollBehavior(),
           home: _error != null
               ? _ErrorSummaryScreen(

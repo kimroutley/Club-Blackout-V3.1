@@ -335,7 +335,7 @@ class _TabooListDialogState extends State<_TabooListDialog> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    // final tt = Theme.of(context).textTheme; // Unused
     final lw = _lightweight;
 
     return ClubAlertDialog(
@@ -407,7 +407,7 @@ class _ClingerOpsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    // final tt = Theme.of(context).textTheme; // Unused
     final clingers = gameEngine.players
         .where((p) => p.isAlive && p.isEnabled)
         .where((p) => p.role.id == 'clinger')

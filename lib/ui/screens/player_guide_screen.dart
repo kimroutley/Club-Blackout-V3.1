@@ -270,9 +270,9 @@ Widget _buildSection(
             Expanded(
               child: Text(
                 title.toUpperCase(),
-                style: GoogleFonts.audiowide(
+                style: GoogleFonts.roboto(
                   color: accentColor,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
                   fontSize: 16,
                   letterSpacing: 1.1,
                 ),
@@ -327,8 +327,8 @@ Widget _buildWelcomeCard(BuildContext context) {
             children: [
               Text(
                 'QUICK REFERENCE',
-                style: GoogleFonts.audiowide(
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.roboto(
+                  fontWeight: FontWeight.w900,
                   color: cs.onSurface,
                   fontSize: 14,
                   letterSpacing: 1.0,
@@ -384,8 +384,8 @@ Widget _buildFlowStep(BuildContext context, String label, String desc) {
               children: [
                 TextSpan(
                   text: '$label: ',
-                  style: GoogleFonts.audiowide(
-                    fontWeight: FontWeight.bold,
+                  style: GoogleFonts.roboto(
+                    fontWeight: FontWeight.w900,
                     fontSize: 12,
                     color: cs.primary,
                   ),

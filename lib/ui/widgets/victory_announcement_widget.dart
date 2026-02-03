@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../logic/game_engine.dart';
@@ -15,9 +16,11 @@ void showVictoryAnnouncement(
     context: context,
     barrierDismissible: false,
     barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.92),
-    builder: (_) => Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+    builder: (_) => BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: Builder(
@@ -129,6 +132,7 @@ void showVictoryAnnouncement(
           },
         ),
       ),
+    ),
     ),
   );
 }

@@ -149,27 +149,9 @@ class ScriptBuilder {
       );
     }
 
-    final medicNeedsSetup = players.any(
-      (p) =>
-          p.isActive &&
-          !p.soberSentHome &&
-          p.role.id == 'medic' &&
-          p.needsSetup &&
-          (p.medicChoice == null || p.medicChoice!.isEmpty),
-    );
-    if (medicNeedsSetup) {
-      steps.add(
-        const ScriptStep(
-          id: 'medic_setup_choice',
-          title: 'The Medic - Setup',
-          readAloudText:
-              'Medic, open your eyes. Choose your ability for the rest of the game.\n\nNow close your eyes.',
-          instructionText: 'Select Protect (daily) or Revive (once per game).',
-          actionType: ScriptActionType.toggleOption,
-          roleId: 'medic',
-        ),
-      );
-    }
+    // Medic setup is strictly handled in Night 0 (Setup Phase).
+    // Startups/late-joins default to PROTECT_DAILY if they miss the setup.
+
 
     final creepNeedsSetup = players.any(
       (p) =>

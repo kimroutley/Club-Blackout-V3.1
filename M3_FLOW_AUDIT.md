@@ -26,15 +26,15 @@
 ## 3. Implementation Roadmap
 
 ### Phase 1: M3 Base (The "Polish" Foundation)
-- [ ] Standardize `AppBar` across all screens.
-- [ ] Migrate `LobbyScreen` player list to `UnifiedPlayerTile`.
-- [ ] Update `RoleTileWidget` to use `Card`.
+- [x] Standardize `AppBar` across all screens.
+- [x] Migrate `LobbyScreen` player list to `UnifiedPlayerTile`.
+- [x] Update `RoleTileWidget` to use `Card`.
 
 ### Phase 2: Flow Streamlining
-- [ ] Implement "Quick Actions" on the Host Dashboard.
-- [ ] Add "Recent Player" chips to the Lobby.
-- [ ] Refactor the Ability FAB Menu to a more interactive Dock.
+- [x] Implement "Quick Actions" on the Host Dashboard.
+- [x] Add "Recent Player" chips to the Lobby.
+- [x] Refactor the Ability FAB Menu to a more interactive Dock.
 
 ### Phase 3: Visual Interactivity
-- [ ] Add `Hero` animations between Lobby -> Game Screen.
-- [ ] Implement smooth background cross-fades during Phase transitions.
+- [x] Add `Hero` animations between Lobby -> Game Screen.
+- [x] Implement smooth background cross-fades during Phase transitions.

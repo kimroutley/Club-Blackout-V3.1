@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    // final tt = Theme.of(context).textTheme; // Unused
 
     final isNight = widget.gameEngine.currentPhase == GamePhase.night;
 
@@ -281,7 +281,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         const SizedBox(height: 60),
-                      ],
 
                       FilledButton(
                         onPressed: () => _showStartOptions(context),
@@ -328,8 +327,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
 
                       // Stats row (if available)
-                      if (widget.gameEngine.guests.isNotEmpty) ...[
+                      if (widget.gameEngine.guests.isNotEmpty)
                         const SizedBox(height: 24),
+                      if (widget.gameEngine.guests.isNotEmpty)
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -370,7 +370,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                      ],
                     ],
                   ),
                 ), // Padding
